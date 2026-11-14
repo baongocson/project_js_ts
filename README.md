@@ -13,7 +13,7 @@ Copy-Item frontend/.env.example frontend/.env
 npm run dev
 ```
 
-Chỉ sao chép file môi trường nếu chưa có. File `.env` ở thư mục gốc có sẵn được giữ nguyên và không tự nạp vào ứng dụng. Backend nạp `backend/.env`; frontend nạp `frontend/.env`. Không đưa bí mật vào biến `VITE_*`.
+Chỉ sao chép file môi trường nếu chưa có. File `.env` ở thư mục gốc có sẵn được giữ nguyên và không tự nạp vào ứng dụng. Backend nạp `backend/.env`, rồi fallback `atlas-credentials.env`; frontend nạp `frontend/.env`. Biến môi trường tiến trình có ưu tiên cao nhất. Không đưa bí mật vào biến `VITE_*`.
 
 - Frontend: http://localhost:5173
 - Health API: http://localhost:3000/api/v1/health
@@ -26,7 +26,7 @@ Vite proxy `/api` về backend trong môi trường phát triển. Production c�
 
 ## MongoDB
 
-Mặc định `DATABASE_ENABLED=false`, cho phép chạy khung và health khi chưa có MongoDB. Muốn kết nối, cấu hình `backend/.env` với `DATABASE_ENABLED=true` và `MONGODB_URI` của bạn. Cần replica set để triển khai transaction theo ERD. Khung chưa tạo collection/index hay thực hiện nghiệp vụ.
+File mẫu có `DATABASE_ENABLED=false` để chạy khung không cần MongoDB. Máy hiện tại đã cấu hình Atlas với database `dashboard_3d`. Đã triển khai 12 schema/validator và toàn bộ index theo ERD; `autoIndex` tắt. Dùng `npm run db:provision -w backend` để tạo/cập nhật có kiểm soát, `npm run db:verify -w backend` để xác minh, `npm run test:database -w backend` để kiểm thử trên Atlas. Backend bật database sẽ kiểm tra kết nối, replica set và schema/index trước khi phục vụ. Xem [hướng dẫn database](docs/database.md).
 
 ## Cấu trúc
 
@@ -45,6 +45,6 @@ frontend/
   public/, vite.config.ts, tsconfig.json
 ```
 
-`GET /api/v1/health` hoạt động. 27 endpoint nghiệp vụ được đăng ký nhưng trả **501 NOT_IMPLEMENTED** với error envelope; chưa có auth, DTO nghiệp vụ, schema MongoDB, idempotency hay thuật toán thực thi. Frontend hiển thị trạng thái kết nối, chưa phải dashboard hoàn chỉnh. Đây là khung để phát triển tiếp.
+`GET /api/v1/health` ping database khi được bật. 27 endpoint nghiệp vụ có DTO/validation/response contract nhưng vẫn trả **501 NOT_IMPLEMENTED** với error envelope; chưa có auth, idempotency hay thuật toán thực thi. Schema MongoDB và index đã có, chưa nối nghiệp vụ vào persistence. Frontend hiển thị trạng thái kết nối, chưa phải dashboard hoàn chỉnh.
 
 Xem [kiến trúc và bước tiếp theo](docs/architecture.md). Cấu trúc tham chiếu tài liệu chính thức [NestJS](https://docs.nestjs.com/modules) và [Vite](https://vite.dev/guide/).

@@ -112,7 +112,7 @@ Prefix chung `/api/v1`. Request dưới đây là DTO đã validate/điền defa
 
 Đã có request/body/query/path/header validators cho27route, union method-specific cho27phương pháp, response types, user projection mapper và pure policies cho missing/equality/sort/filter/no-op/autosave/diagnostics/restore/expiry/retry.
 
-Các route hợp lệ vẫn trả501 NOT_IMPLEMENTED. Chưa có database/schema/index thật, xác thực/ownership, multipart upload/parser, infer/convert engine, storage/previewUI, correlation/histogram computation hoặc commit transaction. Các policy chỉ tính trong bộ nhớ; service phải CAS và kiểm receipt/lifecycle nguyên tử trước trả thành công. Các response types chưa đồng nghĩa mọi serializer và thuật toán đã thực thi.
+Các route hợp lệ vẫn trả501 NOT_IMPLEMENTED. Đã có kết nối Atlas và12schema/validator/index thật theo ERD; xem [database.md](database.md). Chưa có xác thực/ownership, multipart upload/parser, infer/convert engine, storage/previewUI, correlation/histogram computation hoặc transaction nghiệp vụ. Các policy chỉ tính trong bộ nhớ; service phải CAS và kiểm receipt/lifecycle nguyên tử trước trả thành công. Các response types chưa đồng nghĩa mọi serializer và thuật toán đã thực thi.
 
 Không cần duyệt lại D01–D26 để viết service theo hợp đồng này. Chỉ hỏi lại nếu phát sinh thay đổi chức năng, giới hạn mới hoặc nguy cơ làm mất dữ liệu.
 

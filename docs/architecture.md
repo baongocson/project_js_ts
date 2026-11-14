@@ -2,7 +2,7 @@
 
 Nguồn chuẩn: D:\JS_TS\project_js_ts\docs\API.xlsx, D:\JS_TS\project_js_ts\docs\ERD.html
 
-Backend NestJS + Express, modular monolith. Frontend React + Vite + TypeScript. API prefix /api/v1. Controller → Service → Repository → MongoDB. Module chỉ export service cần chia sẻ; tránh import vòng. Chưa có guard/DTO nghiệp vụ, schema hay index thật; toàn bộ 27 route nghiệp vụ trả 501. Không triển khai auth giả, không ghi database từ route placeholder.
+Backend NestJS + Express, modular monolith. Frontend React + Vite + TypeScript. API prefix /api/v1. Controller → Service → Repository → MongoDB. Module chỉ export service cần chia sẻ; tránh import vòng. Đã có DTO/validation và 12 schema/validator/index MongoDB thật; toàn bộ 27 route nghiệp vụ vẫn trả 501. Chưa có guard/auth và persistence nghiệp vụ; không ghi database từ route placeholder. Chi tiết vận hành và kiểm thử Atlas tại [database.md](database.md).
 
 ## Quyền sở hữu collection dự kiến
 
@@ -15,7 +15,7 @@ Backend NestJS + Express, modular monolith. Frontend React + Vite + TypeScript. 
 - Infrastructure: idempotencyRecords
 - Analysis: đọc snapshot published qua DatasetsService, không cần collection riêng
 
-Mỗi collection có một nơi sở hữu ghi. Chưa tạo schema tối giản dễ khiến hiểu nhầm rằng đã đủ ERD. Khi triển khai cần đủ field, unique/partial index và validator theo ERD; autoIndex tắt, phải có bước tạo index có kiểm soát.
+Mỗi collection có một nơi sở hữu ghi. Định nghĩa persistence tập trung tại infrastructure/database/collection-contracts.ts để dùng chung giữa Mongoose và BSON validator. Module nghiệp vụ giữ quyền sở hữu repository/service ghi theo danh sách trên. autoIndex/autoCreate tắt; db:provision tạo index có kiểm soát, startup chỉ xác minh. FK logic và các transaction nghiệp vụ chưa triển khai.
 
 ## Ràng buộc cần giữ khi bổ sung nghiệp vụ
 
@@ -31,7 +31,7 @@ Mỗi collection có một nơi sở hữu ghi. Chưa tạo schema tối giản 
 
 ## Thứ tự tiếp theo
 
-1. Hoàn thiện DTO, schema/index và auth/session/ownership.
+1. Triển khai auth/session/ownership trên DTO và schema/index đã có.
 2. Project + workspace + import + đọc bảng.
 3. Preview edit_cell + Apply + history + restore.
 4. Kiểm thử retry, concurrent Apply, rollback, expiration, cross-owner và cleanup.

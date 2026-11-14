@@ -9,7 +9,10 @@
     "start:prod": "node dist/main.js",
     "typecheck": "tsc --noEmit",
     "test:contracts": "npm run build && node --test test/contracts.test.cjs",
-    "test:http": "npm run build && node --test test/http-contracts.test.cjs"
+    "test:http": "npm run build && node --test test/http-contracts.test.cjs",
+    "db:provision": "npm run build && node dist/infrastructure/database/database.cli.js provision",
+    "db:verify": "npm run build && node dist/infrastructure/database/database.cli.js verify",
+    "test:database": "npm run build && node --test test/database.test.cjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
