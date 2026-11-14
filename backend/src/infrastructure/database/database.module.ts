@@ -1,4 +1,4 @@
-import { DynamicModule, Module, Injectable, OnModuleInit } from '@nestjs/common';
+import { DynamicModule, Module, Global, Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection, MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
@@ -17,6 +17,7 @@ class DatabaseReadiness implements OnModuleInit {
   }
 }
 
+@Global()
 @Module({})
 export class DatabaseModule {
   static register(enabled: boolean): DynamicModule {
