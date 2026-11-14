@@ -1,0 +1,1 @@
+Provider idempotency sẽ được triển khai tại đây: unique(userId, actionScope, keyDigest), requestHash, leaseToken, leaseUntil và receipt. Chưa có cơ chế chống retry trong khung này. Không bật mutation thực tế trước khi hoàn thiện cơ chế commit và xác thực.

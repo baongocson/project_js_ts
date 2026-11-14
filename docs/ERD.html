@@ -1,0 +1,863 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ERD hệ thống khảo sát và tiền xử lý dữ liệu</title><style>body{margin:0;background:#edf2f7;color:#172a3e;font-family:"Segoe UI",Arial,sans-serif;line-height:1.65}main{max-width:1160px;margin:30px auto;background:white;padding:40px 48px;border-radius:14px}h1{font-size:32px;line-height:1.25}h2{margin-top:48px;padding-top:16px;border-top:1px solid #dce5ee;font-size:24px}h3{margin-top:32px;color:#244f75}p,li{font-size:16px}li{margin:8px 0}table{border-collapse:collapse;width:100%;font-size:14px}th{background:#244f75;color:white;text-align:left}td,th{padding:10px 12px;border:1px solid #ccd7e2;vertical-align:top}tr:nth-child(even){background:#f4f7fa}.table-wrap{overflow-x:auto;margin:16px 0}figure{margin:24px 0;overflow:auto;background:#f7f9fc;border:1px solid #dce5ee;border-radius:10px}figure svg{display:block;width:100%;min-width:1000px;height:auto}figcaption{padding:8px 16px;color:#52657d}code{font-size:.9em;background:#eef3f8;padding:1px 4px;border-radius:3px}pre{padding:20px;overflow:auto;background:#f1f5f9}nav{display:flex;gap:12px;flex-wrap:wrap}a{color:#185a95}button{border:0;background:#244f75;color:white;padding:10px 18px;border-radius:6px;cursor:pointer}summary{cursor:pointer;font-weight:600;padding:16px;background:#edf2f7}@media print{body,main{background:white;margin:0;padding:0}nav,button{display:none}h2{break-before:page}figure{break-inside:avoid}figure svg{min-width:0}table{font-size:10px}pre{white-space:pre-wrap}details{display:none}}</style></head><body><main><nav><button onclick="window.print()">In tài liệu</button><span>Sơ đồ, từ điển dữ liệu và mã Mermaid được nhúng trong một file</span></nav><h1>ERD hệ thống khảo sát và tiền xử lý dữ liệu</h1>
+<p>Ngày cập nhật: 14/11/2026. Nguồn yêu cầu: <strong>ý tưởng.docx</strong> gồm 17 mục, <strong>API_design (3).xlsx</strong> và các quyết định 1A–8A, 9B đã chốt. Giới hạn CSV chính thức là 16.000.000 byte, thay giới hạn file cũ trước đây. Đây là thiết kế cho dự án NestJS mới, không phải mô tả backend Fastify hiện tại.</p>
+<p><strong>Kết luận rà soát:</strong> mô hình dưới đây có chỗ biểu diễn dữ liệu cho đủ 17 nhóm yêu cầu. Phù hợp để triển khai NestJS Modular Monolith. Việc đáp ứng HTTP, cấu trúc NestJS, giao diện Vite và hành vi thực tế phải được xác nhận ở hợp đồng API và mã nguồn; ERD tự nó không chứng minh những phần đó.</p>
+<h2>1. Cách đọc sơ đồ</h2>
+<p>ERD đầy đủ bằng Mermaid được nhúng ở mục12 của tài liệu này. Ba hình bên dưới chia theo chủ đề để đọc được ở kích thước thông thường. Các hình chỉ hiển thị thuộc tính chính; từ điển và danh sách quan hệ bên dưới là định nghĩa đầy đủ. Dấu <code>?</code> nghĩa là nullable. FK trong MongoDB là tham chiếu logic, service phải bảo đảm tồn tại, đúng chủ sở hữu và đúng dataset.</p>
+<figure><svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1040" viewBox="0 0 1440 1040" role="img" aria-label="ERD 1 — Tài khoản và quyền sở hữu">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<style>text{font-family:Segoe UI,Arial,sans-serif}.title{font-size:27px;font-weight:700;fill:#13243a}.sub{font-size:15px;fill:#52657d}.name{font-size:18px;font-weight:700;fill:white}.field{font-size:15px;fill:#24384e}.label{font-size:14px;fill:#334c69;font-weight:600;paint-order:stroke;stroke:#f7f9fc;stroke-width:6;stroke-linejoin:round}</style>
+<rect width="1440" height="1040" fill="#f7f9fc"/>
+<text x="36" y="42" class="title">ERD 1 — Tài khoản và quyền sở hữu</text>
+<text x="36" y="70" class="sub">Các trường chính; từ điển dữ liệu và sơ đồ Mermaid chứa đầy đủ thuộc tính và quan hệ.</text>
+<polyline points="420,210 530,210" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="475" y="195" text-anchor="middle" class="label">1 → 0..N</text>
+<polyline points="230,282 230,460" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="230" y="375" text-anchor="middle" class="label">1 → 0..N</text>
+<polyline points="420,550 530,550" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="475" y="535" text-anchor="middle" class="label">1 → 1</text>
+<polyline points="230,622 230,790" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="230" y="720" text-anchor="middle" class="label">1 → 0..1</text>
+<polyline points="420,146 480,146 480,95 1210,95 1210,460" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1025" y="112" text-anchor="middle" class="label">USER 1 → 0..N yêu cầu</text>
+<polyline points="230,622 230,688 1210,688 1210,622" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="805" y="680" text-anchor="middle" class="label">PROJECT 0..1 ← scope của yêu cầu</text>
+<rect x="40" y="120" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M50,120 H410 Q420,120 420,130 V162 H40 V130 Q40,120 50,120" fill="#244f75"/>
+<text x="56" y="148" class="name">USER</text>
+<text x="56" y="188" class="field">_id PK</text>
+<text x="56" y="214" class="field">emailNormalized UK</text>
+<text x="56" y="240" class="field">passwordHash, displayName?</text>
+<text x="56" y="266" class="field">preferences, lifecycle</text>
+<rect x="530" y="120" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M540,120 H900 Q910,120 910,130 V162 H530 V130 Q530,120 540,120" fill="#244f75"/>
+<text x="546" y="148" class="name">AUTH_SESSION</text>
+<text x="546" y="188" class="field">_id PK · userId FK</text>
+<text x="546" y="214" class="field">refreshTokenHash UK (lookup)</text>
+<text x="546" y="240" class="field">rotationCounter, expiresAt</text>
+<text x="546" y="266" class="field">revokedAt?</text>
+<rect x="40" y="460" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M50,460 H410 Q420,460 420,470 V502 H40 V470 Q40,460 50,460" fill="#244f75"/>
+<text x="56" y="488" class="name">PROJECT</text>
+<text x="56" y="528" class="field">_id PK · ownerId FK</text>
+<text x="56" y="554" class="field">name</text>
+<text x="56" y="580" class="field">lifecycle: empty / ready / deleting</text>
+<text x="56" y="606" class="field">createdAt, updatedAt</text>
+<rect x="530" y="460" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M540,460 H900 Q910,460 910,470 V502 H530 V470 Q530,460 540,460" fill="#244f75"/>
+<text x="546" y="488" class="name">WORKSPACE</text>
+<text x="546" y="528" class="field">_id PK · projectId FK UK</text>
+<text x="546" y="554" class="field">boundVersionId FK? · revision</text>
+<text x="546" y="580" class="field">activeTab, chartConfig, selection</text>
+<text x="546" y="606" class="field">tableState, updatedAt</text>
+<rect x="40" y="790" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M50,790 H410 Q420,790 420,800 V832 H40 V800 Q40,790 50,790" fill="#244f75"/>
+<text x="56" y="818" class="name">DATASET</text>
+<text x="56" y="858" class="field">_id PK · projectId FK UK</text>
+<text x="56" y="884" class="field">currentVersionId FK? · revision</text>
+<text x="56" y="910" class="field">originalFile, importOptions</text>
+<text x="56" y="936" class="field">lifecycle: importing / ready</text>
+<rect x="1020" y="460" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M1030,460 H1390 Q1400,460 1400,470 V502 H1020 V470 Q1020,460 1030,460" fill="#244f75"/>
+<text x="1036" y="488" class="name">IDEMPOTENCY_RECORD</text>
+<text x="1036" y="528" class="field">_id PK · userId FK</text>
+<text x="1036" y="554" class="field">projectId FK?</text>
+<text x="1036" y="580" class="field">actionScope, keyDigest, requestHash</text>
+<text x="1036" y="606" class="field">status, response, leaseUntil?</text>
+<text x="36" y="1014" class="sub">PK = định danh · FK = tham chiếu logic · UK = duy nhất · 0..1 = tùy chọn · 0..N = nhiều</text></svg><figcaption>ERD tài khoản và quyền sở hữu</figcaption></figure>
+<figure><svg xmlns="http://www.w3.org/2000/svg" width="1440" height="910" viewBox="0 0 1440 910" role="img" aria-label="ERD 2 — Dataset và các phiên bản">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<style>text{font-family:Segoe UI,Arial,sans-serif}.title{font-size:27px;font-weight:700;fill:#13243a}.sub{font-size:15px;fill:#52657d}.name{font-size:18px;font-weight:700;fill:white}.field{font-size:15px;fill:#24384e}.label{font-size:14px;fill:#334c69;font-weight:600;paint-order:stroke;stroke:#f7f9fc;stroke-width:6;stroke-linejoin:round}</style>
+<rect width="1440" height="910" fill="#f7f9fc"/>
+<text x="36" y="42" class="title">ERD 2 — Dataset và các phiên bản</text>
+<text x="36" y="70" class="sub">Phiên bản published bất biến; số dòng, số cột và datatype thuộc từng phiên bản.</text>
+<polyline points="420,210 530,210" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="475" y="195" text-anchor="middle" class="label">1 → 0..N</text>
+<polyline points="530,150 470,150 470,95 230,95 230,120" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="350" y="89" text-anchor="middle" class="label">current: 0..1</text>
+<polyline points="720,334 720,480 230,480 230,590" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="430" y="465" text-anchor="middle" class="label">1 → 0..N cột</text>
+<polyline points="720,334 720,590" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="720" y="530" text-anchor="middle" class="label">1 → 0..N chunks</text>
+<polyline points="910,240 1210,240 1210,590" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1115" y="225" text-anchor="middle" class="label">result: 1 version / operation</text>
+<polyline points="910,175 960,175 960,100 810,100 810,120" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1135" y="90" text-anchor="middle" class="label">parent / restoredFrom: 0..1</text>
+<rect x="40" y="120" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M50,120 H410 Q420,120 420,130 V162 H40 V130 Q40,120 50,120" fill="#244f75"/>
+<text x="56" y="148" class="name">DATASET</text>
+<text x="56" y="188" class="field">_id PK · projectId FK UK</text>
+<text x="56" y="214" class="field">currentVersionId FK?</text>
+<text x="56" y="240" class="field">revision, originalFile</text>
+<text x="56" y="266" class="field">importOptions</text>
+<rect x="530" y="120" width="380" height="214" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M540,120 H900 Q910,120 910,130 V162 H530 V130 Q530,120 540,120" fill="#244f75"/>
+<text x="546" y="148" class="name">DATASET_VERSION</text>
+<text x="546" y="188" class="field">_id PK · datasetId FK</text>
+<text x="546" y="214" class="field">versionNumber (khi published)</text>
+<text x="546" y="240" class="field">parentVersionId FK?</text>
+<text x="546" y="266" class="field">restoredFromVersionId FK?</text>
+<text x="546" y="292" class="field">state, rowCount, columnCount</text>
+<text x="546" y="318" class="field">contentHash, encodedByteSize</text>
+<rect x="40" y="590" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M50,590 H410 Q420,590 420,600 V632 H40 V600 Q40,590 50,590" fill="#244f75"/>
+<text x="56" y="618" class="name">VERSION_COLUMN</text>
+<text x="56" y="658" class="field">_id PK · versionId FK</text>
+<text x="56" y="684" class="field">columnId ổn định · position</text>
+<text x="56" y="710" class="field">name, logicalType, format</text>
+<text x="56" y="736" class="field">lineage (nguồn cột one-hot)</text>
+<rect x="530" y="590" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M540,590 H900 Q910,590 910,600 V632 H530 V600 Q530,590 540,590" fill="#244f75"/>
+<text x="546" y="618" class="name">DATA_CHUNK</text>
+<text x="546" y="658" class="field">_id PK · versionId FK</text>
+<text x="546" y="684" class="field">chunkIndex · Binary payload</text>
+<text x="546" y="710" class="field">byteLength, sha256, codecVersion</text>
+<text x="546" y="736" class="field">rowId và cells nằm trong payload</text>
+<rect x="1020" y="590" width="380" height="188" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M1030,590 H1390 Q1400,590 1400,600 V632 H1020 V600 Q1020,590 1030,590" fill="#244f75"/>
+<text x="1036" y="618" class="name">PROCESSING_OPERATION</text>
+<text x="1036" y="658" class="field">_id PK · datasetId FK · actorId FK</text>
+<text x="1036" y="684" class="field">baseVersionId FK?</text>
+<text x="1036" y="710" class="field">resultVersionId FK UK</text>
+<text x="1036" y="736" class="field">kind, specification, summary</text>
+<text x="1036" y="762" class="field">idempotencyDigest, createdAt</text>
+<text x="36" y="884" class="sub">PK = định danh · FK = tham chiếu logic · UK = duy nhất · 0..1 = tùy chọn · 0..N = nhiều</text></svg><figcaption>ERD phiên bản dữ liệu</figcaption></figure>
+<figure><svg xmlns="http://www.w3.org/2000/svg" width="1440" height="910" viewBox="0 0 1440 910" role="img" aria-label="ERD 3 — Preview và áp dụng xử lý">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<style>text{font-family:Segoe UI,Arial,sans-serif}.title{font-size:27px;font-weight:700;fill:#13243a}.sub{font-size:15px;fill:#52657d}.name{font-size:18px;font-weight:700;fill:white}.field{font-size:15px;fill:#24384e}.label{font-size:14px;fill:#334c69;font-weight:600;paint-order:stroke;stroke:#f7f9fc;stroke-width:6;stroke-linejoin:round}</style>
+<rect width="1440" height="910" fill="#f7f9fc"/>
+<text x="36" y="42" class="title">ERD 3 — Preview và áp dụng xử lý</text>
+<text x="36" y="70" class="sub">Preview là dữ liệu tạm; history đọc các operation đã commit. Các FK cùng dataset và owner.</text>
+<polyline points="420,210 530,210" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="475" y="194" text-anchor="middle" class="label">base 1 → 0..N</text>
+<polyline points="330,282 330,380 620,380 620,334" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="475" y="365" text-anchor="middle" class="label">candidate 0..1 ↔ 0..1</text>
+<polyline points="910,210 1020,210" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="965" y="195" text-anchor="middle" class="label">1 → 0..N</text>
+<polyline points="230,282 230,590" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="230" y="440" text-anchor="middle" class="label">result 1 ← 0..1 operation</text>
+<polyline points="720,778 720,820 230,820 230,778" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="475" y="807" text-anchor="middle" class="label">response có thể chứa operationId</text>
+<rect x="40" y="120" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M50,120 H410 Q420,120 420,130 V162 H40 V130 Q40,120 50,120" fill="#244f75"/>
+<text x="56" y="148" class="name">DATASET_VERSION</text>
+<text x="56" y="188" class="field">_id PK · datasetId FK</text>
+<text x="56" y="214" class="field">published: base version</text>
+<text x="56" y="240" class="field">staged: candidate version</text>
+<text x="56" y="266" class="field">parent / restoredFrom</text>
+<rect x="530" y="120" width="380" height="214" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M540,120 H900 Q910,120 910,130 V162 H530 V130 Q530,120 540,120" fill="#244f75"/>
+<text x="546" y="148" class="name">PROCESSING_PREVIEW</text>
+<text x="546" y="188" class="field">_id PK · datasetId FK</text>
+<text x="546" y="214" class="field">baseVersionId FK · baseRevision</text>
+<text x="546" y="240" class="field">candidateVersionId FK UK?</text>
+<text x="546" y="266" class="field">specification, specHash</text>
+<text x="546" y="292" class="field">status, summary, schemaChanges</text>
+<text x="546" y="318" class="field">diagnostics, expiresAt</text>
+<rect x="1020" y="120" width="380" height="162" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M1030,120 H1390 Q1400,120 1400,130 V162 H1020 V130 Q1020,120 1030,120" fill="#244f75"/>
+<text x="1036" y="148" class="name">PREVIEW_CHANGE</text>
+<text x="1036" y="188" class="field">_id PK · previewId FK</text>
+<text x="1036" y="214" class="field">rowId ổn định · ordinal</text>
+<text x="1036" y="240" class="field">changeKind</text>
+<text x="1036" y="266" class="field">beforePosition? · afterPosition?</text>
+<rect x="40" y="590" width="380" height="188" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M50,590 H410 Q420,590 420,600 V632 H40 V600 Q40,590 50,590" fill="#244f75"/>
+<text x="56" y="618" class="name">PROCESSING_OPERATION</text>
+<text x="56" y="658" class="field">_id PK · datasetId FK · actorId FK</text>
+<text x="56" y="684" class="field">baseVersionId FK?</text>
+<text x="56" y="710" class="field">resultVersionId FK UK</text>
+<text x="56" y="736" class="field">kind, specification, summary</text>
+<text x="56" y="762" class="field">idempotencyDigest, createdAt</text>
+<rect x="530" y="590" width="380" height="188" rx="10" fill="white" stroke="#bdcddd"/>
+<path d="M540,590 H900 Q910,590 910,600 V632 H530 V600 Q530,590 540,590" fill="#244f75"/>
+<text x="546" y="618" class="name">IDEMPOTENCY_RECORD</text>
+<text x="546" y="658" class="field">_id PK · userId FK</text>
+<text x="546" y="684" class="field">projectId FK?</text>
+<text x="546" y="710" class="field">actionScope + keyDigest (unique scope)</text>
+<text x="546" y="736" class="field">requestHash, status</text>
+<text x="546" y="762" class="field">response tham chiếu kết quả nhỏ</text>
+<text x="36" y="884" class="sub">PK = định danh · FK = tham chiếu logic · UK = duy nhất · 0..1 = tùy chọn · 0..N = nhiều</text></svg><figcaption>ERD preview và áp dụng</figcaption></figure>
+<h2>2. Các chỉnh sửa so với ERD trước</h2>
+<ul>
+<li>Bỏ liên kết sở hữu hai chiều Project.datasetId / Dataset.projectId. Chỉ giữ Dataset.projectId unique.</li>
+<li>Project mới có thể chưa nhập CSV: có 0..1 dataset; khi ready phải có đúng 1 dataset ready. Workspace được tạo cùng project.</li>
+<li>Thống kê rowCount, columnCount và schema datatype thuộc DatasetVersion để lịch sử không bị thay đổi theo dữ liệu hiện tại.</li>
+<li>Thêm VersionColumn và định danh rowId/columnId ổn định, hỗ trợ sửa ô, đổi kiểu, xóa cột và one-hot.</li>
+<li>Thêm preview tạm, candidate snapshot và chỉ mục toàn bộ dòng bị tác động để xem được mọi trang 5 cặp.</li>
+<li>Phân biệt parentVersionId với restoredFromVersionId; không làm mất lịch sử khi restore.</li>
+<li>Thêm idempotency và revision để chống retry tạo trùng và hai tab ghi đè.</li>
+<li>Bỏ deletedAt dạng lưu trữ mềm; deleting chỉ dùng trong quá trình dọn để cuối cùng xóa thật.</li>
+<li>History chỉ có kết quả thành công. Mỗi operation tạo đúng một published version; staged version chưa có history.</li>
+</ul>
+<h2>3. Ranh giới lưu trữ</h2>
+<p>12 collection được đề xuất. User.preferences, workspace config và các cấu hình xử lý nhỏ được nhúng. Không tạo collection cho từng thuật toán hay cho từng màn hình. Missing counts, histogram, value counts, correlation, tọa độ và màu 3D được tính từ snapshot + schema + cấu hình. Nếu bổ sung cache, khóa cache phải chứa versionId, columnIds, method, parameters và engineVersion.</p>
+<p>Phiên bản gốc là published versionNumber=1; không biến đổi token gốc khi suy luận kiểu. Ví dụ N/A vẫn được giữ trong dữ liệu gốc và được đánh dấu missing theo importOptions.missingPolicy. Không tự bỏ dòng khi tính thống kê.</p>
+<p>Thiết kế dùng các chunk nhị phân trong MongoDB, không dùng GridFS ở bản này. MongoDB giới hạn một BSON document ở 16 MiB; file CSV tối đa 16.000.000 byte không đồng nghĩa một document 16.000.000 byte. Chia luồng dữ liệu theo số byte (đề xuất payload tối đa 4 MiB/chunk), kể cả khi một dòng hoặc một ô rất lớn. Không tách theo số dòng đơn thuần. <a href="https://www.mongodb.com/docs/manual/reference/limits/">MongoDB Limits</a>.</p>
+<h2>4. Từ điển dữ liệu</h2>
+<h3>USER — <code>users</code></h3>
+<p>Tài khoản; tên hiển thị tùy chọn. Preferences nhỏ được nhúng trong user.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh tài khoản</td></tr>
+<tr><td><code>email</code></td><td>String</td><td>required</td><td>Email hiển thị</td></tr>
+<tr><td><code>emailNormalized</code></td><td>String</td><td>UK</td><td>Email chuẩn hóa theo chính sách đăng ký và đăng nhập thống nhất</td></tr>
+<tr><td><code>passwordHash</code></td><td>String</td><td>required private</td><td>Hash mật khẩu; không đưa vào DTO phản hồi</td></tr>
+<tr><td><code>displayName</code></td><td>String</td><td>null allowed</td><td>Không bắt buộc khi đăng ký</td></tr>
+<tr><td><code>preferences</code></td><td>Object</td><td>required</td><td>theme và các cài đặt cá nhân nhỏ</td></tr>
+<tr><td><code>lifecycle</code></td><td>Enum</td><td>required</td><td>active hoặc deleting trong thời gian xóa thật</td></tr>
+<tr><td><code>writeEpoch</code></td><td>Integer</td><td>required</td><td>Tăng khi mutation cùng owner hoặc chuyển deleting để tạo write conflict thực</td></tr>
+<tr><td><code>createdAt</code></td><td>Date</td><td>required</td><td>Ngày tạo</td></tr>
+<tr><td><code>updatedAt</code></td><td>Date</td><td>required</td><td>Ngày cập nhật</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>UNIQUE(emailNormalized)</li>
+</ul>
+<h3>AUTH_SESSION — <code>authSessions</code></h3>
+<p>Một phiên đăng nhập trên thiết bị/trình duyệt. Access token mang userId và sessionId; không lưu access token nguyên văn.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh phiên</td></tr>
+<tr><td><code>userId</code></td><td>ObjectId</td><td>FK USER</td><td>Chủ phiên</td></tr>
+<tr><td><code>refreshTokenHash</code></td><td>String</td><td>UK private</td><td>Hash token opaque hiện tại; lookup bằng unique index; không lưu token nguyên văn</td></tr>
+<tr><td><code>rotationCounter</code></td><td>Integer</td><td>required</td><td>CAS hash hiện tại và counter; chỉ một request thành công, hash cũ hoặc CAS thất bại trả401</td></tr>
+<tr><td><code>expiresAt</code></td><td>Date</td><td>required</td><td>Hạn của phiên/refresh token</td></tr>
+<tr><td><code>revokedAt</code></td><td>Date</td><td>null allowed</td><td>Thời điểm thu hồi</td></tr>
+<tr><td><code>createdAt</code></td><td>Date</td><td>required</td><td>Ngày tạo phiên</td></tr>
+<tr><td><code>lastUsedAt</code></td><td>Date</td><td>required</td><td>Lần sử dụng gần nhất</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>UNIQUE(refreshTokenHash)</li>
+<li>INDEX(userId, revokedAt)</li>
+<li>TTL(expiresAt); service vẫn kiểm tra hết hạn trước khi dùng</li>
+</ul>
+<h3>PROJECT — <code>projects</code></h3>
+<p>Điểm vào workspace, chủ sở hữu là nguồn kiểm tra quyền. Không lưu datasetId ngược chiều.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh project</td></tr>
+<tr><td><code>ownerId</code></td><td>ObjectId</td><td>FK USER</td><td>Người sở hữu</td></tr>
+<tr><td><code>name</code></td><td>String</td><td>required</td><td>Tên project</td></tr>
+<tr><td><code>lifecycle</code></td><td>Enum</td><td>required</td><td>empty, ready, deleting; deleting chỉ là trạng thái dọn xóa thật</td></tr>
+<tr><td><code>writeEpoch</code></td><td>Integer</td><td>required</td><td>Tăng ở batch ghi/commit và chuyển deleting; phối hợp với user fence</td></tr>
+<tr><td><code>createdAt</code></td><td>Date</td><td>required</td><td>Ngày tạo</td></tr>
+<tr><td><code>updatedAt</code></td><td>Date</td><td>required</td><td>Dùng sắp xếp danh sách</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>INDEX(ownerId, updatedAt DESC, _id DESC)</li>
+</ul>
+<h3>WORKSPACE — <code>workspaces</code></h3>
+<p>Một trạng thái giao diện cho mỗi project; không lưu previewId. Phiên bản gắn với workspace giúp kiểm tra các tham chiếu cột/dòng.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh workspace</td></tr>
+<tr><td><code>projectId</code></td><td>ObjectId</td><td>FK PROJECT UK</td><td>Một workspace mỗi project</td></tr>
+<tr><td><code>boundVersionId</code></td><td>ObjectId</td><td>FK DATASET_VERSION nullable</td><td>Phiên bản dùng khi lưu các lựa chọn</td></tr>
+<tr><td><code>revision</code></td><td>Integer</td><td>required</td><td>Chống autosave cũ ghi đè trạng thái mới</td></tr>
+<tr><td><code>activeTab</code></td><td>Enum</td><td>required</td><td>collection, cleaning, missing, outliers, scaling, transformation, encoding, history</td></tr>
+<tr><td><code>chartConfig</code></td><td>Object</td><td>required</td><td>xColumnId, yColumnId, zColumnId, colorMode, outlierColumnIds, outlierMethod, threshold</td></tr>
+<tr><td><code>selection</code></td><td>Object</td><td>required</td><td>columnIds: UUID[]; cell: {rowId, columnId} hoặc null; giữ ID ổn định</td></tr>
+<tr><td><code>tableState</code></td><td>Object</td><td>required</td><td>filters, sort, page, pageSize mặc định 10</td></tr>
+<tr><td><code>updatedAt</code></td><td>Date</td><td>required</td><td>Lần lưu gần nhất</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>UNIQUE(projectId)</li>
+</ul>
+<h3>DATASET — <code>datasets</code></h3>
+<p>Một dataset tối đa cho mỗi project; thông tin file gốc được giữ riêng với thống kê từng phiên bản.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh dataset</td></tr>
+<tr><td><code>projectId</code></td><td>ObjectId</td><td>FK PROJECT UK</td><td>Nguồn quan hệ project–dataset</td></tr>
+<tr><td><code>originalFile</code></td><td>Object</td><td>required</td><td>name, byteSize, sha256, importedAt; storageKey nội bộ trỏ tới blob CSV gốc bất biến</td></tr>
+<tr><td><code>importOptions</code></td><td>Object</td><td>required</td><td>encoding, delimiter, headerPolicy, missingPolicy</td></tr>
+<tr><td><code>currentVersionId</code></td><td>ObjectId</td><td>FK DATASET_VERSION nullable</td><td>Bản published hiện tại; null trong lần nhập đầu chưa hoàn tất</td></tr>
+<tr><td><code>revision</code></td><td>Integer</td><td>required</td><td>Tăng mỗi lần công bố phiên bản; CAS chống ghi đè</td></tr>
+<tr><td><code>lifecycle</code></td><td>Enum</td><td>required</td><td>importing, ready; lỗi import dọn placeholder</td></tr>
+<tr><td><code>createdAt</code></td><td>Date</td><td>required</td><td>Ngày tạo</td></tr>
+<tr><td><code>updatedAt</code></td><td>Date</td><td>required</td><td>Lần công bố gần nhất</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>UNIQUE(projectId)</li>
+<li>INDEX(currentVersionId)</li>
+</ul>
+<h3>DATASET_VERSION — <code>datasetVersions</code></h3>
+<p>Snapshot bất biến sau publish. Row/column counts thuộc phiên bản; không đặt cố định ở Dataset.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh phiên bản</td></tr>
+<tr><td><code>datasetId</code></td><td>ObjectId</td><td>FK DATASET</td><td>Dataset sở hữu</td></tr>
+<tr><td><code>versionNumber</code></td><td>Integer</td><td>null until publish</td><td>Số tăng theo thứ tự publish; chỉ gán khi commit</td></tr>
+<tr><td><code>parentVersionId</code></td><td>ObjectId</td><td>FK DATASET_VERSION nullable</td><td>Phiên bản hiện tại trước thao tác; null ở import đầu</td></tr>
+<tr><td><code>restoredFromVersionId</code></td><td>ObjectId</td><td>FK DATASET_VERSION nullable</td><td>Phiên bản lấy nội dung khi restore; khác parent</td></tr>
+<tr><td><code>state</code></td><td>Enum</td><td>required</td><td>building, staged, published, discarding</td></tr>
+<tr><td><code>rowCount</code></td><td>Integer</td><td>required</td><td>Số dòng logic của snapshot</td></tr>
+<tr><td><code>columnCount</code></td><td>Integer</td><td>required</td><td>Số cột của snapshot</td></tr>
+<tr><td><code>encodedByteSize</code></td><td>Integer</td><td>required</td><td>Tổng byte nội dung mã hóa; không bằng kích thước CSV gốc</td></tr>
+<tr><td><code>contentHash</code></td><td>String</td><td>null until staged</td><td>Băm nội dung và schema đã chuẩn hóa</td></tr>
+<tr><td><code>createdAt</code></td><td>Date</td><td>required</td><td>Ngày bắt đầu chuẩn bị</td></tr>
+<tr><td><code>publishedAt</code></td><td>Date</td><td>null until publish</td><td>Ngày công bố</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>PARTIAL UNIQUE(datasetId, versionNumber) WHERE state=published</li>
+<li>INDEX(datasetId, publishedAt DESC, _id DESC)</li>
+<li>INDEX(state, createdAt) cho dọn staging</li>
+</ul>
+<h3>VERSION_COLUMN — <code>versionColumns</code></h3>
+<p>Schema cột riêng cho từng snapshot. columnId là định danh logic ổn định qua các phiên bản; _id là document khác nhau.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh document schema</td></tr>
+<tr><td><code>versionId</code></td><td>ObjectId</td><td>FK DATASET_VERSION</td><td>Phiên bản chứa schema</td></tr>
+<tr><td><code>columnId</code></td><td>UUID</td><td>required</td><td>ID logic ổn định của cột</td></tr>
+<tr><td><code>name</code></td><td>String</td><td>required</td><td>Tên hiển thị; không dùng làm khóa truy cập ô</td></tr>
+<tr><td><code>position</code></td><td>Integer</td><td>required</td><td>Thứ tự cột trong phiên bản</td></tr>
+<tr><td><code>logicalType</code></td><td>Enum</td><td>required</td><td>number, text, date, datetime, boolean, mixed</td></tr>
+<tr><td><code>format</code></td><td>Object</td><td>optional</td><td>Định dạng ngày, timezone, quy tắc parse/hiển thị</td></tr>
+<tr><td><code>lineage</code></td><td>Object</td><td>optional</td><td>sourceColumnId và category tạo cột one-hot; thông tin nguồn</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>UNIQUE(versionId, columnId)</li>
+<li>UNIQUE(versionId, position)</li>
+</ul>
+<h3>DATA_CHUNK — <code>dataChunks</code></h3>
+<p>Lưu payload nhị phân theo byte, không theo số dòng cố định. Ghép đúng thứ tự để đọc snapshot, không chia sẻ chunks giữa phiên bản ở bản đầu.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh chunk</td></tr>
+<tr><td><code>versionId</code></td><td>ObjectId</td><td>FK DATASET_VERSION</td><td>Snapshot sở hữu</td></tr>
+<tr><td><code>chunkIndex</code></td><td>Integer</td><td>required</td><td>Thứ tự byte chunk bắt đầu từ 0</td></tr>
+<tr><td><code>payload</code></td><td>Binary</td><td>required</td><td>Một đoạn luồng dữ liệu có schema codec rõ ràng</td></tr>
+<tr><td><code>byteLength</code></td><td>Integer</td><td>required</td><td>Số byte payload</td></tr>
+<tr><td><code>sha256</code></td><td>String</td><td>required</td><td>Kiểm tra toàn vẹn</td></tr>
+<tr><td><code>codecVersion</code></td><td>String</td><td>required</td><td>Quy ước giải mã kiểu dữ liệu, missing và rowId</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>UNIQUE(versionId, chunkIndex)</li>
+</ul>
+<h3>PROCESSING_PREVIEW — <code>processingPreviews</code></h3>
+<p>Kết quả tạm phía server, không được phục hồi trong workspace. Candidate là snapshot đã tính xong để Apply đúng nội dung đã xem.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh preview</td></tr>
+<tr><td><code>datasetId</code></td><td>ObjectId</td><td>FK DATASET</td><td>Dataset được xử lý</td></tr>
+<tr><td><code>baseVersionId</code></td><td>ObjectId</td><td>FK DATASET_VERSION</td><td>Bản published dùng để preview</td></tr>
+<tr><td><code>baseRevision</code></td><td>Integer</td><td>required</td><td>Revision của dataset tại lúc tạo</td></tr>
+<tr><td><code>candidateVersionId</code></td><td>ObjectId</td><td>FK DATASET_VERSION UK nullable</td><td>Snapshot staged; null nếu tính lỗi/chưa xong</td></tr>
+<tr><td><code>specification</code></td><td>Object</td><td>required</td><td>method duy nhất, engineVersion do server gán, parameters, scope, statisticsScope=whole-columns</td></tr>
+<tr><td><code>specHash</code></td><td>String</td><td>required</td><td>Băm cấu hình chuẩn hóa; chặn sửa tham số khi Apply</td></tr>
+<tr><td><code>status</code></td><td>Enum</td><td>required</td><td>building, ready, invalid, applied, expired</td></tr>
+<tr><td><code>summary</code></td><td>Object</td><td>required</td><td>Số dòng/ô/cột thay đổi và tổng cảnh báo/lỗi</td></tr>
+<tr><td><code>schemaChanges</code></td><td>Object</td><td>required bounded</td><td>Cột thêm/xóa/đổi kiểu; danh sách quá lớn phân trang theo versionColumns</td></tr>
+<tr><td><code>diagnostics</code></td><td>Object</td><td>required bounded</td><td>Mã lỗi/cảnh báo, tổng số và mẫu hữu hạn</td></tr>
+<tr><td><code>createdAt</code></td><td>Date</td><td>required</td><td>Ngày tạo</td></tr>
+<tr><td><code>expiresAt</code></td><td>Date</td><td>required</td><td>Hạn preview; cleanup điều phối, không TTL xóa đơn lẻ</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>INDEX(datasetId, createdAt DESC)</li>
+<li>PARTIAL UNIQUE(candidateVersionId) WHERE candidateVersionId is ObjectId</li>
+<li>INDEX(status, expiresAt)</li>
+</ul>
+<h3>PREVIEW_CHANGE — <code>previewChanges</code></h3>
+<p>Chỉ mục những dòng bị tác động, một document mỗi dòng; before/after lấy từ base/candidate theo rowId. Không chỉ giữ 5 dòng mẫu.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh thay đổi tạm</td></tr>
+<tr><td><code>previewId</code></td><td>ObjectId</td><td>FK PROCESSING_PREVIEW</td><td>Preview sở hữu</td></tr>
+<tr><td><code>rowId</code></td><td>UUID</td><td>required</td><td>ID dòng logic ở bản trước hoặc sau</td></tr>
+<tr><td><code>ordinal</code></td><td>Integer</td><td>required</td><td>Thứ tự ổn định cho phân trang 5 cặp</td></tr>
+<tr><td><code>changeKind</code></td><td>Enum</td><td>required</td><td>updated, deleted, inserted</td></tr>
+<tr><td><code>beforePosition</code></td><td>Integer</td><td>nullable</td><td>Vị trí dòng ở bản gốc; null nếu thêm mới</td></tr>
+<tr><td><code>afterPosition</code></td><td>Integer</td><td>nullable</td><td>Vị trí ở candidate; null nếu bị xóa</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>UNIQUE(previewId, rowId)</li>
+<li>UNIQUE(previewId, ordinal)</li>
+</ul>
+<h3>PROCESSING_OPERATION — <code>processingOperations</code></h3>
+<p>Sổ lịch sử bền vững chỉ chứa thao tác thành công, gồm import, xử lý và restore. History là API đọc collection này.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh thao tác</td></tr>
+<tr><td><code>datasetId</code></td><td>ObjectId</td><td>FK DATASET</td><td>Dataset sở hữu</td></tr>
+<tr><td><code>actorId</code></td><td>ObjectId</td><td>FK USER</td><td>Người thực hiện</td></tr>
+<tr><td><code>baseVersionId</code></td><td>ObjectId</td><td>FK DATASET_VERSION nullable</td><td>Null chỉ ở import đầu</td></tr>
+<tr><td><code>resultVersionId</code></td><td>ObjectId</td><td>FK DATASET_VERSION UK</td><td>Đúng một phiên bản published được tạo</td></tr>
+<tr><td><code>kind</code></td><td>Enum</td><td>required</td><td>import, process, restore</td></tr>
+<tr><td><code>specification</code></td><td>Object</td><td>required</td><td>Bản sao cấu hình và scope đã thực hiện; restore chứa targetVersionId</td></tr>
+<tr><td><code>summary</code></td><td>Object</td><td>required</td><td>Số thay đổi, thông số thống kê đã dùng; quá lớn thì dùng result/base để truy xuất</td></tr>
+<tr><td><code>idempotencyDigest</code></td><td>String</td><td>UK compound</td><td>Dấu nhận diện thao tác chống retry tạo lại, giữ cùng lịch sử</td></tr>
+<tr><td><code>createdAt</code></td><td>Date</td><td>required</td><td>Thời điểm commit</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>UNIQUE(resultVersionId)</li>
+<li>UNIQUE(datasetId, kind, idempotencyDigest)</li>
+<li>INDEX(datasetId, createdAt DESC, _id DESC)</li>
+</ul>
+<h3>IDEMPOTENCY_RECORD — <code>idempotencyRecords</code></h3>
+<p>Hạ tầng chống tạo trùng cho create-project, import, preview, Apply, restore; không phải lịch sử nghiệp vụ.</p>
+<div class="table-wrap"><table><thead><tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>PK</td><td>Định danh yêu cầu chống trùng</td></tr>
+<tr><td><code>userId</code></td><td>ObjectId</td><td>FK USER</td><td>Người gửi</td></tr>
+<tr><td><code>projectId</code></td><td>ObjectId</td><td>FK PROJECT nullable</td><td>Phạm vi để dọn khi xóa; null trước khi tạo project thành công</td></tr>
+<tr><td><code>actionScope</code></td><td>String</td><td>required</td><td>Ví dụ v1.projects.create hoặc v1.datasets.ID.operations.create</td></tr>
+<tr><td><code>keyDigest</code></td><td>String</td><td>UK compound</td><td>Băm Idempotency-Key</td></tr>
+<tr><td><code>requestHash</code></td><td>String</td><td>required</td><td>Băm body canonical và checksum file nếu upload</td></tr>
+<tr><td><code>status</code></td><td>Enum</td><td>required</td><td>pending, succeeded, failed</td></tr>
+<tr><td><code>response</code></td><td>Object</td><td>nullable bounded</td><td>HTTP status và body nhỏ/ID tài nguyên; không lưu cả dataset/token</td></tr>
+<tr><td><code>leaseUntil</code></td><td>Date</td><td>nullable</td><td>Quyền xử lý tạm, recovery sau process crash</td></tr>
+<tr><td><code>leaseToken</code></td><td>UUID</td><td>nullable</td><td>Đổi mỗi lần claim/takeover; fence ngăn worker cũ commit sau khi mất lease</td></tr>
+<tr><td><code>createdAt</code></td><td>Date</td><td>required</td><td>Ngày nhận</td></tr>
+<tr><td><code>updatedAt</code></td><td>Date</td><td>required</td><td>Lần cập nhật gần nhất</td></tr>
+</tbody></table></div>
+<p>Index đề xuất:</p>
+<ul>
+<li>UNIQUE(userId, actionScope, keyDigest)</li>
+<li>INDEX(projectId)</li>
+<li>INDEX(status, leaseUntil)</li>
+</ul>
+<h2>5. Payload dòng và kiểu dữ liệu</h2>
+<p>Row và Cell là cấu trúc logic <strong>bên trong luồng dataChunks</strong>, không phải collection bổ sung. Dùng codec có phiên bản, phân biệt rõ text/number/date/datetime/boolean/null; thứ tự byte chunk không phải thứ tự dòng sau khi lọc.</p>
+
+<pre><code>{
+  &quot;rowId&quot;: &quot;uuid-stable-across-versions&quot;,
+  &quot;position&quot;: 17,
+  &quot;cells&quot;: {
+    &quot;column-uuid-1&quot;: {&quot;kind&quot;: &quot;text&quot;, &quot;value&quot;: &quot;00123&quot;},
+    &quot;column-uuid-2&quot;: {&quot;kind&quot;: &quot;text&quot;, &quot;value&quot;: &quot;N/A&quot;, &quot;missingKind&quot;: &quot;n_a&quot;},
+    &quot;column-uuid-3&quot;: {&quot;kind&quot;: &quot;number&quot;, &quot;value&quot;: 42},
+    &quot;column-uuid-4&quot;: {&quot;kind&quot;: &quot;null&quot;, &quot;value&quot;: null, &quot;missingKind&quot;: &quot;null&quot;}
+  }
+}</code></pre>
+<ul>
+<li>rawToken (string tùy chọn trong codec) giữ lexeme nguồn khi suy kiểu làm khác dạng serialize; không do client gán. File CSV gốc vẫn được giữ byte-for-byte qua originalFile.storageKey. rowId duy nhất trong một snapshot, giữ nguyên khi sửa ô, sắp xếp, lọc, scaling hoặc restore. Xóa dòng loại nó khỏi bản mới nhưng bản cũ vẫn có. Xóa duplicate giữ dòng đầu theo position ổn định.</li>
+<li>columnId tồn tại qua đổi tên/đổi kiểu; one-hot tạo columnId mới và lineage chỉ ra cột nguồn/category. Mỗi cell phải trỏ tới columnId trong schema của chính version đó.</li>
+<li>Cột mới phải có quy tắc giá trị cho mọi dòng; cột bị xóa không còn cell ở snapshot mới. Restore sao chép nguyên rowId/columnId của phiên bản mục tiêu.</li>
+<li>Null, ô rỗng, N/A, chuỗi toàn khoảng trắng được nhận diện theo missingPolicy có version. Giữ token gốc khi import; chỉ thay đổi nội dung sau một operation thành công.</li>
+<li>Dòng được so sánh duplicate bằng toàn bộ cells theo schema, loại rowId/position ra khỏi phép so sánh; không coi hai dòng là khác chỉ vì có ID khác.</li>
+<li>datatype cột và kiểu cell được kiểm tra nhất quán. Cột mixed lúc nhập có thể chứa nhiều loại; chuyển kiểu thành công phải thỏa kiểu đích cho mọi ô thuộc phạm vi và quy tắc schema đã chốt.</li>
+<li>number phải hữu hạn; date và datetime có codec riêng, không làm mất timezone/quy tắc parse. Không dùng JSON.stringify mặc định để gộp NaN, null, date thành cùng giá trị.</li>
+</ul>
+<p>Phân trang 10 dòng: đọc snapshot theo versionId bất biến, áp dụng filter/sort và dùng rowId làm tie-break. Với kiểu lưu chunk, bản đầu có thể cần giải mã/quét snapshot để lọc/sắp xếp; index chunk không biến thành index theo giá trị ô. Hiệu năng cần đo sau triển khai, đặc biệt với nhiều phiên bản/one-hot mở rộng.</p>
+<h2>6. Quan hệ và ràng buộc nghiệp vụ</h2>
+<ol>
+<li>PROJECT.ownerId là nguồn kiểm tra quyền. Truy cập version, preview, chunk hay history phải truy ngược dataset → project → owner. Không tin ownerId client gửi.</li>
+<li>Project empty chưa có dataset published. Dataset placeholder importing chỉ phục vụ xử lý, không được trả như dữ liệu hoàn tất. Import thành công công bố dataset/version/operation đồng thời. Mỗi project tối đa một Dataset nhờ unique projectId.</li>
+<li>currentVersionId phải là published version của chính dataset; parent/restoredFrom/base/result/candidate đều thuộc cùng dataset. Version gốc có parent=null; published version khác có parent hợp lệ. Cấm chu trình và tự tham chiếu.</li>
+<li>Mỗi published version có đúng một operation tạo nó. Mỗi operation có đúng một resultVersionId. Import có base=null; process và restore có base khác null. result.parentVersionId phải bằng operation.baseVersionId.</li>
+<li>Schema/chunks đã published là bất biến. Chỉ building được ghi nội dung; khi staged phải hoàn chỉnh, đủ chunks/schema, checksum/counts hợp lệ. API đọc thường chỉ cho phép published; preview API được đọc đúng candidate của preview thuộc owner.</li>
+<li>Workspace.boundVersionId có thể cũ sau publish; trước khi trả hoặc ghi lại phải kiểm tra các cột, selection, filters, sort, page. Giữ mọi lựa chọn còn hợp lệ, bỏ tham chiếu đã mất, trục mất đặt null và clamp page (rỗng:page1); trả workspaceAdjusted và adjustments để UI thông báo. GET chỉ chuẩn hóa response; PATCH mới lưu, boundVersionId stale trả409. Không reset toàn bộ workspace. Autosave kiểm tra revision; giá trị cũ trả 409.</li>
+<li>Cấu hình xử lý có method, engineVersion, parameters, scope và statisticsScope. Scope là cell(rowId,columnId), columns(columnIds) hoặc dataset; thống kê mean/IQR/scaling có phạm vi riêng, cố định toàn bộ giá trị hợp lệ của cột ở base version. Một preview chỉ có một method; filter UI không tham gia scope hay statisticsScope. EngineVersion chỉ server gán, client không được tự gửi.</li>
+<li>Trường object/array không được tăng vô hạn. Ordinal mappings, one-hot categories, warnings, filters và schemaChanges cần giới hạn byte rõ trong API. Nếu vượt trần, từ chối bằng lỗi có cấu trúc; không cắt âm thầm. Các trần category/cột và snapshot giữ theo sheet quy ước của API(3). ERD không cam kết xử lý vô hạn một CSV 16.000.000 byte.</li>
+<li>Không lưu password, token nguyên văn hay toàn bộ snapshot trong idempotency.response. Các response chỉ chứa kết quả nhỏ và ID, được kiểm tra quyền khi replay.</li>
+<li>Cấu trúc unique/partial index và FK logic là hợp đồng triển khai, chưa phải index đã được tạo. MongoDB không tự cascade các tham chiếu này.</li>
+</ol>
+<h2>7. Preview và commit nguyên tử</h2>
+<ol>
+<li>Xác thực owner và ghi idempotency record pending bằng khóa unique (userId, actionScope, keyDigest); body canonical được băm. Mỗi claim/takeover có leaseToken mới và leaseUntil; worker phải dùng đúng token còn hạn trong transaction commit. Worker đã mất lease không được công bố kể cả khi tính toán đã xong. Nếu đang xử lý trả trạng thái đang xử lý; cùng key khác payload trả 409.</li>
+<li>Đọc baseVersionId và dataset.revision. Kiểm tra scope/method/params; tạo candidate building. Tính tất cả dữ liệu ở vùng staging; ghi schema, chunks, counts, checksum rồi chuyển staged.</li>
+<li>Tạo previewChanges cho <strong>mọi dòng bị tác động</strong>, thứ tự ordinal ổn định. Preview GET trả 5 dòng logic mỗi trang, mỗi dòng chứa before/after và các ô khác biệt được tính bằng đối chiếu columnId. Dòng xóa có after=null; schemaChanges thể hiện cột mới/xóa dù không có dòng nào.</li>
+<li>Preview ready chứa candidate, specHash, summary, diagnostics, expiresAt. Có lỗi invalid thì Apply bị chặn, dữ liệu hiện tại không đổi. Preview không phải một mục history và không được lưu trong workspace để mở lại.</li>
+<li>Apply nhận previewId và Idempotency-Key, không nhận lại bộ tham số có thể khác preview. Kiểm tra key đã thành công <strong>trước</strong> kiểm tra currentVersion để retry hợp lệ trả lại kết quả cũ.</li>
+<li>Giành quyền Apply bằng cập nhật có điều kiện, kiểm tra chưa hết hạn và chưa applied. Trong một transaction ngắn: kiểm tra User active và Project ready bằng write fence chung với delete; CAS dataset.revision/currentVersion; gán versionNumber mới; publish candidate; đổi currentVersion; ghi operation; đổi preview sang applied; hoàn tất idempotency.response. History không giữ FK bắt buộc tới preview sẽ bị xóa.</li>
+<li>Hai tab Apply cùng base: chỉ một CAS thành công, request còn lại trả 409 và cần preview mới. Hai request cùng key: trả cùng result, không tạo hai version. Nếu transaction rollback thì không có version mới công khai hoặc history thành công.</li>
+<li>Worker cleanup giành preview bằng trạng thái điều kiện trước khi dọn. Cleanup và Apply phải cạnh tranh trên cùng preview/version state; không xóa candidate khi đang publish. Chỉ xóa candidate chưa published; sau Apply chỉ dọn preview/changes. Kiểm tra expiresAt ở service vì cleanup có thể chạy muộn.</li>
+</ol>
+<p>Transaction đa document cần MongoDB replica set hoặc môi trường phù hợp có hỗ trợ transaction; có thể dùng replica set một node cho phát triển. Không đưa toàn bộ tính toán/file upload vào transaction; staging chuẩn bị trước rồi công bố bằng metadata transaction. <a href="https://www.mongodb.com/docs/manual/core/transactions/">MongoDB Transactions</a>.</p>
+<p>Idempotency bản đầu: giữ bản ghi tạo project/import/process/restore khi tài nguyên còn tồn tại; không TTL tự xóa làm mất khả năng retry. Request tạo preview chỉ được replay trong vòng đời preview; khi preview hết hạn trả lỗi expired, không tự tạo lại với key cũ. Recovery đọc idempotency.response trước rồi mới kiểm tra operation nếu action tạo version; create-project/preview không có operation riêng. Pending được takeover bằng CAS đổi leaseToken, mọi đường commit đều xác nhận leaseToken hiện tại và leaseUntil còn hạn. Xóa thật project/user sẽ dọn các bản ghi liên quan; sau đó không bảo đảm replay request cũ đã bị xóa.</p>
+<h2>8. Khôi phục và xóa thật</h2>
+<p>Ví dụ đang ở v4, người dùng phục hồi v2: tạo v5 có parentVersionId=v4, restoredFromVersionId=v2; copy schema/chunks của v2 sang v5. Operation(kind=restore) lưu base=v4, result=v5, specification.targetVersionId=v2. currentVersionId=v5. v1 đến v4 và lịch sử cũ giữ nguyên. Tạo v5 dùng luồng staging + CAS + idempotency như Apply; không trỏ current về v2 rồi sửa v2.</p>
+<p>Xóa project: đánh dấu deleting để khóa đọc/ghi mới; công việc xóa có thể tiếp tục sau crash. Dọn idempotency của project, previews và changes, operation/history, mọi version/schema/chunks, dataset, workspace rồi project. Không còn record nghiệp vụ sau khi hoàn tất. Xóa user thu hồi sessions, khóa user deleting, dọn tất cả project và idempotency còn lại rồi xóa user. Không có deletedAt để giữ dữ liệu vô thời hạn.</p>
+<p>Để tránh request đang chạy tái tạo dữ liệu sau delete, create-project/import/Apply và delete phải kiểm tra lifecycle rồi tăng User.writeEpoch và Project.writeEpoch trong transaction tương ứng (create-project chưa có project thì chỉ user fence). Mỗi batch ghi staging cũng phải dùng fence hoặc được dừng và chờ hoàn tất trước purge; bản thiết kế này chọn fence ở mọi batch ghi. Như vậy không có worker ghi lại chunks sau khi project đã bị dọn. Chỉ đọc lifecycle ở đầu request hoặc cập nhật lại cùng một giá trị là chưa đủ. API DELETE đồng bộ, chỉ trả204 khi xóa thật hoàn tất. Bản API này không dùng202; lỗi cần cleanup/recovery và không báo xóa thành công. Snapshot không chia sẻ chunks giúp dọn cascade đơn giản.</p>
+<h2>9. Quyết định đã chốt và các quy tắc nghiệp vụ còn mở</h2>
+<ul>
+<li>D23 đã duyệt: ma trận giữ mọi feature; Pearson cho cặp cột number đủ dữ liệu, cặp khác null/N/A kèm lý do. V1 không bổ sung association category/text; không impute0 hoặc xóa dòng.</li>
+<li>Giới hạn chính thức của CSV gốc là16.000.000 byte (9B), không phải trần mọi snapshot sau one-hot; chunk payload tối đa4 MiB. Các trần khác giữ theo API(3).</li>
+<li>Chốt trim/gộp/xóa toàn bộ whitespace; cú pháp ngày/timezone/boolean; chính sách nhiều mode; số chữ số và ngưỡng IQR/Z-score; cách so sánh missing trong duplicate. Những lựa chọn này được lưu trong specification.parameters và engineVersion, không cần sửa quan hệ ERD.</li>
+<li>Refresh đã chốt3A/4A: cookie token opaque → hash → lookup unique refreshTokenHash. CAS trên hash/counter và hạn/revocation; một request thành công. Token cũ không còn hash hiện hành hoặc CAS thất bại trả401 AUTH_REFRESH_INVALID; không cam kết409 và không giữ token history. Frontend single-flight. Response401 không tự xóa/ghi cookie để tránh đè cookie của request thắng. Rate limiter thuộc provider/middleware với store tạm.</li>
+<li>API đọc dữ liệu dùng sessionId để kiểm tra phiên chưa bị revoke nếu yêu cầu logout có hiệu lực ngay với access token. Access token15 phút, phiên7 ngày tuyệt đối và cookie HttpOnly/Secure/SameSite=Lax, Path=/api/v1/auth giữ theo API(3); Origin allowlist ở auth mutation. Đây là hợp đồng phải kiểm tra khi triển khai.</li>
+</ul>
+<h2>10. Nguồn đối chiếu</h2>
+<ul>
+<li>Nguồn: ý tưởng.docx (17 mục); API_design (3).xlsx (27 API); quyết định 1A–8A và9B. Thay đổi mới nhất trong cuộc trò chuyện được ưu tiên khi nguồn cũ khác nhau.</li>
+<li>Yêu cầu giảng viên trong cuộc trò chuyện: NestJS Modular Monolith, main.ts, AppModule, controller/service; React/Vite assets/public/config; 8 nguyên tắc API.</li>
+<li><a href="https://docs.nestjs.com/modules">NestJS Modules</a>: module lắp ráp controller/provider và import/export dependency.</li>
+<li><a href="https://docs.nestjs.com/controllers">NestJS Controllers</a>: route và xử lý HTTP trong controller.</li>
+<li><a href="https://www.mongodb.com/docs/manual/reference/limits/">MongoDB Limits</a>: giới hạn BSON document 16 MiB.</li>
+<li><a href="https://www.mongodb.com/docs/manual/core/transactions/">MongoDB Transactions</a>: cập nhật nguyên tử nhiều document trên cấu hình hỗ trợ.</li>
+</ul>
+<h2>11. Quan hệ đầy đủ ở mức logic</h2>
+<p>Mỗi dòng đọc: một đối tượng ở cột trái có số đối tượng bên phải như cột cardinality phải; và ngược lại. Các ngoại lệ lifecycle được quy định ở mục 6.</p>
+<div class="table-wrap"><table><thead><tr><th>Trái</th><th>Số bên trái cho một bên phải</th><th>Phải</th><th>Số bên phải cho một bên trái</th><th>Vai trò</th></tr></thead><tbody>
+<tr><td>USER</td><td>1</td><td>AUTH_SESSION</td><td>0..N</td><td>has_sessions</td></tr>
+<tr><td>USER</td><td>1</td><td>PROJECT</td><td>0..N</td><td>owns</td></tr>
+<tr><td>USER</td><td>1</td><td>IDEMPOTENCY_RECORD</td><td>0..N</td><td>submits</td></tr>
+<tr><td>USER</td><td>1</td><td>PROCESSING_OPERATION</td><td>0..N</td><td>performs</td></tr>
+<tr><td>PROJECT</td><td>1</td><td>WORKSPACE</td><td>1</td><td>remembers</td></tr>
+<tr><td>PROJECT</td><td>1</td><td>DATASET</td><td>0..1</td><td>contains_after_import</td></tr>
+<tr><td>PROJECT</td><td>0..1</td><td>IDEMPOTENCY_RECORD</td><td>0..N</td><td>request_scope</td></tr>
+<tr><td>DATASET</td><td>1</td><td>DATASET_VERSION</td><td>0..N</td><td>owns_snapshots</td></tr>
+<tr><td>DATASET_VERSION</td><td>0..1</td><td>DATASET</td><td>0..1</td><td>is_current</td></tr>
+<tr><td>DATASET_VERSION</td><td>0..1</td><td>DATASET_VERSION</td><td>0..N</td><td>parent_of</td></tr>
+<tr><td>DATASET_VERSION</td><td>0..1</td><td>DATASET_VERSION</td><td>0..N</td><td>restoration_source</td></tr>
+<tr><td>DATASET_VERSION</td><td>1</td><td>VERSION_COLUMN</td><td>0..N</td><td>defines_schema</td></tr>
+<tr><td>DATASET_VERSION</td><td>1</td><td>DATA_CHUNK</td><td>0..N</td><td>contains_bytes</td></tr>
+<tr><td>DATASET_VERSION</td><td>0..1</td><td>WORKSPACE</td><td>0..1</td><td>binds_selections</td></tr>
+<tr><td>DATASET</td><td>1</td><td>PROCESSING_PREVIEW</td><td>0..N</td><td>has_temporary_previews</td></tr>
+<tr><td>DATASET_VERSION</td><td>1</td><td>PROCESSING_PREVIEW</td><td>0..N</td><td>preview_base</td></tr>
+<tr><td>DATASET_VERSION</td><td>0..1</td><td>PROCESSING_PREVIEW</td><td>0..1</td><td>preview_candidate</td></tr>
+<tr><td>PROCESSING_PREVIEW</td><td>1</td><td>PREVIEW_CHANGE</td><td>0..N</td><td>indexes_changed_rows</td></tr>
+<tr><td>DATASET</td><td>1</td><td>PROCESSING_OPERATION</td><td>0..N</td><td>has_history</td></tr>
+<tr><td>DATASET_VERSION</td><td>0..1</td><td>PROCESSING_OPERATION</td><td>0..N</td><td>operation_base</td></tr>
+<tr><td>DATASET_VERSION</td><td>1</td><td>PROCESSING_OPERATION</td><td>0..1</td><td>operation_result</td></tr>
+</tbody></table></div>
+<h2>12. ERD đầy đủ bằng Mermaid</h2>
+<details><summary>Mã nguồn Mermaid đầy đủ</summary>
+<pre><code>erDiagram
+    USER ||--o{ AUTH_SESSION : has_sessions
+    USER ||--o{ PROJECT : owns
+    USER ||--o{ IDEMPOTENCY_RECORD : submits
+    USER ||--o{ PROCESSING_OPERATION : performs
+    PROJECT ||--|| WORKSPACE : remembers
+    PROJECT ||--o| DATASET : contains_after_import
+    PROJECT o|--o{ IDEMPOTENCY_RECORD : request_scope
+    DATASET ||--o{ DATASET_VERSION : owns_snapshots
+    DATASET_VERSION o|--o| DATASET : is_current
+    DATASET_VERSION o|--o{ DATASET_VERSION : parent_of
+    DATASET_VERSION o|--o{ DATASET_VERSION : restoration_source
+    DATASET_VERSION ||--o{ VERSION_COLUMN : defines_schema
+    DATASET_VERSION ||--o{ DATA_CHUNK : contains_bytes
+    DATASET_VERSION o|--o| WORKSPACE : binds_selections
+    DATASET ||--o{ PROCESSING_PREVIEW : has_temporary_previews
+    DATASET_VERSION ||--o{ PROCESSING_PREVIEW : preview_base
+    DATASET_VERSION o|--o| PROCESSING_PREVIEW : preview_candidate
+    PROCESSING_PREVIEW ||--o{ PREVIEW_CHANGE : indexes_changed_rows
+    DATASET ||--o{ PROCESSING_OPERATION : has_history
+    DATASET_VERSION o|--o{ PROCESSING_OPERATION : operation_base
+    DATASET_VERSION ||--o| PROCESSING_OPERATION : operation_result
+    USER {
+        ObjectId _id PK
+        String email
+        String emailNormalized UK
+        String passwordHash
+        String displayName
+        Object preferences
+        Enum lifecycle
+        Integer writeEpoch
+        Date createdAt
+        Date updatedAt
+    }
+    AUTH_SESSION {
+        ObjectId _id PK
+        ObjectId userId FK
+        String refreshTokenHash UK
+        Integer rotationCounter
+        Date expiresAt
+        Date revokedAt
+        Date createdAt
+        Date lastUsedAt
+    }
+    PROJECT {
+        ObjectId _id PK
+        ObjectId ownerId FK
+        String name
+        Enum lifecycle
+        Integer writeEpoch
+        Date createdAt
+        Date updatedAt
+    }
+    WORKSPACE {
+        ObjectId _id PK
+        ObjectId projectId FK
+        ObjectId boundVersionId FK
+        Integer revision
+        Enum activeTab
+        Object chartConfig
+        Object selection
+        Object tableState
+        Date updatedAt
+    }
+    DATASET {
+        ObjectId _id PK
+        ObjectId projectId FK
+        Object originalFile
+        Object importOptions
+        ObjectId currentVersionId FK
+        Integer revision
+        Enum lifecycle
+        Date createdAt
+        Date updatedAt
+    }
+    DATASET_VERSION {
+        ObjectId _id PK
+        ObjectId datasetId FK
+        Integer versionNumber
+        ObjectId parentVersionId FK
+        ObjectId restoredFromVersionId FK
+        Enum state
+        Integer rowCount
+        Integer columnCount
+        Integer encodedByteSize
+        String contentHash
+        Date createdAt
+        Date publishedAt
+    }
+    VERSION_COLUMN {
+        ObjectId _id PK
+        ObjectId versionId FK
+        UUID columnId
+        String name
+        Integer position
+        Enum logicalType
+        Object format
+        Object lineage
+    }
+    DATA_CHUNK {
+        ObjectId _id PK
+        ObjectId versionId FK
+        Integer chunkIndex
+        Binary payload
+        Integer byteLength
+        String sha256
+        String codecVersion
+    }
+    PROCESSING_PREVIEW {
+        ObjectId _id PK
+        ObjectId datasetId FK
+        ObjectId baseVersionId FK
+        Integer baseRevision
+        ObjectId candidateVersionId FK
+        Object specification
+        String specHash
+        Enum status
+        Object summary
+        Object schemaChanges
+        Object diagnostics
+        Date createdAt
+        Date expiresAt
+    }
+    PREVIEW_CHANGE {
+        ObjectId _id PK
+        ObjectId previewId FK
+        UUID rowId
+        Integer ordinal
+        Enum changeKind
+        Integer beforePosition
+        Integer afterPosition
+    }
+    PROCESSING_OPERATION {
+        ObjectId _id PK
+        ObjectId datasetId FK
+        ObjectId actorId FK
+        ObjectId baseVersionId FK
+        ObjectId resultVersionId FK
+        Enum kind
+        Object specification
+        Object summary
+        String idempotencyDigest UK
+        Date createdAt
+    }
+    IDEMPOTENCY_RECORD {
+        ObjectId _id PK
+        ObjectId userId FK
+        ObjectId projectId FK
+        String actionScope
+        String keyDigest UK
+        String requestHash
+        Enum status
+        Object response
+        Date leaseUntil
+        UUID leaseToken
+        Date createdAt
+        Date updatedAt
+    }</code></pre>
+</details><hr><h1>Các quyết định đã chốt và đồng bộ</h1>
+<p>Bản cập nhật14/11/2026 sử dụng27 API trong API_design (3).xlsx. Các quyết định dưới đây thay thế mô tả cũ còn mơ hồ; các chi tiết thuật toán và DTO được bổ sung bởi phần D01–D26 đã duyệt ở cuối tài liệu.</p>
+<div class="table-wrap"><table><thead><tr><th>Lựa chọn</th><th>Nội dung chính thức</th><th>Nơi lưu hoặc thực hiện</th></tr></thead><tbody>
+<tr><td>1A Workspace</td><td>chartConfig, selection.columnIds, selection.cell và tableState theo DTO ở trên.</td><td>WORKSPACE object schema</td></tr>
+<tr><td>2A Workspace stale</td><td>Giữ refs hợp lệ, bỏ refs mất, điều chỉnh trang và thông báo; không reset toàn bộ.</td><td>GET project / PATCH workspace</td></tr>
+<tr><td>3A Refresh lookup</td><td>Hash refresh cookie và lookup unique refreshTokenHash.</td><td>AUTH_SESSION + unique index</td></tr>
+<tr><td>4A Refresh rotation</td><td>Một request thành công; hash cũ/CAS thất bại401; frontend single-flight.</td><td>Không token history / không REFRESH_CONFLICT409</td></tr>
+<tr><td>5A Một method</td><td>Một preview, một phương pháp; Apply xong mới chạy bước tiếp theo.</td><td>PROCESSING_PREVIEW.specification</td></tr>
+<tr><td>6A Filter độc lập</td><td>Filter bảng không quyết định dòng bị xử lý; không nhận filtered scope trong v1.</td><td>WORKSPACE.tableState.filters là UI/query</td></tr>
+<tr><td>7A Thống kê toàn cột</td><td>Toàn bộ giá trị hợp lệ của cột tại baseVersion, dù chỉ sửa một ô.</td><td>statisticsScope.type=whole-columns</td></tr>
+<tr><td>8A Specification</td><td>method, parameters, scope, statisticsScope, engineVersion; server gán engineVersion.</td><td>Preview, specHash, Operation dùng cùng cấu trúc</td></tr>
+<tr><td>9B CSV</td><td>Tối đa16.000.000 byte; vẫn chia chunks theo byte.</td><td>POST import / validator / Dataset.originalFile.byteSize</td></tr>
+</tbody></table></div>
+<h2>Object Workspace và specification chính thức</h2>
+
+<pre><code>{
+  &quot;chartConfig&quot;: {&quot;xColumnId&quot;:null,&quot;yColumnId&quot;:null,&quot;zColumnId&quot;:null,&quot;colorMode&quot;:&quot;normal&quot;,&quot;outlierColumnIds&quot;:[],&quot;outlierMethod&quot;:&quot;iqr&quot;,&quot;threshold&quot;:1.5},
+  &quot;selection&quot;: {&quot;columnIds&quot;:[],&quot;cell&quot;:null},
+  &quot;tableState&quot;: {&quot;filters&quot;:[],&quot;sort&quot;:null,&quot;page&quot;:1,&quot;pageSize&quot;:10}
+}</code></pre>
+
+<pre><code>{
+  &quot;method&quot;:&quot;fill_mean&quot;,
+  &quot;parameters&quot;:{},
+  &quot;scope&quot;:{&quot;type&quot;:&quot;columns&quot;,&quot;columnIds&quot;:[&quot;column-uuid&quot;]},
+  &quot;statisticsScope&quot;:{&quot;type&quot;:&quot;whole-columns&quot;},
+  &quot;engineVersion&quot;:&quot;server-assigned&quot;
+}</code></pre>
+<p>Client gửi specification không có engineVersion. Server chọn engineVersion trước tính toán và băm specHash; lưu đủ năm trường trong Preview.specification và Operation.specification. Apply chỉ nhận previewId. Không hỗ trợ pipeline hay filtered scope trong bản này. Những phương pháp không cần thống kê vẫn giữ statisticsScope cấu trúc cố định, không tự tính thống kê không cần thiết.</p>
+<h2>Đối chiếu27 API với ERD</h2>
+<div class="table-wrap"><table><thead><tr><th>Dòng API</th><th>Method và tài nguyên</th><th>Dữ liệu đọc/ghi</th><th>Kết luận</th></tr></thead><tbody>
+<tr><td>2</td><td>POST <code>/api/v1/auth/register</code></td><td>User: emailNormalized unique, passwordHash, preferences</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>3</td><td>POST <code>/api/v1/auth/login</code></td><td>User + AuthSession: token hash, counter, expiry</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>4</td><td>POST <code>/api/v1/auth/refresh</code></td><td>AuthSession: lookup unique refreshTokenHash, CAS rotation</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>5</td><td>POST <code>/api/v1/auth/logout</code></td><td>AuthSession.revokedAt; xóa cookie HTTP</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>6</td><td>GET <code>/api/v1/users/me</code></td><td>User: hồ sơ/preferences</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>7</td><td>PATCH <code>/api/v1/users/me</code></td><td>User: displayName/preferences/update fence</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>8</td><td>DELETE <code>/api/v1/users/me</code></td><td>User + sessions + toàn bộ project và phụ thuộc</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>9</td><td>POST <code>/api/v1/projects</code></td><td>Project + Workspace + IdempotencyRecord</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>10</td><td>GET <code>/api/v1/projects</code></td><td>Project theo ownerId/update index</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>11</td><td>GET <code>/api/v1/projects/:projectId</code></td><td>Project + Workspace + Dataset + current version/schema</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>12</td><td>PATCH <code>/api/v1/projects/:projectId</code></td><td>Project.name/updatedAt/fence</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>13</td><td>PATCH <code>/api/v1/projects/:projectId/workspace</code></td><td>Workspace: object schema đã chốt, boundVersionId/revision</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>14</td><td>DELETE <code>/api/v1/projects/:projectId</code></td><td>Project + mọi dataset/version/preview/history/receipt phụ thuộc</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>15</td><td>POST <code>/api/v1/projects/:projectId/datasets</code></td><td>Dataset + Version + Column + Chunk + Operation + receipt</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>16</td><td>GET <code>/api/v1/datasets/:datasetId/versions/:versionId</code></td><td>DatasetVersion + VersionColumn</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>17</td><td>GET <code>/api/v1/datasets/:datasetId/versions/:versionId/rows</code></td><td>DataChunk payload + schema; row paging là truy vấn</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>18</td><td>GET <code>/api/v1/datasets/:datasetId/versions/:versionId/rows/:rowId</code></td><td>rowId trong DataChunk payload; có thể cần quét snapshot</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>19</td><td>GET <code>/api/v1/datasets/:datasetId/versions/:versionId/analysis/summary</code></td><td>Metadata + schema + snapshot; thống kê suy ra</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>20</td><td>GET <code>/api/v1/datasets/:datasetId/versions/:versionId/analysis/columns/:columnId/distribution</code></td><td>VersionColumn + snapshot; histogram/outlier suy ra</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>21</td><td>GET <code>/api/v1/datasets/:datasetId/versions/:versionId/analysis/correlation</code></td><td>Schema + snapshot; matrix/validPairCounts suy ra</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>22</td><td>GET <code>/api/v1/datasets/:datasetId/versions/:versionId/analysis/points-3d</code></td><td>Snapshot rowId/cells; tọa độ/missing/outlier/sampling suy ra</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>23</td><td>GET <code>/api/v1/datasets/:datasetId/versions/:versionId/analysis/columns/:columnId/value-counts</code></td><td>Schema + snapshot; value counts/phân trang suy ra</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>24</td><td>POST <code>/api/v1/datasets/:datasetId/previews</code></td><td>ProcessingPreview + candidate version/columns/chunks + PreviewChange + receipt</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>25</td><td>GET <code>/api/v1/datasets/:datasetId/previews/:previewId</code></td><td>Preview + Change + base/candidate, diff suy ra</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>26</td><td>POST <code>/api/v1/datasets/:datasetId/operations</code></td><td>Dataset CAS + publish Version + Operation + Preview + receipt</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>27</td><td>GET <code>/api/v1/datasets/:datasetId/operations</code></td><td>ProcessingOperation theo dataset/time index</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+<tr><td>28</td><td>POST <code>/api/v1/datasets/:datasetId/versions/:versionId/restore</code></td><td>Đọc target version; tạo snapshot mới + Operation + Dataset CAS + receipt</td><td>Đủ nguồn dữ liệu; cần thực thi validation/quyền/transaction</td></tr>
+</tbody></table></div>
+<p>Không thêm collection cho dữ liệu suy ra. Mô hình giữ12 collection,21 quan hệ; thay đổi chính là object schema và unique index refresh token. Không coi bảng đối chiếu là bằng chứng API đã chạy.</p>
+<h1>Đối chiếu ERD với yêu cầu hệ thống</h1>
+<p>Tài liệu này đối chiếu mô hình dữ liệu đề xuất với đủ 17 mục trong tài liệu ý tưởng của người dùng và các yêu cầu giảng viên đã được cung cấp trong cuộc trò chuyện. Kết quả là <strong>đánh giá thiết kế</strong>, chưa phải xác nhận mã nguồn mới đã triển khai hoặc chạy đúng. Không có kiểm thử ứng dụng được thực hiện trong bước đối chiếu này.</p>
+<p>Mô hình được đối chiếu gồm 12 collection: <code>users</code>, <code>authSessions</code>, <code>projects</code>, <code>workspaces</code>, <code>datasets</code>, <code>datasetVersions</code>, <code>versionColumns</code>, <code>dataChunks</code>, <code>processingPreviews</code>, <code>previewChanges</code>, <code>processingOperations</code> và <code>idempotencyRecords</code>. Các trường được nhắc dưới đây thể hiện vai trò dữ liệu; kiểu dữ liệu, tên trường chính thức và index cần thống nhất với từ điển dữ liệu kèm ERD.</p>
+<h2>1. Đối chiếu đủ 17 mục trong ý tưởng</h2>
+<div class="table-wrap"><table><thead><tr><th>Mục nguồn</th><th>Yêu cầu cần được hỗ trợ</th><th>Thành phần trong thiết kế</th><th>Kết quả đối chiếu và điều kiện thực hiện</th></tr></thead><tbody>
+<tr><td>1. Mục tiêu và kiến trúc</td><td>NestJS Modular Monolith; controller, service, repository; React, Vite, TypeScript; MongoDB; API v1</td><td>ERD phân chia dữ liệu theo các miền tài khoản, dự án, dữ liệu và xử lý</td><td><strong>Phù hợp ở mức phân chia nghiệp vụ.</strong> Cần kiểm tra riêng <code>main.ts</code>, <code>AppModule</code>, controller/provider, cấu hình frontend và các route. ERD không chứng minh các file này đã tồn tại hoặc hoạt động.</td></tr>
+<tr><td>2. Auth</td><td>Đăng ký email + mật khẩu; email duy nhất; băm mật khẩu; access/refresh token; giới hạn đăng nhập thất bại; đăng xuất thu hồi phiên</td><td><code>users</code>, <code>authSessions</code></td><td><strong>Có dữ liệu nền tảng.</strong> <code>displayName</code> không bắt buộc khi đăng ký. Email được chuẩn hóa theo quy tắc công bố và có index unique. Chỉ lưu password hash và refresh-token hash. Access token không cần collection riêng. Hạn token, kiểm tra phiên, refresh và rate limiting là hành vi của Auth service/guard cần triển khai.</td></tr>
+<tr><td>3. User</td><td>Hồ sơ, cập nhật tên hiển thị, preferences/theme, danh sách project, xóa tài khoản, chỉ truy cập dữ liệu sở hữu</td><td><code>users.preferences</code>, <code>projects.ownerId</code>, các quan hệ sở hữu xuống dataset</td><td><strong>Bao phủ thiết kế.</strong> Xóa tài khoản phải xóa cả phiên đăng nhập, project, workspace, dữ liệu bền vững và dữ liệu tạm liên quan. Mọi API phải đi theo chuỗi sở hữu để kiểm tra quyền. MongoDB không tự kiểm tra các tham chiếu này.</td></tr>
+<tr><td>4. Project</td><td>Tạo/mở/liệt kê/xóa; một dataset; nhớ tab, axes, cột chọn, filter, trang bảng; không khôi phục preview</td><td><code>projects</code>, <code>datasets</code>, <code>workspaces</code></td><td><strong>Bao phủ với giả định vòng đời rõ ràng:</strong> project có 0 dataset khi chưa import, có đúng 1 dataset sau import thành công. <code>datasets.projectId</code> unique bảo đảm tối đa một dataset. Workspace gắn phiên bản mà các tham chiếu cột dựa vào; autosave dùng revision để phát hiện ghi đè. Không lưu previewId làm trạng thái cần khôi phục.</td></tr>
+<tr><td>5. Dataset</td><td>CSV tối đa 16.000.000 byte; kiểm tra CSV; giữ dữ liệu gốc; ID dòng/cột ổn định; dữ liệu chia nhỏ; không tự xóa dòng missing</td><td><code>datasets</code>, <code>datasetVersions</code>, <code>versionColumns</code>, <code>dataChunks</code></td><td><strong>Bao phủ thiết kế.</strong> Phiên bản import đầu tiên được giữ bất biến. Metadata file gốc thuộc dataset; số dòng, số cột và kiểu cột thuộc phiên bản. Mỗi payload là một đoạn của luồng byte, giới hạn theo byte BSON thực tế; ghép theo chunkIndex rồi giải mã theo codecVersion để lấy dòng logic. Giới hạn file nhập không đồng nghĩa mọi phiên bản kết quả cũng nhỏ hơn 16.000.000 byte.</td></tr>
+<tr><td>6. Collection</td><td>Dung lượng gốc, số dòng/cột/missing/duplicate/outlier; phân phối; biểu đồ missing/outlier; correlation; bảng 10 dòng; value counts; datatype</td><td>Giá trị từ <code>dataChunks</code>, schema từ <code>versionColumns</code>, metadata của <code>datasetVersions</code>, Analysis service</td><td><strong>Bao phủ nguồn dữ liệu cần tính.</strong> Không cần collection riêng cho từng biểu đồ. Phân trang dòng dùng phiên bản cố định và thứ tự ổn định; giải mã luồng byte thành dòng logic trước khi đếm/lọc/sắp xếp. Thống kê outlier gắn cột/phương pháp/tham số. D23 đã chốt V1: cột không phải số trả null/N/A kèm lý do, không thêm association category/text.</td></tr>
+<tr><td>7. Cleaning</td><td>Sửa ô, duplicate, HTML, whitespace, chuyển kiểu, đổi hoa/thường, replace; 3D; preview</td><td><code>processingPreviews</code>, <code>previewChanges</code>, candidate version/schema/chunks; <code>processingOperations</code> sau thành công</td><td><strong>Bao phủ thiết kế chung.</strong> Mỗi loại thao tác phải có validator và tập tham số riêng; không chỉ nhận một object tùy ý. Danh mục chi tiết nằm ở phần 2.</td></tr>
+<tr><td>8. Missing values</td><td>Sửa ô; mean, median, mode, max, giá trị nhập; xóa hàng/cột; biểu đồ; preview</td><td>Cơ chế processing chung; <code>scope</code> và phạm vi tính thống kê; Analysis service</td><td><strong>Bao phủ thiết kế.</strong> Tính thống kê từ giá trị hợp lệ của cột nguồn. Khi không có giá trị hợp lệ, preview báo lỗi và Apply không công bố một phần. Các bản ghi sau chuyển đổi không mất liên kết rowId/columnId.</td></tr>
+<tr><td>9. Outliers</td><td>IQR mặc định, Z-score, chọn cột số, sửa ô, kéo về ngưỡng, biểu đồ, preview</td><td>Tham số preview/operation, scope cột, candidate version</td><td><strong>Bao phủ thiết kế.</strong> Lưu phương pháp, tham số và các thống kê/ngưỡng đã dùng để kết quả có thể giải thích. Các giá trị thống kê được tính từ phiên bản nguồn đã cố định.</td></tr>
+<tr><td>10. Scaling</td><td>Min-Max, Standardization; sửa ô; biểu đồ 3D; preview; cảnh báo cột không đủ điều kiện</td><td>Cơ chế processing và version/schema</td><td><strong>Bao phủ thiết kế.</strong> Phân biệt phạm vi giá trị bị sửa với phạm vi tính min/max/mean/std. Chính sách cột hằng và giá trị thiếu phải được validator kiểm tra.</td></tr>
+<tr><td>11. Transformation</td><td>Log1p, Square; sửa ô; biểu đồ 3D; preview; kiểm tra giá trị không hợp lệ</td><td>Cơ chế processing và version/schema</td><td><strong>Bao phủ thiết kế.</strong> Kiểm tra miền đầu vào, số không hữu hạn và kết quả vượt phạm vi biểu diễn. Lỗi khiến toàn thao tác không được áp dụng.</td></tr>
+<tr><td>12. Encoding</td><td>One-hot, ordinal; bảng value counts; mapping do người dùng nhập; preview cột mới/đổi</td><td>Tham số operation, <code>versionColumns</code>, candidate data, schemaChanges trong preview</td><td><strong>Bao phủ thiết kế.</strong> ColumnId cũ giữ ổn định nếu cột được giữ lại; cột phát sinh nhận ID mới. Mapping và chính sách missing/category chưa gán phải được lưu cùng cấu hình. Object hoặc mapping lớn cũng cần giới hạn kích thước.</td></tr>
+<tr><td>13. Preview và Apply</td><td>Preview 5 dòng bị tác động/trang, trước/sau, highlight, tổng thay đổi, lỗi/cảnh báo; Apply đúng preview; phát hiện stale; all-or-nothing; retry không trùng</td><td><code>processingPreviews</code>, <code>previewChanges</code>, staged candidate version, <code>idempotencyRecords</code>, <code>processingOperations</code></td><td><strong>Bao phủ thiết kế workflow.</strong> Apply công bố candidate đã xem; không tự tính lại theo dữ liệu mới. Chuyển current version, publish candidate, ghi operation và hoàn tất idempotency phải nguyên tử. Chi tiết ràng buộc ở phần 3.</td></tr>
+<tr><td>14. History</td><td>Tham số, scope, thời gian, bản trước/sau, summary; phân trang; xem và restore; giữ lịch sử sau bản cũ</td><td><code>processingOperations</code> là sổ lịch sử thành công; <code>datasetVersions</code> và <code>restoredFromVersionId</code></td><td><strong>Bao phủ thiết kế.</strong> Một thao tác thành công tạo đúng một resultVersion; source chỉ rỗng cho import. Restore tạo bản mới và không sửa các bản đã publish. Failed preview không xuất hiện như một thao tác thành công.</td></tr>
+<tr><td>15. Không gian 3D</td><td>Trục số X/Y/Z; click điểm để xem/sửa ô; màu missing/outlier; ẩn điểm thiếu tọa độ và đếm; công bố sampling</td><td>Workspace axes/selection, rowId trong dữ liệu, Analysis service</td><td><strong>Bao phủ dữ liệu và liên kết tương tác.</strong> Tọa độ/màu được tính theo phiên bản và cấu hình. Không cần lưu mỗi điểm 3D thành entity riêng. Số điểm ẩn phải phân biệt với số điểm bỏ qua do sampling.</td></tr>
+<tr><td>16. Phạm vi xử lý</td><td>Ô, cột, dataset theo khả năng phương pháp; statistics scope độc lập</td><td>Cấu hình bất biến trong preview và operation</td><td><strong>Bao phủ thiết kế.</strong> Cell scope chứa rowId + columnId; column scope chứa danh sách columnId; dataset scope không cần sao chép mọi rowId. Filter UI không tham gia scope; chỉ whole-columns cho statisticsScope, một method mỗi preview. Backend xác nhận ID và loại scope hợp lệ.</td></tr>
+<tr><td>17. Thiết kế API</td><td>8 nguyên tắc và quyền sở hữu trên mọi tài nguyên</td><td>Ràng buộc và index; hợp đồng API cần bổ sung</td><td><strong>Có hỗ trợ từ mô hình.</strong> Bảng phần 4 phân biệt điều đã thể hiện trong thiết kế và hành vi chỉ có thể xác minh khi triển khai.</td></tr>
+</tbody></table></div>
+<h2>2. Kiểm tra không bỏ sót phép xử lý</h2>
+<p>Các mã sau là danh mục thiết kế gợi ý cho <code>operationType</code>; có thể đổi tên khi triển khai nhưng không được bỏ chức năng tương ứng. Mọi thao tác thay đổi dữ liệu đều đi qua preview và chỉ xuất hiện trong lịch sử sau khi áp dụng thành công.</p>
+<div class="table-wrap"><table><thead><tr><th>Nhóm</th><th>Phép xử lý cần có</th><th>Dữ liệu cấu hình tối thiểu</th></tr></thead><tbody>
+<tr><td>Sửa trực tiếp dùng chung</td><td>Sửa giá trị ô từ bảng hoặc điểm 3D</td><td>rowId, columnId, giá trị mới và kiểu/validation của cột</td></tr>
+<tr><td>Cleaning</td><td>Xóa duplicate toàn dòng</td><td>Quy tắc so sánh typed values và chọn dòng đại diện; giữ một dòng mỗi nhóm</td></tr>
+<tr><td>Cleaning</td><td>Loại bỏ HTML</td><td>Quy tắc lấy text, xử lý entity và thẻ</td></tr>
+<tr><td>Cleaning</td><td>Xử lý khoảng trắng</td><td>Chế độ trim/gộp/xóa và loại khoảng trắng được áp dụng</td></tr>
+<tr><td>Cleaning</td><td>Chuyển sang Number, Text, Date, Datetime, Boolean</td><td>Kiểu đích, định dạng ngày/giờ, múi giờ nếu có, quy tắc parse số và mapping boolean</td></tr>
+<tr><td>Cleaning</td><td>Chuyển chữ hoa; chuyển chữ thường</td><td>Cột/ô đích; quy tắc xử lý chuỗi</td></tr>
+<tr><td>Cleaning</td><td>Thay thế giá trị</td><td>Giá trị tìm/thay thế, exact hay chế độ khác được hỗ trợ, phân biệt hoa thường</td></tr>
+<tr><td>Missing values</td><td>Điền mean, median, mode, max</td><td>Cột đích, tập dữ liệu dùng tính thống kê, kết quả thống kê; quy tắc hòa mode</td></tr>
+<tr><td>Missing values</td><td>Điền giá trị nhập trực tiếp</td><td>Giá trị nhập và kiểu đích</td></tr>
+<tr><td>Missing values</td><td>Xóa hàng có missing; xóa cột có missing</td><td>Phạm vi cột/hàng dùng xét missing và điều kiện xóa</td></tr>
+<tr><td>Outliers</td><td>Kéo về ngưỡng IQR</td><td>Cột số, hệ số IQR, phạm vi tính thống kê, các ngưỡng đã tính</td></tr>
+<tr><td>Outliers</td><td>Kéo về ngưỡng Z-score</td><td>Cột số, ngưỡng Z-score, phạm vi thống kê, các ngưỡng đã tính</td></tr>
+<tr><td>Scaling</td><td>Min-Max</td><td>Cột số, min/max nguồn, khoảng đích và chính sách cột hằng</td></tr>
+<tr><td>Scaling</td><td>Standardization</td><td>Cột số, mean/std, quy ước std và chính sách std bằng 0</td></tr>
+<tr><td>Transformation</td><td>Log1p</td><td>Cột/ô số và kiểm tra miền hợp lệ</td></tr>
+<tr><td>Transformation</td><td>Square</td><td>Cột/ô số và kiểm tra kết quả hữu hạn</td></tr>
+<tr><td>Encoding</td><td>One-hot</td><td>Cột nguồn, tập category, tên/ID cột sinh ra, giữ hay bỏ cột nguồn, xử lý missing</td></tr>
+<tr><td>Encoding</td><td>Ordinal</td><td>Cột nguồn, bảng category → nhãn số do người dùng nhập, chính sách category chưa gán/missing</td></tr>
+<tr><td>Lịch sử</td><td>Khôi phục phiên bản</td><td>Phiên bản đang hiện tại, phiên bản được phục hồi, phiên bản mới và thông tin nguồn phục hồi</td></tr>
+</tbody></table></div>
+<p>Tần suất, missing chart, outlier chart, correlation, value counts và bảng datatype là truy vấn phân tích. Chúng không thay đổi dataset, không tạo phiên bản mới và không cần biến thành operation xử lý chỉ để có mục trong ERD.</p>
+<h2>3. Ràng buộc để workflow thực sự đáp ứng yêu cầu</h2>
+<ol>
+<li><strong>Bất biến sau publish.</strong> Giá trị, thứ tự dòng, schema cột và metadata của phiên bản đã publish không được sửa tại chỗ. Thay đổi datatype và xóa/tạo cột sinh schema của phiên bản mới. ID dòng còn tồn tại được giữ qua các phiên bản; thứ tự hiển thị là thông tin riêng.</li>
+<li><strong>Đủ candidate trước Apply.</strong> Preview cố định baseVersionId, scope, statistics scope, cấu hình và specHash; tạo candidate ở trạng thái building rồi chuyển staged khi mọi chunk/schema hoàn tất và được kiểm tra. API thông thường chỉ đọc phiên bản đã publish; API preview kiểm tra owner và preview hợp lệ trước khi đọc candidate.</li>
+<li><strong>Phân trang đúng dòng bị tác động.</strong> <code>previewChanges</code> có tối đa một bản ghi cho một cặp previewId + rowId, cùng ordinal ổn định, changeKind và vị trí trước/sau. Dữ liệu trước/sau được lấy từ base/candidate; các ô khác biệt được tính khi trả kết quả bằng đối chiếu giá trị theo columnId và schema, không lưu changedColumnIds riêng. Với dòng bị xóa, phía sau rỗng; thay đổi cấu trúc cột được biểu diễn trong schemaChanges kể cả khi không còn dòng nào. Không chỉ lưu năm dòng mẫu đầu tiên.</li>
+<li><strong>Commit nguyên tử.</strong> Kiểm tra currentVersion vẫn bằng baseVersion và candidate còn sẵn sàng. Trong cùng ranh giới commit, công bố candidate, đổi currentVersion, ghi operation thành công, đánh dấu preview đã áp dụng và lưu kết quả idempotency. Chuẩn bị chunk bên ngoài commit có thể chấp nhận nếu chúng còn ẩn và cleanup an toàn; lỗi không được để lộ một phiên bản nửa vời.</li>
+<li><strong>Idempotency và cạnh tranh.</strong> Có unique key theo chủ thể + phạm vi endpoint + key, cùng request hash. Cùng key/cùng payload trả lại kết quả đã ghi; cùng key/payload khác bị từ chối. Hai key khác nhau cùng Apply một base không được cùng vượt kiểm tra currentVersion. Xử lý retry phải kiểm tra receipt đã hoàn tất trước khi từ chối chỉ vì preview đã được consume. Lease cần token/epoch thay đổi khi takeover; mọi commit kiểm tra token hiện hành để worker hết quyền không tiếp tục công bố. Recovery đọc receipt trước rồi mới đối chiếu operation nếu là import/process/restore; create-project và preview không có operation lịch sử.</li>
+<li><strong>Cleanup không xóa dữ liệu đã dùng.</strong> Preview hết hạn hoặc bị hủy chỉ được dọn candidate chưa publish và không có operation đã commit tham chiếu. Candidate đã publish phải được giữ. Cleanup điều phối trạng thái preview/version rồi dọn <code>previewChanges</code>, schema và chunk phụ thuộc; không TTL xóa một preview đơn lẻ rồi để lại dữ liệu mồ côi. Các candidate building bị bỏ dở cũng cần được thu hồi khi chắc chắn worker không còn quyền ghi.</li>
+<li><strong>Tham chiếu cùng chủ sở hữu.</strong> base/candidate/result/restored version phải thuộc cùng dataset; rowId/columnId phải tồn tại trong phiên bản thích hợp. Không tin userId/ownerId gửi trong body. Các ràng buộc này thuộc service và validator vì FK trong sơ đồ không phải ràng buộc tự động của MongoDB.</li>
+<li><strong>Xóa hẳn và workspace.</strong> Xóa project/user phải phối hợp với tác vụ đang chạy để ngăn chúng công bố dữ liệu sau khi xóa. Mutation và delete cùng kiểm tra lifecycle và thực hiện một cập nhật fence thật sự trên owner/project trong transaction; chỉ đọc lifecycle hoặc ghi lại nguyên giá trị là chưa đủ. Xóa toàn bộ dữ liệu phụ thuộc, gồm cả preview và receipt có dữ liệu tài nguyên. Workspace stale sau restore/xóa cột được chuẩn hóa: loại ID không còn tồn tại, reset trục không hợp lệ và đưa số trang về phạm vi hợp lệ. <code>deletedAt</code> không được coi là đã đáp ứng xóa hẳn.</li>
+</ol>
+<h2>4. Đối chiếu 8 nguyên tắc API của giảng viên</h2>
+<div class="table-wrap"><table><thead><tr><th>Nguyên tắc</th><th>Bằng chứng ở mức thiết kế</th><th>Phần còn phải triển khai và kiểm tra</th><th>Trạng thái</th></tr></thead><tbody>
+<tr><td>Domain Model Driven</td><td>User, Project, Dataset, Version, Preview và Operation có trách nhiệm và quan hệ riêng</td><td>DTO và API phải phản ánh đúng các tài nguyên, không để client sửa trường nội bộ</td><td>Đã thể hiện trong mô hình</td></tr>
+<tr><td>HTTP Methods</td><td>Có thể ánh xạ đọc/tạo/cập nhật/xóa theo tài nguyên</td><td>Kiểm tra route dùng GET/POST/PATCH/PUT/DELETE và không làm thay đổi dữ liệu bằng GET</td><td>Chưa xác minh triển khai</td></tr>
+<tr><td>Idempotency</td><td><code>idempotencyRecords</code>, request hash, unique key và kết quả commit; operation có resultVersion duy nhất</td><td>Retry, chạy đồng thời, timeout sau commit và khôi phục request dang dở</td><td>Đã thiết kế cơ chế; chưa xác minh hành vi</td></tr>
+<tr><td>HTTP Status Codes</td><td>Mô hình phân biệt không tồn tại, xung đột version và dữ liệu không hợp lệ</td><td>Controller/filter trả đúng 201/202/204/400/401/403/404/409/413 hoặc mã được hợp đồng chọn</td><td>Chưa xác minh triển khai</td></tr>
+<tr><td>Versioning</td><td>Yêu cầu API <code>/api/v1</code> đã được ghi nhận</td><td>Cấu hình prefix/versioning của NestJS và hợp đồng route; version API khác version dataset</td><td>Chưa xác minh triển khai</td></tr>
+<tr><td>Semantic Path</td><td>Tài nguyên có danh từ rõ: projects, datasets, versions, previews, operations</td><td>Rà soát toàn bộ URL, quan hệ lồng nhau và tên tập hợp số nhiều</td><td>Được mô hình hỗ trợ; cần hợp đồng API</td></tr>
+<tr><td>Batch Processing</td><td>Một preview/operation có scope nhiều ô/cột/dataset và một candidate; commit all-or-nothing</td><td>Validation toàn bộ đầu vào, staged cleanup, lỗi giữa chừng, không lộ kết quả một phần</td><td>Đã thiết kế cơ chế; chưa xác minh hành vi</td></tr>
+<tr><td>Query Parameters</td><td>Dòng có thứ tự ổn định; metadata/index hỗ trợ project/history/preview và truy vấn theo phiên bản</td><td>Kiểm tra page/limit, giới hạn limit, sort/filter được phép, phản hồi tổng số và hành vi khi dữ liệu thay đổi</td><td>Được mô hình hỗ trợ; chưa xác minh triển khai</td></tr>
+</tbody></table></div>
+<p>Việc có index hoặc trường idempotency trong ERD không tự bảo đảm API đạt nguyên tắc tương ứng. Kết luận hoàn thành cần dựa trên hợp đồng API và kết quả kiểm tra implementation.</p>
+<h2>5. Ánh xạ vào NestJS Modular Monolith</h2>
+<div class="table-wrap"><table><thead><tr><th>Thành phần</th><th>Trách nhiệm</th><th>Dữ liệu liên quan</th></tr></thead><tbody>
+<tr><td><code>main.ts</code></td><td>Bootstrap NestJS, nạp AppModule, cấu hình cổng, prefix/versioning, validation và bắt đầu lắng nghe</td><td>Không phải entity</td></tr>
+<tr><td><code>app.module.ts</code></td><td>Import các module chức năng và cấu hình hạ tầng dùng chung</td><td>Không gom tất cả nghiệp vụ vào một service</td></tr>
+<tr><td><code>AuthModule</code></td><td>AuthController/AuthService; đăng ký, đăng nhập, refresh, logout; guard và rate limiting</td><td><code>authSessions</code>; sử dụng giao diện Users service cho tài khoản</td></tr>
+<tr><td><code>UsersModule</code></td><td>Hồ sơ, preferences và định danh tài khoản; nhận yêu cầu xóa tài khoản</td><td><code>users</code>; chuyển việc dọn nhiều miền cho provider điều phối độc lập, tránh UsersModule import ngược AuthModule</td></tr>
+<tr><td><code>ProjectsModule</code></td><td>Danh sách, tạo/mở/xóa project, ownership và autosave workspace</td><td><code>projects</code>, <code>workspaces</code></td></tr>
+<tr><td><code>DatasetsModule</code></td><td>Import, đọc dữ liệu/schema, quản lý vòng đời phiên bản và chunk</td><td><code>datasets</code>, <code>datasetVersions</code>, <code>versionColumns</code>, <code>dataChunks</code></td></tr>
+<tr><td><code>AnalysisModule</code></td><td>Summary, phân phối, missing/outlier, correlation, value counts và dữ liệu hiển thị 3D</td><td>Đọc dữ liệu theo version qua Datasets service; không bắt buộc có collection riêng</td></tr>
+<tr><td><code>ProcessingModule</code></td><td>Các phương pháp xử lý, preview, Apply, validation scope và công bố kết quả</td><td><code>processingPreviews</code>, <code>previewChanges</code>, <code>processingOperations</code>; sử dụng provider idempotency hạ tầng và dịch vụ dữ liệu phiên bản</td></tr>
+<tr><td><code>HistoryModule</code></td><td>Đọc/phân trang lịch sử, đọc bản cũ và nhận yêu cầu restore</td><td>Đọc <code>processingOperations</code>; yêu cầu Processing service thực hiện restore như một operation mới</td></tr>
+</tbody></table></div>
+<p>Mỗi module khai báo controller và provider trong decorator <code>@Module</code>. Controller định tuyến và chuyển dữ liệu đã kiểm tra cho service; service xử lý nghiệp vụ; repository truy cập MongoDB. Tránh để nhiều module tự viết vào cùng collection bằng các repository khác nhau. Provider idempotency và repository <code>idempotencyRecords</code> thuộc hạ tầng dùng chung, để Projects/Datasets/Processing cùng sử dụng mà không phải import chéo các module nghiệp vụ. Provider điều phối xóa tài khoản được lắp ráp ở tầng ứng dụng với các cổng xóa thuộc từng miền; không tạo vòng Auth → Users → Auth hoặc Users → Projects → Users. Các provider hạ tầng này không cần trở thành module nghiệp vụ mới trên ERD.</p>
+<p><code>AppController</code>/<code>AppService</code> có thể phụ trách endpoint hệ thống như health nếu bài yêu cầu giữ bộ file mặc định. ERD không đòi hỏi mọi controller/service phải có collection. React/Vite, <code>src/assets</code>, <code>public</code>, các file cấu hình frontend cũng cần được kiểm tra ở mã nguồn riêng.</p>
+<h2>6. Tám kịch bản rà soát khi triển khai</h2>
+<p>Các kịch bản dưới đây là tiêu chí kiểm tra dự kiến, <strong>chưa được chạy</strong>.</p>
+<div class="table-wrap"><table><thead><tr><th>Kịch bản</th><th>Thực hiện</th><th>Kết quả phải đạt</th></tr></thead><tbody>
+<tr><td>1. Import và lần mở đầu</td><td>Tạo project trống, nhập CSV sát giới hạn 16.000.000 byte có ô rỗng, N/A, chuỗi trắng, tên cột trùng và một dòng rất dài; thử file vượt giới hạn</td><td>Mỗi project có tối đa một dataset; file vượt giới hạn bị từ chối; CSV không hợp lệ không tạo bản hiện tại dở dang. Bản gốc và missing được bảo toàn theo quy tắc import; các đoạn byte dưới giới hạn BSON, ghép theo chunkIndex và giải mã đúng ngay cả khi điểm cắt nằm giữa một dòng hoặc ký tự nhiều byte.</td></tr>
+<tr><td>2. Retry và Apply đồng thời</td><td>Hai request cùng key/cùng payload; sau đó retry khi response đầu bị mất. Thử cùng key/payload khác và hai key khác nhau cùng baseVersion. Cho worker cũ tiếp tục chạy sau khi lease bị takeover</td><td>Cùng yêu cầu chỉ tạo một phiên bản và một operation; retry nhận cùng kết quả. Khác payload bị từ chối. Hai thao tác khác nhau cùng base không được cùng ghi đè; thao tác còn lại nhận conflict hoặc phải preview lại. Worker mất lease bị chặn bởi token/epoch khi commit; kiểm tra tương tự cho create-project và tạo preview.</td></tr>
+<tr><td>3. Khôi phục v2 khi đang v4</td><td>Giữ v1 → v2 → v3 → v4, yêu cầu restore v2</td><td>Tạo v5 với nội dung/schema của v2; source của thao tác là v4, restoredFrom là v2, result là v5. CurrentVersion chuyển v5; vẫn truy vấn được v3/v4 và lịch sử của chúng.</td></tr>
+<tr><td>4. Chuyển datatype và encoding</td><td>Preview text → number có một giá trị lỗi; sửa cấu hình rồi Apply; tiếp tục one-hot và ordinal</td><td>Lần có lỗi không ghi một phần. Bản cũ giữ datatype cũ; bản mới có schema mới. One-hot tạo columnId mới và preview cột rõ ràng; ordinal lưu mapping. Sửa ô bằng rowId/columnId vẫn đúng sau sort/filter.</td></tr>
+<tr><td>5. Toàn missing và xóa cột</td><td>Preview mean trên cột toàn missing; thử xóa cột đang làm trục 3D, và thử xóa toàn bộ cột</td><td>Mean không tính được phải báo lỗi và không publish. Hành vi dataset không còn cột theo quy tắc đã chốt, không crash. SchemaChanges đủ mô tả xóa cột kể cả không có dòng; axes/filter/selection không tiếp tục trỏ cột đã mất.</td></tr>
+<tr><td>6. Lỗi giữa chừng và preview hết hạn</td><td>Gây lỗi sau khi ghi một số staged chunks nhưng trước commit; sau đó thử Apply preview hết hạn. Chạy cleanup sau một Apply đã thành công</td><td>CurrentVersion/history không đổi khi thất bại; dữ liệu staged không lộ qua API bình thường và được dọn. Preview hết hạn không được Apply. Cleanup không xóa candidate đã publish hoặc dữ liệu history cần đọc.</td></tr>
+<tr><td>7. Xóa hẳn trong lúc có tác vụ</td><td>Xóa project có preview/operation đang xử lý; sau đó xóa tài khoản có nhiều project và session</td><td>Mọi đường đọc bị chặn theo vòng đời xóa; worker không công bố dữ liệu mới sau xóa. Cuối quá trình không còn dataset/version/chunk/preview/change/workspace/history/receipt phụ thuộc; tài khoản bị xóa không refresh được.</td></tr>
+<tr><td>8. Workspace stale và phân trang</td><td>Hai tab autosave cùng workspace; một tab Apply xóa cột hoặc restore. Mở lại project đang ở trang vượt quá số dòng mới; xem preview 5 cặp và bảng 10 dòng</td><td>Phát hiện revision cũ, không âm thầm ghi đè cấu hình mới. Loại refs không hợp lệ và đưa trang về phạm vi hợp lệ. Không khôi phục preview. Phân trang ổn định trên các dòng logic sau giải mã, không đếm chunk như dòng; 3D báo đúng số điểm bị ẩn.</td></tr>
+</tbody></table></div>
+<h2>7. Quy tắc nghiệp vụ đã được đối chiếu với quyết định mới</h2>
+<ol>
+<li><strong>Project trước import:</strong> dùng quan hệ 0..1 dataset trong thời gian project trống, đúng một dataset sau import. Đây là diễn giải vòng đời để hỗ trợ chức năng tạo project trước khi chọn CSV.</li>
+<li><strong>Correlation:</strong> D23 đã duyệt Pearson cho number, các cặp không đủ điều kiện trả null kèm lý do và giữ mọi feature. Chưa mở rộng phạm vi V1 sang phép đo category/text.</li>
+<li><strong>Các quy tắc thuật toán:</strong> whitespace có mode explicit; IQR/std/mode theo sheet quy ước. Định dạng ngày/zone/boolean và encoding đã được D06–D15 bổ sung; lưu vào specification.parameters và engineVersion, không sửa bản published.</li>
+<li><strong>Dataset rỗng:</strong> zero-row được phép, gồm import header-only; không được xóa cột cuối. Toàn missing không tự đoán giá trị điền; no-op theo hợp đồng ready/canApply=false. IQR0 dùng ZERO_SPREAD, std0 dùng ZERO_VARIANCE.</li>
+<li><strong>Import và dung lượng:</strong> UTF8/BOM, delimiter explicit, header first-row, missing default-v1 theo API. Text null không tự thành null; duplicate exact typed/token. Giữ giới hạn16.000.000byte và các trần hiện có, không áp trần mới từ AI; file gốc được bảo toàn byte-for-byte.</li>
+<li><strong>Tính nguyên tử:</strong> “hủy toàn bộ” được hiểu là không công bố bất kỳ phần nào của kết quả nếu thao tác lỗi. Dữ liệu staging nội bộ có thể được ghi trước và dọn sau, nhưng không được trở thành phiên bản hiện tại hoặc lịch sử thành công.</li>
+</ol>
+<h2>Kết luận rà soát</h2>
+<p>Mô hình 12 collection cùng các ràng buộc trên <strong>bao phủ nhu cầu dữ liệu của cả 17 mục trong tài liệu ý tưởng</strong>, bao gồm đầy đủ nhóm phép xử lý, preview, lịch sử, khôi phục, workspace và xác thực. Các tính toán thống kê/biểu đồ được hỗ trợ bởi dữ liệu phiên bản, không cần thêm collection cho từng màn hình.</p>
+<p>Thiết kế <strong>phù hợp để triển khai NestJS Modular Monolith</strong> và hỗ trợ các nguyên tắc API, nhưng chưa phải bằng chứng ứng dụng đã đạt toàn bộ yêu cầu giảng viên. Cần tiếp tục xác minh cấu trúc NestJS/React, hợp đồng API và các kịch bản thực thi; quy tắc DTO hiện hành được bổ sung đầy đủ trong phần D01–D26 đã duyệt; hành vi thực thi vẫn phải kiểm chứng.</p><section id="dto-approved-20261114">
+<h2>Bổ sung hợp đồng DTO theo 8 quyết định chủ dự án — 14/11/2026</h2>
+<p>Phần này thay thế các mô tả cũ mơ hồ đúng trong phạm vi suy kiểu import, missing, duplicate, no-op, autosave, CSV, giới hạn và mã lỗi dưới đây. Không coi toàn bộ bản phản hồi AI Q01–Q75 là đã duyệt. Các collection và quan hệ ngoài phần được nêu giữ nguyên.</p>
+<table><thead><tr><th>Nội dung</th><th>Quy định áp dụng</th><th>Tác động lưu trữ/triển khai</th></tr></thead><tbody>
+<tr><td>Import và file gốc</td><td>Suy kiểu theo từng cột; frontend hiển thị preview cục bộ và cho chọn lại kiểu trước POST import hiện có. importOptions.columnTypes tùy chọn gồm position 0-based và logicalType. Server kiểm toàn bộ cột, không tin sample. Chuỗi số có 0 đầu hoặc integer vượt độ chính xác giữ text, không âm thầm round.</td><td>Giữ nguyên byte CSV gốc trong storage riêng theo checksum; originalFile.storageKey là tham chiếu nội bộ, không trả API. Giữ rawToken trong codec nếu giá trị typed serialize khác lexeme nguồn. Bổ sung hạ tầng storage, không thêm collection nghiệp vụ; staged upload/publish/cleanup và xóa project phải dọn cả blob nguồn. Chưa triển khai storage/engine trong khung.</td></tr>
+<tr><td>Missing</td><td>Input typed cell chỉ kind/value; null là {kind:"null",value:null}. Server suy missingKind=null/empty/whitespace/n_a, response chỉ missing mới có trường đó. N/A nhận sau trim nhưng giữ nguyên token; không tự coi NA/text null là missing. Missing token có thể là text dù schema cột number; nonmissing phải đúng kiểu.</td><td>Giữ token null/rỗng/whitespace/N/A riêng. Đổi token missing là thay đổi thực; phải có preview/version/history nếu Apply. Không dùng thiếu field và null như nhau.</td></tr>
+<tr><td>Duplicate và canonical request</td><td>So chính xác kind/value và token missing; không trim/casefold/NFC. -0 bằng0 theo number JSON. Bỏ rowId/position khi so duplicate.</td><td>Chuẩn hóa object key/default của request, không chuẩn hóa chuỗi dữ liệu hoặc đảo arrays UI. Hash phải xác nhận equality khi có collision; engineVersion giữ thuật toán.</td></tr>
+<tr><td>No-op</td><td>Preview ready + canApply=false, warning NO_CHANGES_DETECTED, message Không có thay đổi. Gọi Apply trả409 NO_CHANGES_TO_APPLY. Dữ liệu lỗi vẫn invalid theo hợp đồng cũ.</td><td>So cả typed data, raw token, schema/format và order. Không publish version/operation/history khi no-op; candidate tạm vẫn cleanup theo TTL. Replay receipt succeeded trước stale/consumed, sau kiểm quyền/lifecycle hợp lệ.</td></tr>
+<tr><td>Autosave</td><td>PATCH có field hợp lệ nhưng state giống trả200 giữ revision/updatedAt; revision hoặc boundVersionId stale vẫn409. Body không field cập nhật400 EMPTY_PATCH.</td><td>Kiểm CAS/revision trước so sánh; nếu có thay đổi mới tăng revision. Persistence phải kiểm tra nguyên tử kể cả no-op để không xác nhận một revision đã stale do race. GET normalization vẫn không ghi DB.</td></tr>
+<tr><td>CSV</td><td>Nhận BOM UTF8, quoted delimiter/newline, LF/CRLF và header-only0 dòng. File0byte/0cột, record lệch số trường hoặc blank record ngoài quoted là CSV_INVALID. Terminal newline không phải record; quoted empty là giá trị hợp lệ.</td><td>Lỗi có recordIndex/lineStart/lineEnd 1-based, columnPosition 0-based khi có thể xác định; không echo nội dung ô. Không bỏ dòng bất thường âm thầm; raw file byte-for-byte giữ riêng.</td></tr>
+<tr><td>Giới hạn và thống kê</td><td>Giữ các trần hiện hành, không thêm100k dòng/32KB ô/1MiB record/correlation200 hay importOptions16KiB. IQR=0 dùng ZERO_SPREAD; std=0 dùng ZERO_VARIANCE; allmissing ALL_MISSING_COLUMN.</td><td>IQR=0 không suy ra variance=0 và không được tự gọi cột hằng. Hạ tầng cần đo tải trước đề xuất giới hạn mới; các trần mới phải có phê duyệt.</td></tr>
+</tbody></table>
+<p>Response envelope, tên query và27 endpoint hiện hành giữ nguyên. Chỉ bổ sung field canApply cho preview, columnTypes cho options và mã/lý do lỗi đã nêu; không tự đổi newVersion thành version hoặc outlierThreshold thành threshold. Các validators/policy trong code hiện chỉ là nền để service triển khai; không chứng minh import/Apply/autosave đã persist đúng.</p>
+</section>
+<section id="dto-d01-d26-approved"><h2>Đồng bộ D01–D26 đã được chủ dự án duyệt</h2>
+<p>Chủ dự án đã đồng ý toàn bộ26 phương án khuyên chọn sau8nguyên tắc trước đó. Các quy tắc cụ thể dưới đây thay thế đoạn còn tạm hoặc trái nhau trong cùng phạm vi; không phê duyệt thêm giới hạn của bản AI Q01–Q75 và không thay sơ đồ12collection.</p>
+<table><thead><tr><th>Nhóm</th><th>Quy định thống nhất</th><th>Tác động ERD</th></tr></thead><tbody>
+<tr><td>D01–D05</td><td>Email ASCII tối đa254 sau trim/lowercase; tên hiển thị/project1–100 Unicode code point sau trim, khôngNFC; null xóa tên hiển thị, project name được trùng. Theme default system. Project sort name/createdAt/updatedAt hai chiều, default-updatedAt.</td><td>Validator/schema defaults và projection; không thêm unique tên project. EmailNormalized unique giữ nguyên.</td></tr>
+<tr><td>D06–D10</td><td>Chuyển số theo decimal separator explicit, grouping kiểm đúng; trim ngoài,+/-,E/e được nhận; không unsafe-round. DateYYYY-MM-DD/datetimeISO8601, timezoneUTCdefault hoặc IANA chọn; offset nguồn ưu tiên, DST mơ hồ/không tồn tại invalid. Date/datetime đổi theo zone; boolean dùng mapping explicit.</td><td>Specification.parameters/engineVersion và column.format giữ đủ lựa chọn; rawToken/file gốc bất biến. DTO không thay thế convert engine.</td></tr>
+<tr><td>D11–D15</td><td>Onehot text/boolean hoặc number asCategory; không mixed/date/datetimeV1. KeepSource defaultfalse, tùy chọntrue. Tên nguồn_category/nguồn_ordinal có suffix unique; bỏ nguồn thay tại vị trí, giữ nguồn chèn sau. Onehot0/1number; missing defaultall-null hoặc category riêng tính trần100. Ordinal mapping đủ/nonmissing/không thừa, labelfiniteunique cho âm/thập phân, giữ missingtoken.</td><td>Onehot tạo columnId mới; ordinal bỏ nguồn giữ columnId/name/position đổi type, giữ nguồn tạo ID mới và lineage.sourceColumnId. Các bản cũ không sửa; schemaChanges đầy đủ. Không tạo logicalType category.</td></tr>
+<tr><td>D16–D19</td><td>Missing cuối cảasc/desc. Text codepoint khôngtrim/casefold/NFC; mixed number/date/datetime/boolean/text rồi giá trị. Contains insensitive khôngtrim/NFC; orderedfilter cùngkind number/date/datetime. Valuecounts gộp missing chỉ trong aggregation, defaultinclude=true.</td><td>Không đổi snapshot/token/equality; typed valuecounts nhóm missing cóvalue=null,isMissing=true. Query/workspace filter dùng chung validator.</td></tr>
+<tr><td>D20–D23</td><td>Histogram cột hằng1bin; allmissing/nonnumeric[] kèmreason. Counts xử lý tách dòng/cột; updatedCell chỉô tồn tại2bên đổi value/kind/token, không đếmôcộtthêm/xóa. Diagnostics tổng100samples ưu tiênerrors, counts thật vàtruncated. V1Pearsonnumeric, còn lại null+reason.</td><td>Summary/diagnostics object có schema cụ thể; không thêm collection biểu đồ. Schema-onlydiff vẫn cóschemaChanges khi0row. Không thêm capcorrelation200 hoặc bins100.</td></tr>
+<tr><td>D24–D26</td><td>Restorecurrent409NO_CHANGES_TO_RESTORE khôngversion/history; targetmissing/unpublished/wrongdataset404. Appliedpreview cònvòngđời200,expired410,purged404. Retrytransientđãrollback bằngleaseCAS; commitkhôngrõthìrecovery trước. Guardauth trước ID/quyền; receipttrước stale/consumed,khôngvượtquyền/delete.</td><td>Giữ restore sinh version mới nếu có thay đổi, không trỏ current về bản cũ. Không tombstone mới. Giữ lease/fence, transaction/receipt nguyên tử; chưa có DB integration thực thi.</td></tr>
+</tbody></table><p>Hợp đồng chi tiết và ma trận27endpoint nằm trong dto-contract.md. Request/query/path/header validators và response types đã có trong code; các service vẫn placeholder501. Auth, upload/parser/storage/engine và persistence transaction chưa triển khai. Không coi compile/tests DTO là bằng chứng toàn bộ hành vi DB đã hoạt động.</p></section></main></body></html>
