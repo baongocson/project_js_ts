@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:local-engine": "tsc src/features/offline/model.ts --target ES2022 --module commonjs --lib ES2022,DOM --strict --skipLibCheck --typeRoots test/empty-types --outDir .artifact-work && node -e \"require('fs').writeFileSync('.artifact-work/package.json', JSON.stringify({type:'commonjs'}))\" && node --test test/local-engine.test.cjs"
   },
   "dependencies": {
     "react": "^19.2.0",
