@@ -1,5 +1,5 @@
 import { parseEmptyQuery } from '../../common/validation/query.validation';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { HistoryService } from './history.service';
 import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
 import { IdempotencyKey } from '../../common/validation/idempotency-key.decorator';

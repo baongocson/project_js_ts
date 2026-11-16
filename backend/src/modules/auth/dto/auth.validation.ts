@@ -6,6 +6,7 @@ function parseCredentials(input: unknown, registration: boolean): RegisterDto | 
   const v = new InputValidator();
   const body = v.object(input, '', ['email', 'password']);
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  // eslint-disable-next-line no-control-regex -- Intentional ASCII range; isEmail rejects invalid control characters.
   if (!email || email.length > 254 || !/^[\x00-\x7f]+$/.test(email) || !isEmail(email, { allow_utf8_local_part: false })) {
     v.issue('email', 'Email ASCII không hợp lệ hoặc dài quá 254 ký tự');
   }

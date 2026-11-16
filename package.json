@@ -10,12 +10,25 @@
     "dev": "concurrently -k -n api,web \"npm run start:dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w backend && npm run build -w frontend",
     "typecheck": "npm run typecheck --workspaces",
-    "start:backend": "npm run start:prod -w backend"
+    "start:backend": "npm run start:prod -w backend",
+    "test": "npm run test:unit -w backend",
+    "test:unit": "npm run test:unit -w backend",
+    "test:e2e": "npm run test:e2e:backend && npm run test:e2e:frontend",
+    "test:integration": "npm run test:integration -w backend",
+    "test:e2e:backend": "npm run test:e2e -w backend",
+    "test:e2e:frontend": "npm run test:e2e -w frontend",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix --max-warnings=0"
   },
   "devDependencies": {
-    "concurrently": "^9.2.0"
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^9.2.0",
+    "eslint": "^10.15.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "typescript-eslint": "^8.72.2"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": "^22.13.0 || >=24.0.0"
   }
 }

@@ -1,8 +1,7 @@
 import { parseEmptyQuery } from '../../common/validation/query.validation';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
-import { resourceParams, type ResourceParamsDto } from '../../common/validation/request.validation';
 import type { PatchUserDto } from './dto/user.dto';
 import { parsePatchUser } from './dto/user.validation';
 import { parseEmptyBody } from '../auth/dto/auth.validation';
