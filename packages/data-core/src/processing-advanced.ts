@@ -1,6 +1,7 @@
 /** Deterministic, pure advanced operations. Does not mutate source snapshots. */
 import { acceptsCell, cellKey, missingKind, sameCell } from './cell.js';
 import { compareCells } from './query.js';
+import { deterministicLog1p } from './deterministic-math.js';
 import type { Cell, LogicalType, Snapshot, Row, Column } from './types.js';
 import type { EngineResult, Diagnostic, ChangedCell, SchemaChange, ProcessingSpecification, ProcessingMethod } from './processing.js';
 
@@ -80,7 +81,7 @@ export function processAdvanced(snapshot:Snapshot, raw:ProcessingSpecification):
       return spec.parameters.condition==='any'?checks.some(Boolean):checks.length>0&&checks.every(Boolean);
     }));
     if(removed.size===0)return done(snapshot,snapshot,[],[],false);
-    if(removed.size===snapshot.columns.length)return bad(snapshot,[err('EMPTY_SCHEMA_NOT_ALLOWED','Dataset phải còn ít nhất một cột')]);
+    if(removed.size===snapshot.columns.length)return bad(snapshot,[err('LAST_COLUMN','Dataset phải còn ít nhất một cột')]);
     const columns=snapshot.columns.filter(c=>!removed.has(c.columnId));
     const rows=snapshot.rows.map(row=>({ ...row,cells:Object.fromEntries(Object.entries(row.cells).filter(([id])=>!removed.has(id))) }));
     return done(snapshot,{columns,rows},[],[],true);
@@ -118,7 +119,7 @@ export function processAdvanced(snapshot:Snapshot, raw:ProcessingSpecification):
         if(std===0){errors.push(err('ZERO_VARIANCE','Độ lệch chuẩn bằng 0',id));continue;}
         derived.set(id,{transform:n=>(n-mean)/std});
       }
-      if(spec.method==='log1p')derived.set(id,{transform:n=>Math.log1p(n)});
+      if(spec.method==='log1p')derived.set(id,{transform:deterministicLog1p});
       if(spec.method==='square')derived.set(id,{transform:n=>n*n});
     }else if(spec.method==='fill_mode'){
       const cats=categories(snapshot,id);

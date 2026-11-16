@@ -1,0 +1,224 @@
+[
+  {
+    "method": "edit_cell",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {
+      "value": {
+        "kind": "number",
+        "value": 5
+      }
+    },
+    "cell": true
+  },
+  {
+    "method": "remove_duplicates",
+    "csv": "n,t\n1,a\n1,a\n2,b\n",
+    "parameters": {
+      "keep": "first"
+    },
+    "dataset": true
+  },
+  {
+    "method": "strip_html",
+    "csv": "n,t\n1,<b>A</b>\n2,B\n",
+    "parameters": {
+      "decodeEntities": true
+    },
+    "column": 1
+  },
+  {
+    "method": "normalize_whitespace",
+    "csv": "n,t\n1,  Ab  \n2,  Cd  \n",
+    "parameters": {
+      "mode": "trim"
+    },
+    "column": 1
+  },
+  {
+    "method": "uppercase",
+    "csv": "n,t\n1,  Ab  \n2,  Cd  \n",
+    "parameters": {},
+    "column": 1
+  },
+  {
+    "method": "lowercase",
+    "csv": "n,t\n1,  Ab  \n2,  Cd  \n",
+    "parameters": {},
+    "column": 1
+  },
+  {
+    "method": "replace_value",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {
+      "from": {
+        "kind": "number",
+        "value": 1
+      },
+      "to": {
+        "kind": "number",
+        "value": 9
+      },
+      "match": "exact"
+    }
+  },
+  {
+    "method": "convert_number",
+    "csv": "n,t\n\"1,5\",a\n\"2,5\",b\n",
+    "parameters": {
+      "decimalSeparator": ",",
+      "allowThousands": false
+    }
+  },
+  {
+    "method": "convert_text",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {
+      "format": "canonical"
+    }
+  },
+  {
+    "method": "convert_date",
+    "csv": "n,t\n2026-11-16T01:00:00.000Z,a\n2026-11-17T02:00:00.000Z,b\n",
+    "parameters": {
+      "inputFormat": "YYYY-MM-DD"
+    }
+  },
+  {
+    "method": "convert_datetime",
+    "csv": "n,t\n2026-11-16,a\n2026-11-17,b\n",
+    "parameters": {
+      "inputFormat": "ISO8601",
+      "timezone": "Asia/Ho_Chi_Minh"
+    }
+  },
+  {
+    "method": "convert_boolean",
+    "csv": "n,t\nyes,a\nno,b\n",
+    "parameters": {
+      "trueValues": [
+        "yes"
+      ],
+      "falseValues": [
+        "no"
+      ],
+      "caseSensitive": false
+    }
+  },
+  {
+    "method": "fill_mean",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {}
+  },
+  {
+    "method": "fill_median",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {}
+  },
+  {
+    "method": "fill_mode",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {
+      "tieBreak": "typed-ascending"
+    }
+  },
+  {
+    "method": "fill_max",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {}
+  },
+  {
+    "method": "fill_constant",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {
+      "value": {
+        "kind": "number",
+        "value": 8
+      }
+    }
+  },
+  {
+    "method": "drop_missing_rows",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {
+      "condition": "any"
+    }
+  },
+  {
+    "method": "drop_missing_columns",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {
+      "condition": "any"
+    }
+  },
+  {
+    "method": "clip_iqr",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {
+      "factor": 0.1
+    }
+  },
+  {
+    "method": "clip_zscore",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {
+      "threshold": 0.5
+    }
+  },
+  {
+    "method": "scale_minmax",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {
+      "rangeMin": 0,
+      "rangeMax": 1
+    }
+  },
+  {
+    "method": "standardize",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {}
+  },
+  {
+    "method": "log1p",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {}
+  },
+  {
+    "method": "square",
+    "csv": "n,t\n1,a\n2,b\n100,c\n,N/A\n",
+    "parameters": {}
+  },
+  {
+    "method": "one_hot",
+    "csv": "n,t\n1,a\n2,b\n3,N/A\n",
+    "parameters": {
+      "keepSource": false,
+      "missingCategory": false,
+      "asCategory": false
+    },
+    "column": 1
+  },
+  {
+    "method": "ordinal",
+    "csv": "n,t\n1,a\n2,b\n3,N/A\n",
+    "parameters": {
+      "mapping": [
+        {
+          "value": {
+            "kind": "text",
+            "value": "a"
+          },
+          "label": 4
+        },
+        {
+          "value": {
+            "kind": "text",
+            "value": "b"
+          },
+          "label": 8
+        }
+      ],
+      "keepSource": false
+    },
+    "column": 1
+  }
+]

@@ -9,6 +9,15 @@ const base: Snapshot = {
   rows: [{ rowId: row, position: 0, cells: { [col]: { kind: 'number', value: 7, rawToken: '7' } } }],
 };
 describe('pure restore summary', () => {
+  test('D21 counts schema changes separately while preserving common-cell changes',()=>{
+    const extra='00000000-0000-4000-8000-000000000003';
+    const added:Snapshot={columns:[...base.columns,{...base.columns[0],columnId:extra,position:1}],rows:base.rows.map(row=>({...row,cells:{...row.cells,[extra]:{kind:'number',value:1}}}))};
+    for(const [before,after] of [[base,added],[added,base]]) {
+      const summary=restoreSummary(before,after);
+      assert.equal(summary.updatedCellCount,0);
+      assert.equal(summary.updatedRowCount,1);
+    }
+  });
   test('computes a full-snapshot cell diff without mutating a version', () => {
     const next: Snapshot = { ...base, rows: [{ ...base.rows[0], cells: { [col]: { kind: 'number', value: 3, rawToken: '3' } } }] };
     const frozen = JSON.stringify(base);

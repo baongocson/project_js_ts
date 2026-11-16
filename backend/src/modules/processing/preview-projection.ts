@@ -70,11 +70,13 @@ export function projectPreview(base: Snapshot, next: Snapshot, specification: Pr
     if (!after) { deletedRowCount++; append(before.rowId, 'deleted', before.position, null); continue; }
     const ids = new Set([...Object.keys(before.cells), ...Object.keys(after.cells)]);
     let cellChangeCount = 0;
+    let rowChanged = before.position !== after.position;
     for (const id of ids) {
       const a = before.cells[id], b = after.cells[id];
-      if (!a || !b || !sameCell(a, b)) cellChangeCount++;
+      if (!a || !b) { rowChanged = true; continue; }
+      if (!sameCell(a, b) || a.rawToken !== b.rawToken) { cellChangeCount++; rowChanged = true; }
     }
-    if (cellChangeCount || before.position !== after.position) {
+    if (rowChanged) {
       updatedRowCount++;
       updatedCellCount += cellChangeCount;
       append(before.rowId, 'updated', before.position, after.position);

@@ -14,6 +14,7 @@ const suites = [
   ['database', 'src/test/integration/infrastructure/database/database.integration-spec.ts'],
   ['database-health', 'src/test/integration/infrastructure/database/database-health.integration-spec.ts'],
   ['be3', 'src/test/integration/modules/processing/be3.integration-spec.ts'],
+  ['method-matrix', 'src/test/integration/modules/processing/method-matrix.integration-spec.ts'],
 ];
 
 function selectedSuites(argv) {

@@ -14,6 +14,16 @@ const base:Snapshot = { columns:[column(colA,0)], rows:[
   {rowId:rowB,position:1,cells:{[colA]:{kind:'null',value:null}}},
 ]};
 describe('processing preview projection',()=>{
+  test('D21 separates added/removed columns from updated cells on populated rows',()=>{
+    const added:Snapshot={columns:[...base.columns,column(colB,1)],rows:base.rows.map(row=>({...row,cells:{...row.cells,[colB]:{kind:'number',value:9}}}))};
+    for(const [before,after] of [[base,added],[added,base]]) {
+      const result=projectPreview(before,after,spec);
+      assert.equal(result.summary.updatedCellCount,0);
+      assert.equal(result.summary.updatedRowCount,2);
+      assert.equal(result.changes.length,2);
+      assert.equal(result.summary.addedColumnCount+result.summary.removedColumnCount,1);
+    }
+  });
   test('one changed cell and statistics from whole base column',()=>{
     const next:Snapshot = {columns:base.columns,rows:[base.rows[0],{...base.rows[1],cells:{[colA]:{kind:'number',value:2}}}]};
     const result=projectPreview(base,next,spec);

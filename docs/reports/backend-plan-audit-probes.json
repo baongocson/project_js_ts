@@ -1,0 +1,34 @@
+{
+  "baseCommit": "b7e33f60d1f4d99e8747576d0dc9b98b9b51a769",
+  "scope": "working tree including remediation",
+  "observations": [
+    {
+      "id": "D21-preview-added-column",
+      "expected": 0,
+      "actual": 0,
+      "detail": "Only a column was added; original cell is unchanged.",
+      "matchesContract": true
+    },
+    {
+      "id": "D21-restore-removed-column",
+      "expected": 0,
+      "actual": 0,
+      "detail": "Only a column was removed; common cell is unchanged.",
+      "matchesContract": true
+    },
+    {
+      "id": "drop-last-column-code",
+      "expected": "LAST_COLUMN",
+      "actual": "LAST_COLUMN",
+      "detail": "API.md requires LAST_COLUMN when removing all columns.",
+      "matchesContract": true
+    },
+    {
+      "id": "ordinal-mapping-limit-status",
+      "expected": 413,
+      "actual": 413,
+      "detail": "5001 distinct entries; API.md requires 413 above 5000.",
+      "matchesContract": true
+    }
+  ]
+}

@@ -13,3 +13,7 @@ The replay adapter calls existing BE endpoints:
 The implementation intentionally refuses to guess local-to-server ID mapping after the first operation changes the base version. It also never stores an access token or refresh token in the IndexedDB outbox.
 
 Run `npm run test:offline -w frontend` and the ordinary root typecheck/lint/build suite. The test suite is a pure coordinator test with an in-memory store; real IndexedDB and Chrome offline E2E need FE wiring.
+
+## Luồng ứng dụng đã nối
+
+/ offline (route `/offline`) dùng project-store.ts để giữ nguyên CSV/snapshot/history và project-sync.ts để create/import/map/replay. pages/OfflineWorkspace.tsx là UI; Web Locks tránh hai tab sync cùng project. Access token không lưu trong IndexedDB; account binding giữ dữ liệu khi logout/delete/conflict. Restore lưu version mapping; encoding kiểm lineage và typed data. Chạy `npm run test:acceptance -w frontend` cho gate HTTPS/browser/DB tạm. Không dùng IndexedDbQueueStore cũ thay cho nguồn CSV đầy đủ.

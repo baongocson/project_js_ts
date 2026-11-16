@@ -36,10 +36,9 @@ export class ProcessingRepository extends Be2Repository {
   }
   async listChanges(previewId: Types.ObjectId, page: number, limit: number): Promise<{ items: RowChange[]; total: number }> {
     const collection = this.db().collection<RowChange & { previewId: Types.ObjectId }>('previewChanges');
-    const [items, total] = await Promise.all([
-      collection.find({ previewId }).sort({ ordinal: 1 }).skip((page - 1) * limit).limit(limit).toArray(),
-      collection.countDocuments({ previewId }),
-    ]);
+    const total = await collection.countDocuments({ previewId });
+    // A valid safe page can still overflow page*limit. Empty pages never reach skip.
+    const items = page > Math.ceil(total / limit) ? [] : await collection.find({ previewId }).sort({ ordinal: 1 }).skip((page - 1) * limit).limit(limit).toArray();
     return { items, total };
   }
   async expired(now: Date, limit: number): Promise<PreviewRecord[]> {

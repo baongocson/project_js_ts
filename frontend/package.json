@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "npm run build -w @dashboard/data-core",
+    "prebuild": "npm run build -w @dashboard/data-core",
+    "pretypecheck": "npm run build -w @dashboard/data-core",
+    "test:acceptance": "node scripts/run-acceptance.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
@@ -16,6 +20,7 @@
     "test:offline": "node --experimental-strip-types --test test/offline/*.test.mjs"
   },
   "dependencies": {
+    "@dashboard/data-core": "0.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.18.5"

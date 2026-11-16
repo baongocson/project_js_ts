@@ -1,3 +1,4 @@
+import { PayloadTooLargeException } from '@nestjs/common';
 import { InputValidator } from '../../../common/validation/validation';
 import type { ApplyPreviewDto, CreatePreviewDto } from './processing.dto';
 const rules: Record<string,{scopes:string[];defaults:Record<string,unknown>}> = {
@@ -67,6 +68,7 @@ export function parseCreatePreview(input:unknown):CreatePreviewDto {
  if(method==='ordinal'){
   if(!Array.isArray(params.mapping))v.issue(path+'mapping','Thiếu mapping');
   else{
+   if(params.mapping.length>5000)throw new PayloadTooLargeException({code:'LIMIT_EXCEEDED',message:'Mapping ordinal vượt 5000 phần tử'});
    v.integer(params.mapping.length,path+'mapping',0,5000);const keys=new Set<string>();const labels=new Set<unknown>();
    params.mapping.forEach((entry,i)=>{const p=path+'mapping.'+i;const item=v.object(entry,p,['value','label']);const cell=v.cell(item.value,p+'.value');if(cell.kind==='null'||(cell.kind==='text'&&(cell.value.trim()===''||cell.value.trim()==='N/A')))v.issue(p+'.value','Mapping ordinal chỉ chứa category không missing');v.number(item.label,p+'.label');const key=JSON.stringify([cell.kind,cell.value]);if(keys.has(key))v.issue(p+'.value','Category không được trùng');if(labels.has(item.label))v.issue(p+'.label','Label không được trùng');keys.add(key);labels.add(item.label);});
   }

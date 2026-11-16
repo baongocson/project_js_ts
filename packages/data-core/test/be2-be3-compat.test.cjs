@@ -61,7 +61,7 @@ test('BE-3 refuses removing every column because BE-2 codec disallows empty sche
   const source = importCsv(bytes('a,b\nN/A,N/A\n'), { delimiter: ',' }, randomUUID);
   const result = processSnapshot(source, sp('drop_missing_columns', { type: 'dataset' }, { condition: 'all' }));
   assert.equal(result.canApply, false);
-  assert.equal(result.errors[0].code, 'EMPTY_SCHEMA_NOT_ALLOWED');
+  assert.equal(result.errors[0].code, 'LAST_COLUMN');
   assert.equal(result.snapshot, source);
 });
 test('BE-3 one_hot produces valid BE-2 UUIDv4 metadata, lineage and codec roundtrip', () => {

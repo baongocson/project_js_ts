@@ -41,7 +41,7 @@ export interface Diagnostic { code: string; message: string; rowId?: string; col
 export interface ChangedCell { rowId: string; columnId: string; before: Cell; after: Cell }
 export interface SchemaChange { columnId: string; before: LogicalType; after: LogicalType }
 export interface EngineResult { snapshot: Snapshot; changes: ChangedCell[]; schemaChanges: SchemaChange[]; errors: Diagnostic[]; warnings: Diagnostic[]; canApply: boolean }
-export const ENGINE_VERSION = 'data-core-unified-0.5.0';
+export const ENGINE_VERSION = 'data-core-unified-0.6.0';
 
 function invalid(snapshot: Snapshot, errors: Diagnostic[]): EngineResult {
   return { snapshot, changes: [], schemaChanges: [], errors, warnings: [], canApply: false };

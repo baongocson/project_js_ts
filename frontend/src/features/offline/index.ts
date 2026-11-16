@@ -1,4 +1,5 @@
 export { createOfflineQueue } from './queue.ts';
+export { OfflineWorkspace } from './pages/OfflineWorkspace';
 export { IndexedDbQueueStore } from './indexeddb-queue-store.ts';
 export { replayOfflineQueue } from './replay.ts';
 export { OfflineApiAdapter } from './api/offline-client.ts';

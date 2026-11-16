@@ -20,6 +20,7 @@ export default defineConfig(
     'video/**',
   ]),
   { linterOptions: { reportUnusedDisableDirectives: 'error' } },
+  { files: ['frontend/public/offline-worker.js'], languageOptions: { globals: globals.serviceworker } },
   {
     name: 'node-scripts-and-configs',
     files: ['**/*.{js,cjs,mjs}'],

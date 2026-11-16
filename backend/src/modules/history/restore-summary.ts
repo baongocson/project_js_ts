@@ -13,11 +13,13 @@ export function restoreSummary(before: Snapshot, after: Snapshot): ProcessingSum
     if (!next) { deletedRowCount++; continue; }
     const ids = new Set([...Object.keys(row.cells), ...Object.keys(next.cells)]);
     let count = 0;
+    let rowChanged = row.position !== next.position;
     for (const id of ids) {
       const left = row.cells[id], right = next.cells[id];
-      if (!left || !right || !sameCell(left, right) || left.rawToken !== right.rawToken) count++;
+      if (!left || !right) { rowChanged = true; continue; }
+      if (!sameCell(left, right) || left.rawToken !== right.rawToken) { count++; rowChanged = true; }
     }
-    if (count || row.position !== next.position) { updatedRowCount++; updatedCellCount += count; }
+    if (rowChanged) { updatedRowCount++; updatedCellCount += count; }
   }
   for (const row of after.rows) if (!oldRows.has(row.rowId)) insertedRowCount++;
   let typeChangedColumnCount = 0, metadataChangedColumnCount = 0;
