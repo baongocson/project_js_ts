@@ -1,9 +1,10 @@
-import { parseEmptyQuery } from '../../common/validation/query.validation';
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { HistoryService } from './history.service';
+import { CurrentPrincipal, type Principal } from '../auth/security/auth-context';
+import { parseEmptyQuery } from '../../common/validation/query.validation';
 import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
 import { IdempotencyKey } from '../../common/validation/idempotency-key.decorator';
 import { resourceParams, type ResourceParamsDto } from '../../common/validation/request.validation';
+import { HistoryService } from './history.service';
 import type { HistoryQueryDto, RestoreVersionDto } from './dto/history.dto';
 import { parseHistoryQuery, parseRestoreVersion } from './dto/history.validation';
 
@@ -12,13 +13,22 @@ export class HistoryController {
   constructor(private readonly service: HistoryService) {}
 
   @Get('operations')
-  listOperations(@Param(new DtoValidationPipe(resourceParams(['datasetId']))) _params: ResourceParamsDto, @Query(new DtoValidationPipe(parseHistoryQuery)) _query: HistoryQueryDto) {
-    return this.service.pending('listOperations');
+  listOperations(
+    @CurrentPrincipal() principal: Principal,
+    @Param(new DtoValidationPipe(resourceParams(['datasetId']))) params: ResourceParamsDto,
+    @Query(new DtoValidationPipe(parseHistoryQuery)) query: HistoryQueryDto,
+  ) {
+    return this.service.listOperations(principal, params.datasetId!.toLowerCase(), query);
   }
 
   @Post('versions/:versionId/restore')
-  restore(@Param(new DtoValidationPipe(resourceParams(['datasetId', 'versionId']))) _params: ResourceParamsDto, @Body(new DtoValidationPipe(parseRestoreVersion)) _body: RestoreVersionDto, @IdempotencyKey() _key: string, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
-    return this.service.pending('restore');
+  restore(
+    @CurrentPrincipal() principal: Principal,
+    @Param(new DtoValidationPipe(resourceParams(['datasetId', 'versionId']))) params: ResourceParamsDto,
+    @Body(new DtoValidationPipe(parseRestoreVersion)) body: RestoreVersionDto,
+    @IdempotencyKey() key: string,
+    @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>,
+  ) {
+    return this.service.restore(principal, params.datasetId!.toLowerCase(), params.versionId!.toLowerCase(), body, key);
   }
-
 }

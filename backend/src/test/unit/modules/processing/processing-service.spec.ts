@@ -30,9 +30,9 @@ function setup(snapshot: Snapshot = base) {
   const datasetRecords = { byId: async () => ({ lifecycle: 'ready', currentVersionId: new Types.ObjectId(baseVersionId), revision: 1 }) };
   const publisher = {
     prepare: async () => { staged++; return candidateVersionId; },
-    publish: async (_lease: unknown, _input: unknown, response: (version: number, id: string) => unknown, participant: (s: never) => Promise<void>) => {
+    publish: async (_lease: unknown, _input: unknown, response: (version: number, id: string, createdAt: Date) => unknown, participant: (s: never) => Promise<void>) => {
       await participant({} as never);
-      return response(2, '0123456789abcdef01234573');
+      return response(2, '0123456789abcdef01234573', new Date('2026-11-16T10:00:00Z'));
     },
   };
   const receipts = {

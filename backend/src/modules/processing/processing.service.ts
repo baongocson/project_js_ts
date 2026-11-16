@@ -162,12 +162,11 @@ export class ProcessingService {
       if (current.lifecycle !== 'ready' || current.currentVersionId?.toHexString() !== preview.baseVersionId.toHexString() || current.revision !== preview.baseRevision)
         throw new ConflictException({ code: 'BASE_VERSION_STALE', message: 'Phiên bản dữ liệu đã thay đổi' });
       const candidateVersionId = preview.candidateVersionId!.toHexString();
-      const now = new Date();
       return this.publisher.publish(claim.lease, {
         datasetId, candidateVersionId, expectedCurrentVersionId: preview.baseVersionId.toHexString(), expectedRevision: preview.baseRevision,
         kind: 'process', specification: preview.specification, summary: preview.summary,
-      }, (_versionNumber, operationId): ApplyPreviewResponseDto => ({
-        operation: { _id: operationId, kind: 'process', baseVersionId: preview.baseVersionId.toHexString(), resultVersionId: candidateVersionId, summary: preview.summary, createdAt: now.toISOString() },
+      }, (_versionNumber, operationId, createdAt): ApplyPreviewResponseDto => ({
+        operation: { _id: operationId, kind: 'process', baseVersionId: preview.baseVersionId.toHexString(), resultVersionId: candidateVersionId, summary: preview.summary, createdAt: createdAt.toISOString() },
         dataset: { currentVersionId: candidateVersionId, revision: preview.baseRevision + 1 },
       }), session => this.repository.markApplied(preview, session));
     });
