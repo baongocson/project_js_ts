@@ -34,3 +34,7 @@ Chạy từ gốc: `npm run test -w @dashboard/data-core`, `npm run build -w @da
 - **Giới hạn chưa hoàn tất:** Convert datetime hiện chặn timezone IANA khác UTC (trả `UNSUPPORTED_TIMEZONE`); strip HTML chỉ là bộ lọc cơ bản; sinh ID dùng phép băm ổn định không có khả năng chống va chạm mật mã, có kiểm tra trùng trong snapshot; chưa tích hợp REST Preview/Apply, History/Restore, Analysis/3D, offline outbox, MongoDB transaction hay kiểm thử E2E. Các tình huống này phải giải quyết trước khi tuyên bố BE-3 hoàn tất.
 
 Chạy từ thư mục gốc: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run build`. Test core riêng: `npm test -w @dashboard/data-core`.
+
+## BE-3 final engine contract audit
+
+Bổ sung `be3-final-contract-audit.test.mjs` cho D07/D09/D10/D11/D14/D15 và HTML script/style stripping. `ENGINE_VERSION=data-core-unified-0.5.0`. Gói core có 27 phương pháp, nhưng offline UI và Browser E2E thuộc giai đoạn tích hợp chung, không phải chức năng đã có ở package.

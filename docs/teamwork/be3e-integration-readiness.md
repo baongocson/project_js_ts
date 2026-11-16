@@ -4,7 +4,7 @@
 
 - Kiểm thử **MongoDB replica set tạm, riêng biệt** qua HTTP thực: Auth, Dataset/CSV, Processing Preview/Get/Apply, History/Restore và 5 Analysis API.
 - Kiểm tra snapshot đã publish bất biến, receipt/idempotency retry, stale-version conflict, quyền sở hữu và hai Apply cạnh tranh.
-- **Không triển khai FE outbox/offline ở bản này.** Việc replay thật từ IndexedDB/Frontend và khôi phục trạng thái sau reload cần FE-1/FE-3 phối hợp, không thể tự nhận đạt.
+- Sau E1 đã có **E2A offline outbox/replay core** và 10 test thuần đạt; browser UI, lưu CSV offline, ID mapping và offline→server E2E vẫn chưa hoàn tất, cần FE-1/FE-3 phối hợp.
 - Không phải bản triển khai trên Atlas production, không thay thế security/load test.
 
 ## Thực hiện sau khi đã commit BE-3D
@@ -35,7 +35,7 @@ Nếu chạy không được (không tải được binary, thiếu quyền kh�
 
 ## Coverage còn thiếu — không đánh dấu BE-3 hoàn thành
 
-- FE outbox: lưu bền IndexedDB, original CSV bytes, complete typed snapshot, checkpoints, local-to-server ID maps.
+- FE outbox core đã có IndexedDB queue store và checkpoints; **chưa có** original CSV bytes, complete typed snapshot, local-to-server ID maps hoặc UI wiring.
 - End-to-end mạng mất giữa request/response, reload giữa Apply và retry nguyên key, mới chỉ có retry qua HTTP (BE-2 có test disconnect ở project create).
 - Các luồng `one_hot`, `ordinal`, `remove_duplicates`, `drop_missing_rows` qua HTTP thực và đồng bộ sau encoding.
 - Hết hạn preview + background cleanup; pending leases/recovery khi worker chết, concurrent restore và account delete.

@@ -41,7 +41,7 @@ export interface Diagnostic { code: string; message: string; rowId?: string; col
 export interface ChangedCell { rowId: string; columnId: string; before: Cell; after: Cell }
 export interface SchemaChange { columnId: string; before: LogicalType; after: LogicalType }
 export interface EngineResult { snapshot: Snapshot; changes: ChangedCell[]; schemaChanges: SchemaChange[]; errors: Diagnostic[]; warnings: Diagnostic[]; canApply: boolean }
-export const ENGINE_VERSION = 'data-core-unified-0.4.0';
+export const ENGINE_VERSION = 'data-core-unified-0.5.0';
 
 function invalid(snapshot: Snapshot, errors: Diagnostic[]): EngineResult {
   return { snapshot, changes: [], schemaChanges: [], errors, warnings: [], canApply: false };
@@ -60,24 +60,67 @@ function validDate(value: string): boolean {
   const days = [31, isLeap(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   return year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= days[month - 1];
 }
-function toIsoDatetime(value: string): string | undefined {
-  // Explicit timezone is required: never interpret an offset-free timestamp in local time.
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return undefined;
-  if (!validDate(value.slice(0, 10))) return undefined;
-  const epoch = Date.parse(value);
-  return Number.isFinite(epoch) ? new Date(epoch).toISOString() : undefined;
+function validTime(value: string): boolean {
+  const match = /^(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?$/.exec(value);
+  return !!match && Number(match[1]) < 24 && Number(match[2]) < 60 && Number(match[3]) < 60;
 }
-function parseNumber(value: string, decimal: '.' | ',', allowThousands: boolean): number | undefined {
+/** Resolve a wall-clock timestamp in an IANA zone without silently choosing a DST fold/gap. */
+function zonedInstant(local: string, timezone: string): { iso?: string; error?: string } {
+  const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?)$/.exec(local);
+  if (!match || !validDate(match[1]) || !validTime(match[2])) return { error: 'INVALID_DATETIME' };
+  const nominal = Date.parse(`${local}Z`);
+  if (!Number.isFinite(nominal)) return { error: 'INVALID_DATETIME' };
+  let formatter: Intl.DateTimeFormat;
+  try {
+    formatter = new Intl.DateTimeFormat('en-GB-u-ca-gregory', {
+      timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+    });
+  } catch { return { error: 'INVALID_TIMEZONE' }; }
+  const parts = (instant: number) => {
+    const result = Object.fromEntries(formatter.formatToParts(new Date(instant)).map(part => [part.type, part.value]));
+    return { date: `${result.year.padStart(4, '0')}-${result.month}-${result.day}`,
+      time: `${result.hour}:${result.minute}:${result.second}` };
+  };
+  const offsets = new Set<number>();
+  for (const reference of [nominal - 86_400_000, nominal, nominal + 86_400_000]) {
+    const localParts = parts(reference);
+    const localEpoch = Date.parse(`${localParts.date}T${localParts.time}Z`);
+    if (Number.isFinite(localEpoch)) offsets.add(localEpoch - Math.floor(reference / 1000) * 1000);
+  }
+  const matches = new Set<number>();
+  for (const offset of offsets) {
+    const candidate = nominal - offset;
+    const localParts = parts(candidate);
+    if (localParts.date === match[1] && localParts.time === match[2].slice(0, 8)) matches.add(candidate);
+  }
+  if (matches.size === 0) return { error: 'DATETIME_NONEXISTENT' };
+  if (matches.size > 1) return { error: 'DATETIME_AMBIGUOUS' };
+  return { iso: new Date([...matches][0]).toISOString() };
+}
+function toIsoDatetime(value: string, timezone: string): { iso?: string; error?: string } {
+  const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?)(Z|[+-]\d{2}:\d{2})?$/i.exec(value);
+  if (!match || !validDate(match[1]) || !validTime(match[2])) return { error: 'INVALID_DATETIME' };
+  if (match[3]) {
+    const instant = Date.parse(value);
+    return Number.isFinite(instant) ? { iso: new Date(instant).toISOString() } : { error: 'INVALID_DATETIME' };
+  }
+  return zonedInstant(value, timezone);
+}
+function parseNumber(value: string, decimal: '.' | ',', allowThousands: boolean): { number?: number; error?: string } {
+  const input = value.trim();
   const thousands = decimal === '.' ? ',' : '.';
-  const sign = '[+-]?';
   const fraction = decimal === '.' ? '\\.' : ',';
   const group = thousands === '.' ? '\\.' : ',';
-  const plain = new RegExp(`^${sign}(?:\\d+(?:${fraction}\\d+)?|${fraction}\\d+)$`);
-  const grouped = new RegExp(`^${sign}\\d{1,3}(?:${group}\\d{3})+(?:${fraction}\\d+)?$`);
-  if (!plain.test(value) && !(allowThousands && grouped.test(value))) return undefined;
-  const raw = value.replaceAll(thousands, '').replace(decimal, '.');
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) && Math.abs(parsed) <= Number.MAX_SAFE_INTEGER ? parsed : undefined;
+  const exponent = '(?:[eE][+-]?\\d+)?';
+  const plain = new RegExp(`^[+-]?(?:\\d+(?:${fraction}\\d+)?|${fraction}\\d+)${exponent}$`);
+  const grouped = new RegExp(`^[+-]?\\d{1,3}(?:${group}\\d{3})+(?:${fraction}\\d+)?${exponent}$`);
+  if (!plain.test(input) && !(allowThousands && grouped.test(input))) return { error: 'INVALID_NUMBER' };
+  const normal = input.replaceAll(thousands, '').replace(decimal, '.');
+  const number = Number(normal);
+  if (!Number.isFinite(number)) return { error: 'INVALID_NUMBER' };
+  if (Number.isInteger(number) && !Number.isSafeInteger(number)) return { error: 'NUMERIC_PRECISION_LOSS' };
+  return { number };
 }
 function decodeEntities(value: string): string {
   const named: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0' };
@@ -98,14 +141,20 @@ function convert(before: Cell, spec: ProcessingSpecification): { after?: Cell; e
       const mode = spec.parameters.mode;
       return { after: { kind: 'text', value: mode === 'trim' ? before.value.trim() : mode === 'collapse' ? before.value.replace(/\s+/gu, ' ').trim() : before.value.replace(/\s+/gu, '') } };
     }
-    case 'strip_html': return before.kind === 'text' ? { after: { kind: 'text', value: spec.parameters.decodeEntities ? decodeEntities(before.value.replace(/<[^>]*>/g, '')) : before.value.replace(/<[^>]*>/g, '') } } : { after: before };
+    case 'strip_html': {
+      if (before.kind !== 'text') return { after: before };
+      const withoutExecutable = before.value.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+      const plain = withoutExecutable.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]*>/g, '');
+      return { after: { kind: 'text', value: spec.parameters.decodeEntities ? decodeEntities(plain) : plain } };
+    }
     case 'uppercase': return before.kind === 'text' ? { after: { kind: 'text', value: before.value.toUpperCase() } } : { after: before };
     case 'lowercase': return before.kind === 'text' ? { after: { kind: 'text', value: before.value.toLowerCase() } } : { after: before };
     case 'replace_value': return { after: sameCell(before, spec.parameters.from) ? spec.parameters.to : before };
     case 'convert_number': {
       if (before.kind === 'number') return { after: before, logicalType: 'number' };
-      const value = before.kind === 'text' ? parseNumber(before.value, spec.parameters.decimalSeparator, spec.parameters.allowThousands) : undefined;
-      return value === undefined ? { error: 'INVALID_NUMBER' } : { after: { kind: 'number', value }, logicalType: 'number' };
+      if (before.kind !== 'text') return { error: 'INVALID_NUMBER' };
+      const parsed = parseNumber(before.value, spec.parameters.decimalSeparator, spec.parameters.allowThousands);
+      return parsed.number === undefined ? { error: parsed.error ?? 'INVALID_NUMBER' } : { after: { kind: 'number', value: parsed.number }, logicalType: 'number' };
     }
     case 'convert_text': {
       const value = before.kind === 'date' || before.kind === 'datetime' || before.kind === 'text' ? before.value : String(before.value);
@@ -113,12 +162,17 @@ function convert(before: Cell, spec: ProcessingSpecification): { after?: Cell; e
     }
     case 'convert_date': {
       if (before.kind === 'date' && validDate(before.value)) return { after: before, logicalType: 'date' };
+      if (before.kind === 'datetime') {
+        const iso = toIsoDatetime(before.value, 'UTC').iso;
+        return iso ? { after: { kind: 'date', value: iso.slice(0, 10) }, logicalType: 'date' } : { error: 'INVALID_DATE' };
+      }
       return before.kind === 'text' && validDate(before.value) ? { after: { kind: 'date', value: before.value }, logicalType: 'date' } : { error: 'INVALID_DATE' };
     }
     case 'convert_datetime': {
-      if (spec.parameters.timezone !== 'UTC') return { error: 'UNSUPPORTED_TIMEZONE' }; // fail closed until IANA conversion contract is agreed
-      const iso = before.kind === 'text' || before.kind === 'datetime' ? toIsoDatetime(before.value) : undefined;
-      return iso === undefined ? { error: 'INVALID_DATETIME' } : { after: { kind: 'datetime', value: iso }, logicalType: 'datetime' };
+      const raw = before.kind === 'date' ? `${before.value}T00:00:00` : before.kind === 'text' || before.kind === 'datetime' ? before.value : undefined;
+      if (raw === undefined) return { error: 'INVALID_DATETIME' };
+      const parsed = toIsoDatetime(raw, spec.parameters.timezone);
+      return parsed.iso === undefined ? { error: parsed.error ?? 'INVALID_DATETIME' } : { after: { kind: 'datetime', value: parsed.iso }, logicalType: 'datetime' };
     }
     case 'convert_boolean': {
       if (before.kind === 'boolean') return { after: before, logicalType: 'boolean' };

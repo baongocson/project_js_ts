@@ -69,7 +69,7 @@ test('conversion: ISO datetime explicit timezone; ambiguous timestamps rejected'
   const r=processSnapshot(s,spec('convert_datetime',{type:'dataset'},{inputFormat:'ISO8601',timezone:'UTC'}));
   assert.equal(r.snapshot.rows[0].cells.d.value,'2026-11-16T08:29:00.000Z');
   s.rows[0].cells.d.value='2026-11-16T15:29:00';
-  assert.equal(processSnapshot(s,spec('convert_datetime',{type:'dataset'},{inputFormat:'ISO8601',timezone:'UTC'})).errors[0].code,'INVALID_DATETIME');
+  assert.equal(processSnapshot(s,spec('convert_datetime',{type:'dataset'},{inputFormat:'ISO8601',timezone:'UTC'})).snapshot.rows[0].cells.d.value,'2026-11-16T15:29:00.000Z');
 });
 test('conversion: boolean custom mapping and missing preservation',()=>{
   const s={columns:[{columnId:'b',name:'B',position:0,logicalType:'text'}],rows:[{rowId:'a',position:0,cells:{b:{kind:'text',value:'YES'}}},{rowId:'b',position:1,cells:{b:{kind:'text',value:'N/A'}}}]};

@@ -44,6 +44,12 @@ function stableUuid(text:string):string {
   return `${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;
 }
 const numeric=(value:number):Cell=>({kind:'number',value});
+function distinctName(base: string, used: Set<string>): string {
+  let name = base, suffix = 2;
+  while (used.has(name)) name = `${base}_${suffix++}`;
+  used.add(name);
+  return name;
+}
 export function processAdvanced(snapshot:Snapshot, raw:ProcessingSpecification):EngineResult {
   const spec=raw as AdvancedSpec;
   const {scope}=spec;
@@ -161,9 +167,15 @@ function encode(snapshot:Snapshot,spec:Extract<AdvancedSpec,{method:'one_hot'|'o
       map.set(cellKey(item.value),item.label);labels.add(item.label);
     }
     const base=snapshot.columns.find(c=>c.columnId===id)!;
+    const realCategories = categories(snapshot, id);
+    if (!realCategories) return bad(snapshot, [err('CELL_NOT_FOUND', 'Ô không tồn tại', id)]);
+    if (realCategories.some(cell => !map.has(cellKey(cell))))
+      return bad(snapshot, [err('UNMAPPED_CATEGORY', 'Category chưa mapping', id)]);
+    if (map.size !== realCategories.length)
+      return bad(snapshot, [err('INVALID_MAPPING', 'Mapping có category không thuộc cột', id)]);
     const newId=spec.parameters.keepSource?stableUuid(`${id}:ordinal`):id;
     if(newId!==id&&snapshot.columns.some(c=>c.columnId===newId))return bad(snapshot,[err('COLUMN_ID_CONFLICT','ID cột trùng',newId)]);
-    const newColumn:Column={columnId:newId,name:spec.parameters.keepSource?`${base.name}_ordinal`:base.name,position:base.position+(spec.parameters.keepSource?0.5:0),logicalType:'number',format:null,lineage:{sourceColumnId:id}};
+    const newColumn:Column={columnId:newId,name:spec.parameters.keepSource?distinctName(`${base.name}_ordinal`, new Set(snapshot.columns.map(column=>column.name))):base.name,position:base.position+(spec.parameters.keepSource?0.5:0),logicalType:'number',format:null,lineage:{sourceColumnId:id}};
     const changes:ChangedCell[]=[];
     const rows=snapshot.rows.map(row=>{
       const cell=row.cells[id];if(!cell){errors.push(err('CELL_NOT_FOUND','Ô không tồn tại',id,row.rowId));return row;}
@@ -180,17 +192,21 @@ function encode(snapshot:Snapshot,spec:Extract<AdvancedSpec,{method:'one_hot'|'o
   const planned:{source:string;sourceName:string;categories:Cell[];includeMissing:boolean;columns:Column[]}[]=[];
   let generated=0;
   const taken=new Set(snapshot.columns.map(c=>c.columnId));
+  const names=new Set(snapshot.columns.map(c=>c.name));
   for(const id of selected){
     const base=snapshot.columns.find(c=>c.columnId===id)!;
     const cats=categories(snapshot,id);
     if(!cats){errors.push(err('CELL_NOT_FOUND','Ô không tồn tại',id));continue;}
-    if(cats.length>100){errors.push(err('TOO_MANY_CATEGORIES','Quá 100 category',id));continue;}
+    if (base.logicalType !== 'text' && base.logicalType !== 'boolean' && !(base.logicalType === 'number' && spec.parameters.asCategory)) {
+      errors.push(err('UNSUPPORTED_CATEGORY_TYPE', 'One-hot chỉ hỗ trợ text/boolean hoặc number khi asCategory=true', id)); continue;
+    }
     const missing=spec.parameters.missingCategory&&snapshot.rows.some(r=>missingKind(r.cells[id])!==undefined);
+    if(cats.length+(missing?1:0)>100){errors.push(err('TOO_MANY_CATEGORIES','Quá 100 category',id));continue;}
     const generatedColumns=[...cats,...(missing?[{kind:'null',value:null} as Cell]:[])].map((c,i)=>{
       const category=cellKey(c),newId=stableUuid(`${id}:onehot:${category}`);
       if(taken.has(newId)){errors.push(err('COLUMN_ID_CONFLICT','Trùng ID cột',id));}
       taken.add(newId);
-      return {columnId:newId,name:`${base.name}__${i+1}`,position:base.position+(i+1)/(cats.length+2),logicalType:spec.parameters.asCategory?'text' as const:'number' as const,format:null,lineage:{sourceColumnId:id,category:missingKind(c)!==undefined?{isMissing:true as const}:c}};
+      return {columnId:newId,name:distinctName(`${base.name}_${missingKind(c)!==undefined?'missing':String(c.value)}`,names),position:base.position+(i+1)/(cats.length+2),logicalType:'number' as const,format:null,lineage:{sourceColumnId:id,category:missingKind(c)!==undefined?{isMissing:true as const}:c}};
     });
     generated+=generatedColumns.length;
     planned.push({source:id,sourceName:base.name,categories:cats,includeMissing:missing,columns:generatedColumns});
@@ -207,7 +223,10 @@ function encode(snapshot:Snapshot,spec:Extract<AdvancedSpec,{method:'one_hot'|'o
       const values=[...p.categories,...(p.includeMissing?[{kind:'null',value:null} as Cell]:[])];
       values.forEach((cat,i)=>{
         const isHit=missingKind(cat)!==undefined?missingKind(current)!==undefined:sameCell(current,cat);
-        cells[p.columns[i].columnId]=spec.parameters.asCategory?{kind:'text',value:isHit?'1':'0'}:numeric(isHit?1:0);
+        // Without a missing category, missing source rows must remain missing in all generated columns.
+        cells[p.columns[i].columnId] = missingKind(current) !== undefined && !p.includeMissing
+          ? { kind: 'null', value: null }
+          : numeric(isHit ? 1 : 0);
       });
       if(remove.has(p.source))delete cells[p.source];
     }
