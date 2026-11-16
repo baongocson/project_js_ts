@@ -12,7 +12,8 @@
     "test:e2e:install": "playwright install chromium",
     "check:architecture": "node scripts/check-architecture.mjs",
     "lint": "eslint . --max-warnings=0",
-    "lint:fix": "eslint . --fix --max-warnings=0"
+    "lint:fix": "eslint . --fix --max-warnings=0",
+    "test:offline": "node --experimental-strip-types --test test/offline/*.test.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",
