@@ -28,7 +28,8 @@ describe('HTTP DTO contracts (explicit security overrides, database disabled)', 
         const be2 = route.startsWith('projects') || (route.startsWith('datasets') && !route.includes('/analysis/') && !route.includes('/restore') && !route.includes('/previews') && !route.includes('/operations'));
         const be3Processing = route.includes('/previews') || (method === 'POST' && route === 'datasets/' + id + '/operations');
         const be3History = (method === 'GET' && route === 'datasets/' + id + '/operations') || route.endsWith('/restore');
-        const implemented = be2 || be3Processing || be3History;
+        const be3Analysis = route.includes('/analysis/');
+        const implemented = be2 || be3Processing || be3History || be3Analysis;
         expect(response.status).toBe(implemented ? 503 : 501);
         expect(record(record(response.body).error).code).toBe(implemented ? 'DATABASE_UNAVAILABLE' : 'NOT_IMPLEMENTED');
     });

@@ -1,4 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
+import { CurrentPrincipal, type Principal } from '../auth/security/auth-context';
 import { AnalysisService } from './analysis.service';
 import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
 import { resourceParams, type ResourceParamsDto } from '../../common/validation/request.validation';
@@ -8,30 +9,24 @@ import { parseSummaryQuery, parseDistributionQuery, parseCorrelationQuery, parse
 @Controller('datasets/:datasetId/versions/:versionId/analysis')
 export class AnalysisController {
   constructor(private readonly service: AnalysisService) {}
-
   @Get('summary')
-  summary(@Param(new DtoValidationPipe(resourceParams(['datasetId', 'versionId']))) _params: ResourceParamsDto, @Query(new DtoValidationPipe(parseSummaryQuery)) _query: SummaryQueryDto) {
-    return this.service.pending('summary');
+  summary(@CurrentPrincipal() principal:Principal,@Param(new DtoValidationPipe(resourceParams(['datasetId','versionId']))) params:ResourceParamsDto,@Query(new DtoValidationPipe(parseSummaryQuery)) query:SummaryQueryDto) {
+    return this.service.summary(principal,params.datasetId!.toLowerCase(),params.versionId!.toLowerCase(),query);
   }
-
   @Get('columns/:columnId/distribution')
-  distribution(@Param(new DtoValidationPipe(resourceParams(['datasetId', 'versionId', 'columnId']))) _params: ResourceParamsDto, @Query(new DtoValidationPipe(parseDistributionQuery)) _query: DistributionQueryDto) {
-    return this.service.pending('distribution');
+  distribution(@CurrentPrincipal() principal:Principal,@Param(new DtoValidationPipe(resourceParams(['datasetId','versionId','columnId']))) params:ResourceParamsDto,@Query(new DtoValidationPipe(parseDistributionQuery)) query:DistributionQueryDto) {
+    return this.service.distribution(principal,params.datasetId!.toLowerCase(),params.versionId!.toLowerCase(),params.columnId!,query);
   }
-
   @Get('correlation')
-  correlation(@Param(new DtoValidationPipe(resourceParams(['datasetId', 'versionId']))) _params: ResourceParamsDto, @Query(new DtoValidationPipe(parseCorrelationQuery)) _query: CorrelationQueryDto) {
-    return this.service.pending('correlation');
+  correlation(@CurrentPrincipal() principal:Principal,@Param(new DtoValidationPipe(resourceParams(['datasetId','versionId']))) params:ResourceParamsDto,@Query(new DtoValidationPipe(parseCorrelationQuery)) query:CorrelationQueryDto) {
+    return this.service.correlation(principal,params.datasetId!.toLowerCase(),params.versionId!.toLowerCase(),query);
   }
-
   @Get('points-3d')
-  points3d(@Param(new DtoValidationPipe(resourceParams(['datasetId', 'versionId']))) _params: ResourceParamsDto, @Query(new DtoValidationPipe(parsePoints3dQuery)) _query: Points3dQueryDto) {
-    return this.service.pending('points3d');
+  points3d(@CurrentPrincipal() principal:Principal,@Param(new DtoValidationPipe(resourceParams(['datasetId','versionId']))) params:ResourceParamsDto,@Query(new DtoValidationPipe(parsePoints3dQuery)) query:Points3dQueryDto) {
+    return this.service.points3d(principal,params.datasetId!.toLowerCase(),params.versionId!.toLowerCase(),query);
   }
-
   @Get('columns/:columnId/value-counts')
-  valueCounts(@Param(new DtoValidationPipe(resourceParams(['datasetId', 'versionId', 'columnId']))) _params: ResourceParamsDto, @Query(new DtoValidationPipe(parseValueCountsQuery)) _query: ValueCountsQueryDto) {
-    return this.service.pending('valueCounts');
+  valueCounts(@CurrentPrincipal() principal:Principal,@Param(new DtoValidationPipe(resourceParams(['datasetId','versionId','columnId']))) params:ResourceParamsDto,@Query(new DtoValidationPipe(parseValueCountsQuery)) query:ValueCountsQueryDto) {
+    return this.service.valueCounts(principal,params.datasetId!.toLowerCase(),params.versionId!.toLowerCase(),params.columnId!,query);
   }
-
 }
