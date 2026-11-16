@@ -4,3 +4,4 @@ export * from './codec.js';
 export * from './csv.js';
 export * from './query.js';
 export * from './sync-contract.js';
+export * from './processing.js';

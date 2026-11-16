@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
+import { DatasetsModule } from '../datasets/datasets.module';
 import { AnalysisController } from './analysis.controller';
 import { AnalysisService } from './analysis.service';
-
-import { AnalysisGuard } from './analysis.guard';
 import { AnalysisRepository } from './analysis.repository';
 
-@Module({ controllers: [AnalysisController], providers: [AnalysisService, AnalysisGuard, AnalysisRepository], exports: [AnalysisService] })
+@Module({ imports: [DatasetsModule], controllers: [AnalysisController], providers: [AnalysisService, AnalysisRepository], exports: [AnalysisService] })
 export class AnalysisModule {}

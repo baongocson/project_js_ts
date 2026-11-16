@@ -39,16 +39,16 @@ export class SnapshotPublisherService {
     return id.toHexString();
   }
   /** BE-3 supplies an atomic preview CAS hook; a failed hook rolls back the whole publish. */
-  async publish<T>(lease: Lease, input: PublishInput, response: (versionNumber: number, operationId: string) => T, participant: (session: ClientSession) => Promise<void>): Promise<T> {
+  async publish<T>(lease: Lease, input: PublishInput, response: (versionNumber: number, operationId: string, createdAt: Date) => T, participant: (session: ClientSession) => Promise<void>): Promise<T> {
     await this.checkLeaseParent(lease, input.datasetId);
     if (input.candidateVersionId === input.expectedCurrentVersionId) throw new ConflictException({ code: 'NO_CHANGES_TO_APPLY', message: 'Không có candidate mới' });
-    const operationId = new Types.ObjectId();
+    const operationId = new Types.ObjectId(), createdAt = new Date();
     return this.datasets.transaction(async session => {
       await this.receipts.touch(lease, session);
       const versionNumber = await this.datasets.publishCandidate(input, session);
       await participant(session);
-      await this.operations.append({ _id: operationId, datasetId: new Types.ObjectId(input.datasetId), actorId: new Types.ObjectId(lease.principal.userId), baseVersionId: new Types.ObjectId(input.expectedCurrentVersionId), resultVersionId: new Types.ObjectId(input.candidateVersionId), kind: input.kind, specification: input.specification, summary: input.summary, idempotencyDigest: lease.digest, createdAt: new Date() }, session);
-      const body = response(versionNumber, operationId.toHexString());
+      await this.operations.append({ _id: operationId, datasetId: new Types.ObjectId(input.datasetId), actorId: new Types.ObjectId(lease.principal.userId), baseVersionId: new Types.ObjectId(input.expectedCurrentVersionId), resultVersionId: new Types.ObjectId(input.candidateVersionId), kind: input.kind, specification: input.specification, summary: input.summary, idempotencyDigest: lease.digest, createdAt }, session);
+      const body = response(versionNumber, operationId.toHexString(), createdAt);
       await this.receipts.complete(lease, 201, body, session);
       return body;
     });

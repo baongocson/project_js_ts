@@ -1,18 +1,15 @@
-# Feature offline
+# Offline replay E2A — existing-server dataset
 
-Phần dành cho khả năng làm việc offline theo kế hoạch. Checkout hiện chưa có offline engine, IndexedDB hoặc đồng bộ; chưa tạo triển khai giả.
+`IndexedDbQueueStore` persists per-queue state in IndexedDB. `createOfflineQueue` validates IDs and independent idempotency keys. `replayOfflineQueue` checkpoints **before every external mutation**, retries uncertain commits with exactly the original key, stops on stale base/account/engine/owner, and only marks synced after a server-head verification.
 
-## Cấu trúc và luồng dự kiến
+This is an independently testable replay infrastructure, **not a finished offline feature**. The current frontend does not yet provide offline CSV Blob/V1 snapshot persistence, local→server mapping for new projects and imports, multi-operation re-mapping, app shell/service worker, auth UI, and browser end-to-end proof. FE integration must supply a trusted authenticated `readRemoteState` adapter, local IDs mapped to the published server IDs, and UI for user-visible blocked/conflict states. Do not claim all offline commands are synced merely because this module passes unit tests.
 
-- `api/`: endpoint riêng của feature, gọi transport ở shared/api.
-- `components/`: UI đặc thù của feature.
-- `hooks/`: logic/trạng thái tái sử dụng trong feature.
-- `pages/`: màn hình được app router lắp ghép.
-- `types.ts`: kiểu dữ liệu riêng của feature.
-- `index.ts`: API công khai, chỉ export thành phần thực sự được triển khai.
+The replay adapter calls existing BE endpoints:
 
-Luồng dự kiến khi có nghiệp vụ: app router → page → hooks/API → shared/api → backend. Feature được dùng shared; không import ngược app. Chưa có code nghiệp vụ nên index/types hiện chỉ đánh dấu TypeScript module (`export {}`), không giả lập thành công.
+- `POST datasets/:datasetId/previews` with `Idempotency-Key`
+- `POST datasets/:datasetId/operations` with `Idempotency-Key`
+- `POST datasets/:datasetId/versions/:versionId/restore` with `Idempotency-Key`
 
-## Chạy và kiểm tra
+The implementation intentionally refuses to guess local-to-server ID mapping after the first operation changes the base version. It also never stores an access token or refresh token in the IndexedDB outbox.
 
-Từ gốc repo: `npm run dev -w frontend`, `npm run typecheck -w frontend`. E2E chung: `npm run test:e2e:frontend`. Hiện chưa có test chứng minh nghiệp vụ offline hoàn thành; chỉ có E2E trang hệ thống. Khi triển khai, thêm test luồng tương ứng và export qua index, cập nhật README.
+Run `npm run test:offline -w frontend` and the ordinary root typecheck/lint/build suite. The test suite is a pure coordinator test with an in-memory store; real IndexedDB and Chrome offline E2E need FE wiring.
