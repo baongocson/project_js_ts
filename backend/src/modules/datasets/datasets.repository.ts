@@ -25,8 +25,21 @@ export class DatasetsRepository extends Be2Repository {
     const columns = await this.db().collection<ColumnRecord>('versionColumns').find({ versionId: version._id }, { session }).sort({ position: 1 }).toArray();
     return { version, columns: columns.map(publicColumn) };
   }
-  async snapshot(datasetId: string, versionId: string): Promise<Snapshot> {
-    const { version, columns } = await this.version(datasetId, versionId);
+  /** Read a staged candidate only through a verified dataset/preview owner boundary. */
+  async stagedSnapshot(datasetId: string, versionId: string): Promise<Snapshot> {
+    return this.snapshot(datasetId, versionId, 'staged');
+  }
+  async snapshot(datasetId: string, versionId: string, state: 'published' | 'staged' = 'published'): Promise<Snapshot> {
+    let version: VersionRecord;
+    let columns: Column[];
+    if (state === 'published') ({ version, columns } = await this.version(datasetId, versionId));
+    else {
+      const staged = await this.db().collection<VersionRecord>('datasetVersions').findOne({ _id: new Types.ObjectId(versionId), datasetId: new Types.ObjectId(datasetId), state: 'staged' });
+      if (!staged) throw new NotFoundException({ code: 'CANDIDATE_NOT_FOUND', message: 'Không tìm thấy candidate đã chuẩn bị' });
+      version = staged;
+      const docs = await this.db().collection<ColumnRecord>('versionColumns').find({ versionId: staged._id }).sort({ position: 1 }).toArray();
+      columns = docs.map(publicColumn);
+    }
     const chunks = await this.db().collection<{ _id: Types.ObjectId; chunkIndex: number; payload: Binary; byteLength: number; sha256: string; codecVersion: string }>('dataChunks').find({ versionId: version._id }).sort({ chunkIndex: 1 }).toArray();
     try {
       let size = 0;

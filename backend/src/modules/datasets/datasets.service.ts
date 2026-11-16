@@ -86,6 +86,11 @@ export class DatasetsService {
     await this.ownership.dataset(datasetId, principal);
     return this.repository.snapshot(datasetId, versionId);
   }
+  /** BE-3 must validate preview ownership before requesting staged data. */
+  async readPreviewCandidate(principal: Principal, datasetId: string, candidateVersionId: string) {
+    await this.ownership.dataset(datasetId, principal);
+    return this.repository.stagedSnapshot(datasetId, candidateVersionId);
+  }
   async projectDataset(projectId: string) { return this.repository.byProject(projectId); }
   async listRows(principal: Principal, datasetId: string, versionId: string, query: RowsQueryDto) {
     const snapshot = await this.readSnapshot(principal, datasetId, versionId);
