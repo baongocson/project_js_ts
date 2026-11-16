@@ -1,4 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
 import type { ProcessingSpecificationDto } from '../processing/dto/processing.dto';
 import type { ImportOptionsDto } from '../datasets/dto/import-options.dto';
 import type { OperationDto } from '../processing/dto/processing-response.dto';
@@ -27,7 +28,8 @@ function publicOperation(operation: CommittedOperation): OperationDto {
   };
   if (operation.kind === 'restore') return {
     ...shared, kind: 'restore', baseVersionId: operation.baseVersionId!.toHexString(),
-    specification: operation.specification as { targetVersionId: string },
+    // MongoDB schema stores the restore target as BSON ObjectId; HTTP exposes hex string.
+    specification: { targetVersionId: (operation.specification as { targetVersionId: Types.ObjectId }).targetVersionId.toHexString() },
   };
   return {
     ...shared, kind: 'process', baseVersionId: operation.baseVersionId!.toHexString(),
@@ -77,7 +79,8 @@ export class HistoryService {
       const candidateVersionId = await this.publisher.prepare(claim.lease, datasetId, currentVersionId!, restored, versionId);
       return this.publisher.publish(claim.lease, {
         datasetId, candidateVersionId, expectedCurrentVersionId: currentVersionId!, expectedRevision: revision,
-        kind: 'restore', specification: { targetVersionId: versionId }, summary,
+        // processingOperations.specification.targetVersionId requires BSON ObjectId.
+        kind: 'restore', specification: { targetVersionId: new Types.ObjectId(versionId) }, summary,
       }, (versionNumber, operationId, createdAt): RestoreVersionResponseDto => ({
         operation: { _id: operationId, kind: 'restore', baseVersionId: currentVersionId!, resultVersionId: candidateVersionId, createdAt: createdAt.toISOString() },
         newVersion: { _id: candidateVersionId, versionNumber, parentVersionId: currentVersionId!, restoredFromVersionId: versionId },

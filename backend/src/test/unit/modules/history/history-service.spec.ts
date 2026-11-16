@@ -73,7 +73,9 @@ function fixture(options: { current?: string; targetPublished?: boolean; replay?
       calls.push('publish'); published++;
       assert.equal(input.kind, 'restore');
       assert.equal(input.expectedRevision, 2);
-      assert.deepEqual(input.specification, { targetVersionId: targetVersion });
+      const stored = input.specification as { targetVersionId: Types.ObjectId };
+      assert.ok(stored.targetVersionId instanceof Types.ObjectId);
+      assert.equal(stored.targetVersionId.toHexString(), targetVersion);
       assert.equal(input.summary.updatedCellCount, 1);
       await participant();
       return response(3, operation, createdAt);
@@ -86,7 +88,7 @@ function fixture(options: { current?: string; targetPublished?: boolean; replay?
       return { items: [{
         _id: new Types.ObjectId(operation), actorId: new Types.ObjectId(actor),
         baseVersionId: new Types.ObjectId(oldVersion), resultVersionId: new Types.ObjectId(candidate),
-        kind: 'restore', specification: { targetVersionId: targetVersion }, summary: { updatedCellCount: 1 }, createdAt,
+        kind: 'restore', specification: { targetVersionId: new Types.ObjectId(targetVersion) }, summary: { updatedCellCount: 1 }, createdAt,
       }], total: 21 };
     },
   };
@@ -134,6 +136,7 @@ describe('History Service restore / immutable transaction hand-off', () => {
     const response = await env.service.listOperations(principal, datasetId, { page: 2, limit: 20, kind: 'restore' });
     assert.equal(response.total, 21);
     assert.equal(response.items[0].kind, 'restore');
+    if (response.items[0].kind === 'restore') assert.equal(response.items[0].specification.targetVersionId, targetVersion);
     assert.equal(response.items[0].resultVersionId, candidate);
     assert.equal(response.items[0].createdAt, createdAt.toISOString());
     assert.deepEqual(env.calls, ['owner', 'list']);
