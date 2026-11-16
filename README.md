@@ -57,9 +57,9 @@ frontend/
   public/, vite.config.ts, tsconfig.json
 ```
 
-`GET /api/v1/health` ping database khi được bật. 27 endpoint nghiệp vụ có DTO/validation/response contract nhưng vẫn trả **501 NOT_IMPLEMENTED** với error envelope; chưa có auth, idempotency hay thuật toán thực thi. Schema MongoDB và index đã có, chưa nối nghiệp vụ vào persistence. Frontend hiển thị trạng thái kết nối, chưa phải dashboard hoàn chỉnh.
+`GET /api/v1/health` ping database khi được bật. BE-1 đã triển khai 4 API Auth và 3 API Users khi database bật: bcrypt, JWT/session/refresh, profile và xóa tài khoản có cleanup. 20 API Projects/Datasets/Processing/History/Analysis còn trả **501 NOT_IMPLEMENTED** sau khi vượt qua xác thực/quyền; idempotency và engine nghiệp vụ thuộc BE-2/BE-3. Frontend vẫn hiển thị trạng thái kết nối, chưa có auth UI hoặc dashboard hoàn chỉnh.
 
-Mỗi module đã có guard riêng và repository đặt phẳng. Đây là khung cấu trúc: guard chưa gắn vào controller, repository chưa thực hiện CRUD. Không coi những file này là chức năng bảo mật/persistence đã hoàn thành.
+AuthGuard và OwnershipGuard đã gắn toàn cục: thiếu JWT/session hợp lệ trả 401 trước kiểm ID, rồi kiểm quyền project/dataset/version/preview. Health và Auth là public; Auth mutations vẫn kiểm Origin và rate limit. Các guard scaffold của những module còn lại chưa được dùng thay guard thật. Xem [BE-1 bàn giao](docs/plans/be1-handoff.md).
 
 ## Kiểm thử
 
@@ -74,7 +74,7 @@ npm run lint -w backend       # chỉ backend
 
 Lint bổ sung cho typecheck, kiểm kiến trúc và test. Xem [quy tắc và cách dùng ESLint](docs/architecture/code-quality.md).
 
-Backend dùng Jest, ts-jest, Nest Testing và Supertest, tập trung trong `backend/src/test/`. Bên trong chia theo common/module/infrastructure tương ứng, còn contract liên module ở unit/contracts. File ví dụ: `e2e/modules/auth/auth.e2e-spec.ts`, `unit/modules/auth/auth.service.spec.ts`. Test đọc source TypeScript; production build loại `src/test` khỏi `dist`. Frontend dùng Playwright Chromium để kiểm trang hệ thống với backend thật và các ca lỗi có kiểm soát; chưa có E2E đăng nhập vì nghiệp vụ đó chưa triển khai.
+Backend dùng Jest, ts-jest, Nest Testing và Supertest, tập trung trong `backend/src/test/`. Test đọc source TypeScript; production build loại `src/test` khỏi `dist`. Bộ DTO contract cũ có override guard tường minh khi database tắt; bộ security HTTP và integration BE-1 kiểm guard thật. Frontend dùng Playwright Chromium để kiểm trang hệ thống; chưa có E2E đăng nhập trình duyệt vì chưa có auth UI.
 
 ```powershell
 npm run test:unit
@@ -84,9 +84,10 @@ npm run test:e2e:backend            # chỉ backend
 npm run test:e2e:frontend           # chỉ browser + health backend
 # Cần Atlas đã cấu hình; có dữ liệu thử và cleanup/rollback
 npm run test:integration
+npm run test:be1 -w backend        # HTTP + Atlas thật, có dữ liệu thử/cleanup
 ```
 
-Xem [cấu trúc và phạm vi test](backend/src/test/readme.md). Test Auth hiện kiểm hợp đồng 400/501 của bản main, chưa phải test đăng nhập thành công.
+Trước khi chạy backend với database bật, chạy `npm run auth:init-secret -w backend` để tạo secret cục bộ nếu chưa có; lệnh không in secret hoặc thay khóa hợp lệ. HTTPS cùng origin hoặc reverse proxy HTTPS được yêu cầu khi nghiệm thu cookie Secure trong trình duyệt. Xem [cấu trúc test](backend/src/test/readme.md) và [BE-1 bàn giao](docs/plans/be1-handoff.md).
 
 Frontend tổ chức theo chiều import `app → features → shared` và `app → shared`; typecheck kiểm cả chiều import và vòng phụ thuộc. E2E frontend tự build hai workspace, chạy preview 4173 và Nest 4300 với database tắt, không dùng Atlas. Xem [frontend README](frontend/README.md) và [trạng thái thực hiện refactor](docs/refactor/refactor-status.md).
 

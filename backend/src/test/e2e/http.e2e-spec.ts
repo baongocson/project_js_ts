@@ -5,9 +5,9 @@ type Case = readonly [
     string,
     unknown?
 ];
-describe('HTTP routes and validation (E2E — current main scaffold)', () => {
+describe('HTTP DTO contracts (explicit security overrides, database disabled)', () => {
     let fixture: Awaited<ReturnType<typeof createTestApp>>;
-    beforeAll(async () => { fixture = await createTestApp(); });
+    beforeAll(async () => { fixture = await createTestApp(false, true); });
     afterAll(async () => { await fixture?.close(); });
     const id = '0123456789abcdef01234567', uuid = '00000000-0000-4000-8000-000000000001';
     const root = 'datasets/' + id + '/versions/' + id;

@@ -1,25 +1,24 @@
-# AuthModule
+# Auth — BE-1
 
-Đăng ký, đăng nhập và phiên xác thực.
+Đã triển khai register/login/refresh/logout khi DATABASE_ENABLED=true. AuthController là Public đối với JWT nhưng có AuthMutationGuard kiểm Origin và rate limit trước pipe. Khi database tắt, service tiếp tục trả 501 sau validation cho các test DTO; route bảo vệ không tự bỏ JWT vì DB tắt.
 
-## Cấu trúc
+## Luồng
 
-| Thành phần | Trách nhiệm |
-| --- | --- |
-| auth.controller.ts | Khai báo route và gọi validation DTO trước khi chuyển đến service. |
-| auth.service.ts | Điều phối nghiệp vụ; bản main hiện còn trả HTTP 501 cho nghiệp vụ chưa triển khai. |
-| auth.guard.ts | File guard riêng. Khung hiện từ chối với 501 nếu được gọi; chưa gắn vào controller. |
-| auth.repository.ts | Ranh giới truy cập dữ liệu, đang là khung, chưa có CRUD. |
-| auth.module.ts | Đăng ký controller, service, guard và repository với NestJS. |
-| security/ | Chính sách bảo mật riêng của module khi triển khai; không chứa secret. |
-| dto/ | Kiểu request/response và validation hiện có; xem README bên trong. |
+Controller → validation parser → AuthService → AuthRepository → MongoDB. Register tạo user với bcryptjs cost 12, unique emailNormalized và response projection. Register không tự đăng nhập/cấp session. Login kiểm mật khẩu, user active, tạo session qua transaction parent fence rồi cấp JWT 900 giây và refresh cookie. Refresh lookup SHA256 hash, rotation CAS trong transaction giữ nguyên expiresAt tuyệt đối 7 ngày. Logout revoke hash rồi clear cookie; cookie thiếu/không hợp lệ/đã revoke vẫn 204.
 
-## Luồng và trạng thái
+AuthGuard và OwnershipGuard đăng ký APP_GUARD qua useExisting trong AuthModule, theo đúng thứ tự. AuthModule global export AuthGuard, AuthService, OwnershipService. Public decorator chỉ dùng cho Auth/health. Principal do guard tạo, không lấy userId/ownerId từ body.
 
-Luồng đang chạy: HTTP → DTO/pipe → controller → service → HTTP 501 khi chưa có nghiệp vụ. Luồng dự kiến sau khi triển khai bảo mật: HTTP → guard → DTO → controller → service → repository → database. Guard đã đăng ký provider nhưng chưa dùng @UseGuards để không thay hành vi API của main bằng một kiểm tra bảo mật giả. Không dùng guard này để tuyên bố route đã được bảo vệ.
+## File
 
-Schema/validator/index vẫn do infrastructure/database quản lý tập trung. Không tạo bản schema thứ hai trong module. Chưa triển khai thêm nghiệp vụ, kết nối hay collection trong đợt cấu hình này.
+- auth.controller.ts: status, cookie HttpOnly/Secure/SameSite=Lax/Path=/api/v1/auth; không trả refresh token trong JSON.
+- auth.service.ts: điều phối bcrypt, projection, Origin, login failure limit và token.
+- auth.repository.ts: users/authSessions; transaction tạo/rotate session có write fence với user active; không trả thẳng document ra HTTP.
+- auth.guard.ts: kiểm JWT, exp/sub/sid/iss/aud, session chưa revoke/hết hạn và user active.
+- auth.module.ts: DI và global guards.
+- dto/: body contract/parser giữ nguyên; security/: primitives, context, token settings, rate limit và ownership.
 
-## Kiểm thử
+## Cấu hình và test
 
-Test tập trung trong backend/src/test: unit/, e2e/, integration/. Chạy npm run test:unit hoặc npm run test:e2e:backend từ gốc repo. Test hiện kiểm hợp đồng và trạng thái khung, không chứng minh CRUD đã hoàn thành. Mã nguồn JS/TS, không dùng kiểu any.
+Chạy npm run auth:init-secret -w backend trước khi bật DB nếu chưa có secret; giữ backend/.env riêng, không commit. Rate limit theo biến trong .env.example, một process, không distributed. CORS/Origin exact allowlist; proxy mặc định không được tin X-Forwarded-For. Cookie Secure phải nghiệm thu browser qua HTTPS; test Supertest kiểm header và truyền cookie tường minh, không thay thế kiểm cookie jar của browser.
+
+Từ gốc: npm run lint, npm run typecheck, npm run test:unit, npm run test:e2e:backend, npm run test:be1 -w backend. Lệnh cuối dùng Atlas thật, tạo/dọn tài khoản thử riêng; không drop/provision database. Xem docs/plans/be1-handoff.md.

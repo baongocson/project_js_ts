@@ -1,4 +1,4 @@
-import { DynamicModule, Module, Injectable, OnModuleInit } from '@nestjs/common';
+import { DynamicModule, Global, Module, Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection, MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
@@ -18,11 +18,12 @@ class DatabaseReadiness implements OnModuleInit {
 }
 
 @Module({})
+@Global()
 export class DatabaseModule {
   static register(enabled: boolean): DynamicModule {
     return { module: DatabaseModule, imports: enabled ? [MongooseModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => databaseOptions({ MONGODB_URI: config.getOrThrow<string>('MONGODB_URI'), MONGODB_DB_NAME: config.get<string>('MONGODB_DB_NAME'), MONGODB_DNS_SERVERS: config.get<string>('MONGODB_DNS_SERVERS') }),
+      useFactory: (config: ConfigService) => ({ ...databaseOptions({ MONGODB_URI: config.getOrThrow<string>('MONGODB_URI'), MONGODB_DB_NAME: config.get<string>('MONGODB_DB_NAME'), MONGODB_DNS_SERVERS: config.get<string>('MONGODB_DNS_SERVERS') }), retryAttempts: 1 }),
     }), MongooseModule.forFeature(COLLECTION_CONTRACTS.map(c => ({ name: c.name, schema: c.schema, collection: c.name })))] : [], providers: enabled ? [DatabaseReadiness] : [], exports: enabled ? [MongooseModule] : [] };
   }
 }

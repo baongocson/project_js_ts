@@ -4,6 +4,14 @@ export function validateEnvironment(env: Record<string, unknown>) {
   const enabled = String(env.DATABASE_ENABLED ?? 'false');
   if (!['true', 'false'].includes(enabled)) throw new Error('DATABASE_ENABLED must be true or false');
   if (enabled === 'true' && !env.MONGODB_URI) throw new Error('MONGODB_URI is required when database is enabled');
+  if (enabled === 'true' && (typeof env.AUTH_ACCESS_TOKEN_SECRET !== 'string' || Buffer.byteLength(env.AUTH_ACCESS_TOKEN_SECRET, 'utf8') < 32)) throw new Error('AUTH_ACCESS_TOKEN_SECRET must contain at least 32 UTF-8 bytes');
+  for (const key of ['AUTH_REGISTER_LIMIT', 'AUTH_LOGIN_LIMIT', 'AUTH_LOGIN_FAILURE_LIMIT', 'AUTH_REFRESH_LIMIT', 'AUTH_LOGOUT_LIMIT']) {
+    if (env[key] !== undefined && (!/^\d+$/.test(String(env[key])) || !Number.isSafeInteger(Number(env[key])) || Number(env[key]) < 1)) throw new Error(`${key} must be a positive integer`);
+  }
+  for (const key of ['AUTH_TOKEN_ISSUER', 'AUTH_TOKEN_AUDIENCE']) {
+    if (env[key] !== undefined && (typeof env[key] !== 'string' || !env[key].trim())) throw new Error(`${key} must be a non-empty string`);
+  }
+  if (env.ACCOUNT_CLEANUP_ENABLED !== undefined && !['true', 'false'].includes(String(env.ACCOUNT_CLEANUP_ENABLED))) throw new Error('ACCOUNT_CLEANUP_ENABLED must be true or false');
   const origin = String(env.FRONTEND_ORIGIN ?? 'http://localhost:5173');
   for (const entry of origin.split(',')) {
     const url = new URL(entry.trim());

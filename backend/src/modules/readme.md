@@ -19,3 +19,7 @@ Mỗi module có controller/service/guard/repository/module đặt phẳng, dto/
 ## Bảo trì
 
 Dùng JS/TS và TypeScript strict, không dùng any. Kiểm thử tại src/test; cập nhật README khi chức năng, phụ thuộc hoặc luồng thay đổi. Không ghi credentials vào tài liệu.
+
+## Cập nhật BE-1
+
+Auth/Users đã có persistence và global AuthGuard/OwnershipGuard. Các mô tả scaffold phía trên còn đúng với 5 module nghiệp vụ chưa triển khai, không còn đúng với Auth/Users. Cần dùng Principal/fence theo docs/plans/be1-handoff.md khi triển khai BE-2/3; không gắn guard placeholder của module vào route đã được global guard bảo vệ.

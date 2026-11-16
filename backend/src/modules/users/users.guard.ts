@@ -1,9 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, NotImplementedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { AuthGuard } from '../auth/auth.guard';
 
-/** Security scaffold: do not attach to routes until authorization is implemented. */
+/** Optional module-level alias. Global AuthGuard already protects Users routes. */
 @Injectable()
 export class UsersGuard implements CanActivate {
-  canActivate(_context: ExecutionContext): boolean {
-    throw new NotImplementedException({code:'NOT_IMPLEMENTED',message:'Guard chưa được triển khai',details:{module:'users',action:'authorize'}});
-  }
+  constructor(private readonly auth: AuthGuard) {}
+  canActivate(context: ExecutionContext): Promise<boolean> { return this.auth.canActivate(context); }
 }

@@ -41,3 +41,9 @@ npm exec -w backend -- jest --config jest.config.cjs --selectProjects e2e --runT
 Root test:e2e chạy cả E2E backend và Playwright frontend; dùng test:e2e:backend để chỉ chạy phần này. Typecheck kiểm app và test; production build loại src/test.
 
 Đợt refactor hiện tại: unit 20/20, backend E2E 40/40. Integration chưa chạy lại trên Atlas trong đợt này; không dùng kết quả lần trước làm bằng chứng mới. Auth test hiện kiểm contract 400/501, chưa chứng minh đăng nhập hoặc phân quyền đã triển khai.
+
+## BE-1 ngày 16/11/2026
+
+Bộ DTO cũ dùng createTestApp(false, true) để override guard tường minh, giữ test parser/contract khi database tắt. createTestApp mặc định không override. Security HTTP mới kiểm global guards thật; integration/modules/auth kiểm 7 API Auth/Users và ownership/cascade trên Atlas thật. owned-fixture.ts chỉ tạo dữ liệu có ID/file riêng.
+
+Lệnh mới: npm run test:be1 -w backend. Secret test sinh trong process, không sửa .env; restore sau suite. Account sweeper của app tắt trong test, riêng recovery test dùng service instance mới để dọn đúng user thử. Kết quả BE-1 mới nhất và giới hạn browser HTTPS xem docs/plans/be1-handoff.md; số test của đợt refactor phía trên là số lịch sử.

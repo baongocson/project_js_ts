@@ -1,7 +1,7 @@
-# Test e2e/modules/auth
+# Auth HTTP test
 
-Nội dung: auth.e2e-spec.ts.
+auth.e2e-spec.ts giữ các body/query contract khi database=false, override guard tường minh. Không dùng nó để tuyên bố auth thành công.
 
-Nhánh tương ứng phần code được kiểm; hợp đồng liên module được giữ riêng trong unit/contracts. Mỗi spec giữ các input/assertion hiện có sau khi chuyển cấu trúc; không tạo nghiệp vụ giả để test PASS.
+security.e2e-spec.ts không override guard: health public, protected routes401 trước ID400, forged bearer401, Origin403 và rate limit429/Retry-After. Database tắt, không cần Atlas.
 
-Chạy từ gốc: `npm run test:e2e:backend`. Không cần database. Luồng và setup chi tiết xem backend/src/test/readme.md.
+Từ gốc: npm run test:e2e:backend. HTTP+Atlas auth/user/ownership/cascade thật ở integration/modules/auth; chạy npm run test:be1 -w backend.

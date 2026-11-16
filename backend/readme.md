@@ -1,6 +1,6 @@
 # Backend Dashboard 3D
 
-NestJS modular monolith. Khung common/config/infrastructure/modules và repository đặt phẳng đã có trước đợt refactor này, được giữ nguyên. Hiện có 27 endpoint nghiệp vụ với validation/contract nhưng trả 501; health hoạt động và có thể kiểm MongoDB khi bật database.
+NestJS modular monolith. BE-1 triển khai Auth 4 API, Users 3 API và guard/ownership toàn cục; health hoạt động. 20 API nghiệp vụ khác còn scaffold sau bước bảo vệ. Xem [BE-1 bàn giao](../docs/plans/be1-handoff.md).
 
 ## Cấu trúc và trách nhiệm
 
@@ -16,7 +16,7 @@ NestJS modular monolith. Khung common/config/infrastructure/modules và reposito
 
 ## Luồng và giới hạn
 
-Luồng hiện tại: HTTP → pipe/DTO → controller → service trả 501 cho nghiệp vụ chưa triển khai. Guard được khai báo nhưng chưa gắn route và chưa có xác thực/phân quyền. Repository cũng chưa thực hiện CRUD. Người dùng đã xác nhận giữ nguyên trạng thái nghiệp vụ trong đợt refactor; không dùng sự hiện diện file guard để tuyên bố hệ thống đã được bảo vệ.
+Luồng hiện tại: HTTP → global AuthGuard → OwnershipGuard → pipe/DTO → controller → service/repository. Health/Auth public; auth mutation có Origin/rate guard. Auth/Users dùng persistence thật khi bật database; khi tắt vẫn giữ 501 ở service để test DTO cô lập. Thiếu phiên ở route bảo vệ luôn 401, không tự bỏ guard vì DB tắt. BE-2/3 cần gọi transaction fence trong service; guard trước request không thay thế kiểm lifecycle/revoke trong transaction ghi.
 
 Giữ schema/index ở infrastructure/database, không nhân đôi trong module và không tự xóa security/validation/common. Không dựng hệ thống AI mới; hướng dẫn AI trong video là có điều kiện.
 
@@ -24,6 +24,7 @@ Giữ schema/index ở infrastructure/database, không nhân đôi trong module 
 
 ```powershell
 npm run start:dev -w backend
+npm run auth:init-secret -w backend
 npm run build -w backend
 npm run typecheck -w backend
 npm run lint -w backend
@@ -33,6 +34,7 @@ npm run test:e2e:backend
 npm run test:contracts -w backend
 # Chỉ khi cần kiểm trên database thật đã cấu hình:
 npm run test:integration
+npm run test:be1 -w backend
 ```
 
 Môi trường giữ nguyên: backend/.env rồi fallback atlas-credentials.env, biến tiến trình ưu tiên cao hơn. Không đưa secret vào tài liệu/log. Xem [test README](src/test/readme.md), [database](../docs/database/database.md), [kiến trúc](../docs/architecture/architecture.md), [trạng thái refactor](../docs/refactor/refactor-status.md).

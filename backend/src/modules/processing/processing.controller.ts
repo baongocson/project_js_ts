@@ -1,4 +1,5 @@
 import { parseEmptyQuery } from '../../common/validation/query.validation';
+import { PreviewBodyOwner } from '../auth/security/auth-context';
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ProcessingService } from './processing.service';
 import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
@@ -24,6 +25,7 @@ export class ProcessingController {
   }
 
   @Post('operations')
+  @PreviewBodyOwner()
   apply(@Param(new DtoValidationPipe(resourceParams(['datasetId']))) _params: ResourceParamsDto, @Body(new DtoValidationPipe(parseApplyPreview)) _body: ApplyPreviewDto, @IdempotencyKey() _key: string, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
     return this.service.pending('apply');
   }

@@ -10,6 +10,9 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
     const body = exception instanceof HttpException ? exception.getResponse() : null;
     const details = typeof body === 'object' && body !== null ? body as Record<string, unknown> : {};
+    if (status === 429 && typeof details.details === 'object' && details.details !== null && 'retryAfter' in details.details) {
+      response.setHeader('Retry-After', String(details.details.retryAfter));
+    }
     const requestId = randomUUID();
     if (status >= 500 && status !== 501) this.logger.error(`Request ${requestId} failed`, exception instanceof Error ? exception.stack : undefined);
     const messages = Array.isArray(details.message) ? details.message.filter((value): value is string => typeof value === 'string') : null;

@@ -1,5 +1,7 @@
 # Kế hoạch giao việc backend — dev-backend
 
+> Cập nhật BE-1 ngày 16/11/2026: xem [kết quả và interface bàn giao](be1-handoff.md). Phần kiểm kê bên dưới là baseline trước khi thực hiện BE-1, không phải trạng thái mới nhất.
+
 Ngày kiểm kê: **16/11/2026**. Nhóm: **3 người backend**, phối hợp 3 người frontend. Hạn báo cáo suy ra từ yêu cầu “sau 3 ngày”: **19/11/2026, giờ cụ thể cần chốt**. T là lúc nhóm nhận việc; các mốc T+24/48/72 giờ là thời gian trôi qua, không phải yêu cầu làm liên tục.
 
 **Phạm vi đã xác nhận:** phải có online, offline hoạt động và **đồng bộ dữ liệu offline lên server khi có mạng** trong cùng đợt bàn giao. Đọc kèm [kế hoạch frontend](frontend-implementation-plan.md). Đây là tài liệu giao việc; lượt lập kế hoạch chưa triển khai nghiệp vụ, commit, merge hoặc tạo/chuyển nhánh.
