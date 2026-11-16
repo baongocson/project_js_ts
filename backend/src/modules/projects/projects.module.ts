@@ -3,7 +3,10 @@ import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 
 import { ProjectsGuard } from './projects.guard';
-import { ProjectsRepository } from './projects.repository';
+import { ProjectStateModule } from './project-state.module';
+import { DatasetsModule } from '../datasets/datasets.module';
+import { IdempotencyModule } from '../../infrastructure/idempotency/idempotency.module';
+import { AccountCleanupModule } from '../../infrastructure/database/account-cleanup.module';
 
-@Module({ controllers: [ProjectsController], providers: [ProjectsService, ProjectsGuard, ProjectsRepository], exports: [ProjectsService] })
+@Module({ imports: [ProjectStateModule, DatasetsModule, IdempotencyModule, AccountCleanupModule], controllers: [ProjectsController], providers: [ProjectsService, ProjectsGuard], exports: [ProjectsService] })
 export class ProjectsModule {}

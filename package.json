@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "backend",
-    "frontend"
+    "frontend",
+    "packages/data-core"
   ],
   "scripts": {
     "dev": "concurrently -k -n api,web \"npm run start:dev -w backend\" \"npm run dev -w frontend\"",
@@ -12,7 +13,7 @@
     "typecheck": "npm run typecheck --workspaces",
     "start:backend": "npm run start:prod -w backend",
     "test": "npm run test:unit -w backend",
-    "test:unit": "npm run test:unit -w backend",
+    "test:unit": "npm run test -w @dashboard/data-core && npm run test:unit -w backend",
     "test:e2e": "npm run test:e2e:backend && npm run test:e2e:frontend",
     "test:integration": "npm run test:integration -w backend",
     "test:e2e:backend": "npm run test:e2e -w backend",

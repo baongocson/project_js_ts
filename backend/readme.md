@@ -1,6 +1,6 @@
 # Backend Dashboard 3D
 
-NestJS modular monolith. BE-1 triển khai Auth 4 API, Users 3 API và guard/ownership toàn cục; health hoạt động. 20 API nghiệp vụ khác còn scaffold sau bước bảo vệ. Xem [BE-1 bàn giao](../docs/plans/be1-handoff.md).
+NestJS modular monolith. BE-1 triển khai Auth4/Users3 và guard/ownership. BE-2 bổ sung Projects6/Datasets4 cùng storage/snapshot/idempotency/publish/recovery. 10 API Processing/History/Analysis và engine27method thuộc BE-3 còn scaffold. Xem [BE-1](../docs/plans/be1-handoff.md) và [BE-2](../docs/teamwork/nguyen-be2.md).
 
 ## Cấu trúc và trách nhiệm
 
@@ -35,6 +35,8 @@ npm run test:contracts -w backend
 # Chỉ khi cần kiểm trên database thật đã cấu hình:
 npm run test:integration
 npm run test:be1 -w backend
+npm run test:be2:local -w backend
+npm run test:integration:local -w backend
 ```
 
 Môi trường giữ nguyên: backend/.env rồi fallback atlas-credentials.env, biến tiến trình ưu tiên cao hơn. Không đưa secret vào tài liệu/log. Xem [test README](src/test/readme.md), [database](../docs/database/database.md), [kiến trúc](../docs/architecture/architecture.md), [trạng thái refactor](../docs/refactor/refactor-status.md).

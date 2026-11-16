@@ -100,11 +100,12 @@ describe('BE-1 HTTP + real MongoDB (no auth/ownership overrides)', () => {
     expect(after?.rotationCounter).toBe(1);
   });
   it('checks authentication before ID syntax, and ownership before unimplemented services', async () => {
-    const db = connection.db!, now = new Date(); projectId = new Types.ObjectId();
-    await db.collection('projects').insertOne({ _id: projectId, ownerId: new Types.ObjectId(userId), name: 'BE1 test', lifecycle: 'empty', writeEpoch: 0, createdAt: now, updatedAt: now });
+    const db = connection.db!;
+    const created = await request(fixture.server).post('/api/v1/projects').set('Authorization', `Bearer ${access}`).set('Idempotency-Key', `be1-${run}`).send({ name: 'BE1 test' }).expect(201);
+    projectId = new Types.ObjectId(String(record(record(created.body).project)._id));
     await request(fixture.server).get('/api/v1/projects/invalid').expect(401);
     await request(fixture.server).get('/api/v1/projects/invalid').set('Authorization', `Bearer ${access}`).expect(400);
-    await request(fixture.server).get(`/api/v1/projects/${projectId}`).set('Authorization', `Bearer ${access}`).expect(501);
+    await request(fixture.server).get(`/api/v1/projects/${projectId}`).set('Authorization', `Bearer ${access}`).expect(200);
     const other = await login(otherEmail);
     await request(fixture.server).get(`/api/v1/projects/${projectId}`).set('Authorization', `Bearer ${other.token}`).expect(403);
     await request(fixture.server).get(`/api/v1/projects/${new Types.ObjectId()}`).set('Authorization', `Bearer ${access}`).expect(404);
@@ -132,7 +133,7 @@ describe('BE-1 HTTP + real MongoDB (no auth/ownership overrides)', () => {
     const result = await login(); access = result.token; cookie = result.cookie;
     graph = await ownedFixture(connection, new Types.ObjectId(userId), resolve(PROJECT_ROOT, 'backend/storage/originals'));
     const prefix = `/api/v1/datasets/${graph.datasetId}`;
-    await request(fixture.server).get(`${prefix}/versions/${graph.versionId}`).set('Authorization', `Bearer ${access}`).expect(501);
+    await request(fixture.server).get(`${prefix}/versions/${graph.versionId}`).set('Authorization', `Bearer ${access}`).expect(200);
     const other = await login(otherEmail);
     await request(fixture.server).get(`${prefix}/versions/${graph.versionId}`).set('Authorization', `Bearer ${other.token}`).expect(403);
     await request(fixture.server).get(`${prefix}/versions/${new Types.ObjectId()}`).set('Authorization', `Bearer ${access}`).expect(404);

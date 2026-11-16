@@ -4,6 +4,12 @@ import { DatasetsService } from './datasets.service';
 
 import { DatasetsGuard } from './datasets.guard';
 import { DatasetsRepository } from './datasets.repository';
+import { IdempotencyModule } from '../../infrastructure/idempotency/idempotency.module';
+import { StorageModule } from '../../infrastructure/storage/storage.module';
+import { ProjectStateModule } from '../projects/project-state.module';
+import { OperationWriterModule } from '../processing/operation-writer.module';
+import { ImportRecoveryService } from './import-recovery.service';
+import { SnapshotPublisherService } from './snapshot-publisher.service';
 
-@Module({ controllers: [DatasetsController], providers: [DatasetsService, DatasetsGuard, DatasetsRepository], exports: [DatasetsService] })
+@Module({ imports: [IdempotencyModule, ProjectStateModule, OperationWriterModule, StorageModule], controllers: [DatasetsController], providers: [DatasetsService, DatasetsGuard, DatasetsRepository, ImportRecoveryService, SnapshotPublisherService], exports: [DatasetsService, SnapshotPublisherService] })
 export class DatasetsModule {}

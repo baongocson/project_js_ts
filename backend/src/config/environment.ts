@@ -13,6 +13,10 @@ export function validateEnvironment(env: Record<string, unknown>) {
   }
   if (env.ACCOUNT_CLEANUP_ENABLED !== undefined && !['true', 'false'].includes(String(env.ACCOUNT_CLEANUP_ENABLED))) throw new Error('ACCOUNT_CLEANUP_ENABLED must be true or false');
   const origin = String(env.FRONTEND_ORIGIN ?? 'http://localhost:5173');
+  const lease = Number(env.IDEMPOTENCY_LEASE_MS ?? 60_000), heartbeat = Number(env.IDEMPOTENCY_HEARTBEAT_MS ?? 20_000);
+  if (!Number.isSafeInteger(lease) || !Number.isSafeInteger(heartbeat) || heartbeat < 1 || lease <= heartbeat) throw new Error('Idempotency timing requires 0 < heartbeat < lease');
+  if (env.PROJECT_CLEANUP_ENABLED !== undefined && !['true', 'false'].includes(String(env.PROJECT_CLEANUP_ENABLED))) throw new Error('PROJECT_CLEANUP_ENABLED must be true or false');
+  if (env.IMPORT_RECOVERY_ENABLED !== undefined && !['true', 'false'].includes(String(env.IMPORT_RECOVERY_ENABLED))) throw new Error('IMPORT_RECOVERY_ENABLED must be true or false');
   for (const entry of origin.split(',')) {
     const url = new URL(entry.trim());
     if (!['http:', 'https:'].includes(url.protocol) || url.origin !== entry.trim()) throw new Error('FRONTEND_ORIGIN must contain exact HTTP origins');

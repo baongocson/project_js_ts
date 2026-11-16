@@ -57,7 +57,7 @@ frontend/
   public/, vite.config.ts, tsconfig.json
 ```
 
-`GET /api/v1/health` ping database khi được bật. BE-1 đã triển khai 4 API Auth và 3 API Users khi database bật: bcrypt, JWT/session/refresh, profile và xóa tài khoản có cleanup. 20 API Projects/Datasets/Processing/History/Analysis còn trả **501 NOT_IMPLEMENTED** sau khi vượt qua xác thực/quyền; idempotency và engine nghiệp vụ thuộc BE-2/BE-3. Frontend vẫn hiển thị trạng thái kết nối, chưa có auth UI hoặc dashboard hoàn chỉnh.
+`GET /api/v1/health` ping database khi được bật. BE-1 triển khai4API Auth và3API Users. BE-2 bổ sung6API Projects và4API Datasets với CSV/storage/snapshot/idempotency/publish/recovery; xem [báo cáo BE-2](docs/teamwork/nguyen-be2.md). 10API Processing/History/Analysis và engine27method thuộc BE-3 vẫn scaffold. Frontend vẫn là trang trạng thái kết nối, chưa có auth UI/dashboard hoặc nghiệm thu offline sync.
 
 AuthGuard và OwnershipGuard đã gắn toàn cục: thiếu JWT/session hợp lệ trả 401 trước kiểm ID, rồi kiểm quyền project/dataset/version/preview. Health và Auth là public; Auth mutations vẫn kiểm Origin và rate limit. Các guard scaffold của những module còn lại chưa được dùng thay guard thật. Xem [BE-1 bàn giao](docs/plans/be1-handoff.md).
 

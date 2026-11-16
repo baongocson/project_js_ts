@@ -1,25 +1,9 @@
 # ProjectsModule
 
-Project và cấu hình workspace.
+BE-2 triển khai đủ 6 API project/workspace, dùng global AuthGuard/OwnershipGuard của BE-1. Không dùng ProjectsGuard scaffold để bảo vệ route.
 
-## Cấu trúc
+Trạng thái triển khai và lệnh nghiệm thu ở [báo cáo BE-2](../../../../docs/teamwork/nguyen-be2.md).
 
-| Thành phần | Trách nhiệm |
-| --- | --- |
-| projects.controller.ts | Khai báo route và gọi validation DTO trước khi chuyển đến service. |
-| projects.service.ts | Điều phối nghiệp vụ; bản main hiện còn trả HTTP 501 cho nghiệp vụ chưa triển khai. |
-| projects.guard.ts | File guard riêng. Khung hiện từ chối với 501 nếu được gọi; chưa gắn vào controller. |
-| projects.repository.ts | Ranh giới truy cập dữ liệu, đang là khung, chưa có CRUD. |
-| projects.module.ts | Đăng ký controller, service, guard và repository với NestJS. |
-| security/ | Chính sách bảo mật riêng của module khi triển khai; không chứa secret. |
-| dto/ | Kiểu request/response và validation hiện có; xem README bên trong. |
+`projects.service` điều phối receipt, transaction fence, workspace CAS và cleanup/recovery. `projects.repository` sở hữu ghi projects/workspaces. `project-state.service/module` cung cấp participant bindImport cho Datasets. `workspace-normalization` bỏ refs không hợp lệ, clamp trang theo snapshot hiện tại và trả adjustments; GET không ghi database. No-op PATCH giữ revision/updatedAt, stale revision/base trả409. Delete đánh dấu deleting, gọi AccountCleanupService và chỉ204 sau khi dọn xong; worker startup/60giây phục hồi marker.
 
-## Luồng và trạng thái
-
-Luồng đang chạy: HTTP → DTO/pipe → controller → service → HTTP 501 khi chưa có nghiệp vụ. Luồng dự kiến sau khi triển khai bảo mật: HTTP → guard → DTO → controller → service → repository → database. Guard đã đăng ký provider nhưng chưa dùng @UseGuards để không thay hành vi API của main bằng một kiểm tra bảo mật giả. Không dùng guard này để tuyên bố route đã được bảo vệ.
-
-Schema/validator/index vẫn do infrastructure/database quản lý tập trung. Không tạo bản schema thứ hai trong module. Chưa triển khai thêm nghiệp vụ, kết nối hay collection trong đợt cấu hình này.
-
-## Kiểm thử
-
-Test tập trung trong backend/src/test: unit/, e2e/, integration/. Chạy npm run test:unit hoặc npm run test:e2e:backend từ gốc repo. Test hiện kiểm hợp đồng và trạng thái khung, không chứng minh CRUD đã hoàn thành. Mã nguồn JS/TS, không dùng kiểu any.
+Kiểm chứng nghiệp vụ thật: `npm run test:be2:local -w backend`. Không dùng test DB-disabled để nghiệm thu CRUD.

@@ -1,5 +1,7 @@
 import { parseEmptyQuery } from '../../common/validation/query.validation';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, HttpCode, UseInterceptors } from '@nestjs/common';
+import { Be2RequestLogInterceptor } from '../../common/be2-request-log.interceptor';
+import { CurrentPrincipal, type Principal } from '../auth/security/auth-context';
 import { ProjectsService } from './projects.service';
 import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
 import { IdempotencyKey } from '../../common/validation/idempotency-key.decorator';
@@ -12,37 +14,39 @@ import { parseEmptyBody } from '../auth/dto/auth.validation';
 import type { EmptyBodyDto } from '../auth/dto/auth.dto';
 
 @Controller('projects')
+@UseInterceptors(Be2RequestLogInterceptor)
 export class ProjectsController {
   constructor(private readonly service: ProjectsService) {}
 
   @Post('')
-  create(@Body(new DtoValidationPipe(parseProjectName)) _body: ProjectNameDto, @IdempotencyKey() _key: string, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
-    return this.service.pending('create');
+  create(@CurrentPrincipal() principal: Principal, @Body(new DtoValidationPipe(parseProjectName)) body: ProjectNameDto, @IdempotencyKey() key: string, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
+    return this.service.create(principal, body, key);
   }
 
   @Get('')
-  list(@Query(new DtoValidationPipe(parseListProjects)) _query: ListProjectsQueryDto) {
-    return this.service.pending('list');
+  list(@CurrentPrincipal() principal: Principal, @Query(new DtoValidationPipe(parseListProjects)) query: ListProjectsQueryDto) {
+    return this.service.list(principal, query);
   }
 
   @Get(':projectId')
-  get(@Param(new DtoValidationPipe(resourceParams(['projectId']))) _params: ResourceParamsDto, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
-    return this.service.pending('get');
+  get(@CurrentPrincipal() principal: Principal, @Param(new DtoValidationPipe(resourceParams(['projectId']))) params: ResourceParamsDto, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
+    return this.service.get(principal, params.projectId!);
   }
 
   @Patch(':projectId')
-  rename(@Param(new DtoValidationPipe(resourceParams(['projectId']))) _params: ResourceParamsDto, @Body(new DtoValidationPipe(parseProjectName)) _body: ProjectNameDto, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
-    return this.service.pending('rename');
+  rename(@CurrentPrincipal() principal: Principal, @Param(new DtoValidationPipe(resourceParams(['projectId']))) params: ResourceParamsDto, @Body(new DtoValidationPipe(parseProjectName)) body: ProjectNameDto, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
+    return this.service.rename(principal, params.projectId!, body);
   }
 
   @Patch(':projectId/workspace')
-  saveWorkspace(@Param(new DtoValidationPipe(resourceParams(['projectId']))) _params: ResourceParamsDto, @Body(new DtoValidationPipe(parsePatchWorkspace)) _body: PatchWorkspaceDto, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
-    return this.service.pending('saveWorkspace');
+  saveWorkspace(@CurrentPrincipal() principal: Principal, @Param(new DtoValidationPipe(resourceParams(['projectId']))) params: ResourceParamsDto, @Body(new DtoValidationPipe(parsePatchWorkspace)) body: PatchWorkspaceDto, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
+    return this.service.saveWorkspace(principal, params.projectId!, body);
   }
 
   @Delete(':projectId')
-  delete(@Param(new DtoValidationPipe(resourceParams(['projectId']))) _params: ResourceParamsDto, @Body(new DtoValidationPipe(parseEmptyBody)) _body: EmptyBodyDto, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
-    return this.service.pending('delete');
+  @HttpCode(204)
+  delete(@CurrentPrincipal() principal: Principal, @Param(new DtoValidationPipe(resourceParams(['projectId']))) params: ResourceParamsDto, @Body(new DtoValidationPipe(parseEmptyBody)) _body: EmptyBodyDto, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
+    return this.service.delete(principal, params.projectId!);
   }
 
 }

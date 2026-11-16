@@ -6,6 +6,7 @@ import { realpath, unlink } from 'node:fs/promises';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { PROJECT_ROOT } from './database.connection';
 import type { Principal } from '../../modules/auth/security/auth-context';
+import { StorageWriteBarrier } from '../storage/storage-write-barrier.service';
 
 /** Resumable cleanup for an account already fenced as deleting. Shared with project deletion. */
 @Injectable()
@@ -14,7 +15,7 @@ export class AccountCleanupService implements OnApplicationBootstrap, OnModuleDe
   private timer?: ReturnType<typeof setInterval>;
   private sweepTask?: Promise<void>;
   private readonly active = new Map<string, Promise<void>>();
-  constructor(private readonly config: ConfigService, @Optional() @InjectConnection() private readonly connection?: Connection) {}
+  constructor(private readonly config: ConfigService, @Optional() @InjectConnection() private readonly connection?: Connection, @Optional() private readonly storageWrites?: StorageWriteBarrier) {}
   private db() {
     if (!this.connection?.db) throw new ServiceUnavailableException({ code: 'DATABASE_UNAVAILABLE', message: 'Cơ sở dữ liệu chưa sẵn sàng' });
     return this.connection.db;
@@ -60,6 +61,7 @@ export class AccountCleanupService implements OnApplicationBootstrap, OnModuleDe
     const project = await this.db().collection('projects').findOne({ _id: projectId });
     if (!project) return;
     if (project.lifecycle !== 'deleting') throw new Error('Cleanup requires a deleting project');
+    await this.storageWrites?.wait(projectId.toHexString());
     for await (const dataset of this.db().collection('datasets').find({ projectId })) {
       for await (const preview of this.db().collection('processingPreviews').find({ datasetId: dataset._id }, { projection: { _id: 1 } })) {
         await this.db().collection('previewChanges').deleteMany({ previewId: preview._id });
@@ -94,7 +96,7 @@ export class AccountCleanupService implements OnApplicationBootstrap, OnModuleDe
       if (!inside(realRoot, realTarget)) throw new Error('Original storage path escapes root');
       await unlink(realTarget);
     } catch (error: unknown) {
-      if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+      if (!(typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT')) throw error;
     }
   }
   onApplicationBootstrap(): void {

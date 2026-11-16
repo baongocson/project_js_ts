@@ -28,7 +28,7 @@ export default defineConfig(
   },
   {
     name: 'typescript-common',
-    files: ['backend/**/*.ts', 'frontend/**/*.{ts,tsx}'],
+    files: ['backend/**/*.ts', 'frontend/**/*.{ts,tsx}', 'packages/**/*.ts'],
     extends: [js.configs.recommended, tseslint.configs.recommended],
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', {
@@ -44,6 +44,11 @@ export default defineConfig(
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
     },
+  },
+  {
+    name: 'data-core-typescript',
+    files: ['packages/data-core/**/*.ts'],
+    languageOptions: { parserOptions: { project: ['./packages/data-core/tsconfig.json'], tsconfigRootDir } },
   },
   {
     name: 'backend-typescript-and-tests',

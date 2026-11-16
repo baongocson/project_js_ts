@@ -1,0 +1,14 @@
+{
+  "name": "@dashboard/data-core",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/esm/index.js",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/esm/index.js", "require": "./dist/index.js" } },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json && node scripts/mark-esm.cjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test test/*.test.cjs"
+  }
+}
