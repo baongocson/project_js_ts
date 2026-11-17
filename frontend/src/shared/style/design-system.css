@@ -1,0 +1,142 @@
+/* Presentation only: existing grids, routes, component keys and event handlers stay intact. */
+body {
+  font-family: var(--font-ui); -webkit-font-smoothing: antialiased;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse at 0% 0%, var(--ambient-purple), transparent 55%), radial-gradient(ellipse at 100% 25%, var(--ambient-cyan), transparent 50%), linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 100% 900px, 100% 1100px, 48px 48px, 48px 48px;
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+}
+:where(h1, h2, h3) { letter-spacing: -.025em; text-wrap: balance; }
+:where(main, .app-header) a { transition: color var(--motion-fast) ease; }
+:where(main, .app-header) a:hover { color: var(--accent); }
+.eyebrow { letter-spacing: .12em; }
+@supports (background-clip: text) {
+  .page-heading h1, .auth-card h1 { background: var(--gradient-heading); background-clip: text; color: transparent; }
+}
+
+/* Explicit app surfaces: no blanket styling of every div or nested semantic element. */
+:is(main, .workspace-layout, .local-workspace) section,
+.panel, .auth-card, .project-card, .preview-stage {
+  background: linear-gradient(var(--glass), var(--glass)) padding-box, var(--neon-border) border-box;
+  border: 1px solid transparent;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm), 0 0 var(--glow-radius) var(--glow-color);
+}
+.summary-chart, .row-inspector, :where(main, dialog) fieldset {
+  border-color: var(--border);
+  border-radius: var(--radius-lg);
+}
+.panel, .project-card, .preview-stage { padding: var(--space-6); }
+.auth-card { padding: var(--space-8); }
+.project-card { box-shadow: var(--shadow-md); }
+ .project-card { transition: transform var(--motion-normal) ease, box-shadow var(--motion-normal) ease; }
+@media (hover: hover) {
+  .project-card:hover { transform: translateY(var(--hover-lift)); box-shadow: var(--shadow-md), 0 0 var(--glow-radius) var(--glow-color); }
+}
+.app-header { background: var(--surface); }
+@supports (backdrop-filter: blur(8px)) {
+  .app-header { background: var(--glass); backdrop-filter: blur(8px); }
+}
+.brand-mark { background: var(--gradient-brand); box-shadow: 0 4px 12px #3b82f624; }
+.connection-bar { background: var(--surface-elevated); }
+.badge { background: var(--accent-soft); color: var(--accent); border-radius: var(--radius-pill); }
+.badge.ready { color: var(--success); background: var(--success-tint); }
+.save-state { background: var(--surface); border-radius: var(--radius-pill); }
+.stat-grid > div { background: var(--surface-elevated); border-radius: var(--radius-lg); }
+.stat-grid strong { color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
+.file-mark { border-color: var(--border); border-radius: var(--radius-card); background: var(--tint); }
+
+/* Preserve native button semantics, disabled attributes and all existing handlers. */
+.button, .local-workspace > section > button:not(.button) {
+  min-height: 44px;
+  font-family: var(--font-ui);
+  font-weight: 650;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--button-bg) var(--gradient-action);
+  color: var(--button-text);
+  box-shadow: 0 2px 4px #0b122010;
+  transition: background-color var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) ease;
+}
+.button.secondary { background: var(--surface-elevated); color: var(--text); border-color: var(--control-border); box-shadow: none; }
+.button.danger { background: var(--danger-bg); color: var(--button-text); }
+@media (hover: hover) {
+  .button:not(:disabled):not([aria-disabled="true"]):hover,
+  .local-workspace > section > button:not(.button):not(:disabled):hover { background: var(--button-hover) var(--gradient-action); color: var(--button-text); box-shadow: 0 0 var(--glow-radius) var(--glow-color); transform: translateY(var(--hover-lift)); }
+  .button.secondary:not(:disabled):not([aria-disabled="true"]):hover { background: var(--accent-soft); color: var(--text); border-color: var(--accent); }
+  .button.danger:not(:disabled):not([aria-disabled="true"]):hover { background: var(--danger-hover); }
+}
+.button:not(:disabled):not([aria-disabled="true"]):active,
+.local-workspace > section > button:not(.button):not(:disabled):active { background: var(--button-active); box-shadow: inset 0 2px 4px #0b122033; }
+.button.secondary:not(:disabled):not([aria-disabled="true"]):active { background: var(--tint); }
+.button.danger:not(:disabled):not([aria-disabled="true"]):active { background: var(--danger-active); }
+.button:disabled, .local-workspace > section > button:not(.button):disabled {
+  opacity: 1; background: var(--disabled-bg); color: var(--disabled-text); border-color: var(--border); box-shadow: none; transform: none; cursor: not-allowed;
+}
+
+:where(main, dialog) :is(input, select, textarea):where(:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"])) {
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-control);
+  padding: var(--control-padding-block) var(--control-padding-inline);
+  font-family: var(--font-ui);
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+:where(main, dialog) :is(input, textarea)::placeholder { color: var(--placeholder); opacity: 1; }
+:where(main, dialog) select option { background: var(--surface); color: var(--text); }
+:where(main, dialog) select[multiple] { background: var(--surface-elevated); }
+:where(main, dialog) :is(input, textarea)[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+:where(main, dialog) :is(input, select, textarea):disabled {
+  background-color: var(--disabled-bg); color: var(--disabled-text); opacity: 1; cursor: not-allowed;
+}
+:where(main, dialog) input:is([type="checkbox"], [type="radio"]) {
+  width: 1.1em; height: 1.1em; padding: 0; margin: 0; flex-shrink: 0; accent-color: var(--button-bg); vertical-align: middle;
+}
+:where(main, dialog) input[type="range"] { accent-color: var(--button-bg); }
+:where(main, dialog) input[type="file"]::file-selector-button {
+  border: 1px solid var(--control-border); border-radius: var(--radius-sm); background: var(--surface-elevated);
+  color: var(--text); font: inherit; padding: var(--space-2) var(--space-3); margin-inline-end: var(--space-3); cursor: pointer;
+}
+:where(main, dialog) textarea { resize: vertical; }
+:where(main, dialog) :is(input, select, textarea):focus-visible { border-color: var(--focus); box-shadow: var(--shadow-focus); }
+:is(.button, .cell-button, .skip-link, .section-tabs button, .analysis-tabs button):focus-visible,
+:where(main, dialog, .app-header) :is(a, input, select, textarea, summary, button):focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 3px;
+}
+.skip-link { z-index: 100; border: 1px solid var(--control-border); border-radius: var(--radius-control); box-shadow: var(--shadow-md); }
+
+.section-tabs { background: var(--surface); border-color: var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-sm); }
+.section-tabs button:not(.button) { border: 1px solid transparent; transition: background-color var(--motion-fast) ease, color var(--motion-fast) ease; }
+.section-tabs button:not(.button):not(:disabled):hover { background: var(--tint); color: var(--text); }
+.section-tabs button[aria-current="page"]:not(.button) { background: var(--button-bg); color: var(--button-text); border-color: var(--button-bg); box-shadow: 0 2px 8px #3b82f61a; }
+.section-tabs button:not(.button):disabled { opacity: 1; color: var(--disabled-text); cursor: not-allowed; }
+.toolbar { border-radius: var(--radius-lg); }
+.toolbar :is(input, select) { min-height: 44px; }
+.notice { background: var(--tint); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.notice.error { background: var(--danger-tint); border-color: var(--danger); }
+.data-table { background: var(--surface); border-color: var(--border); border-radius: var(--radius-lg); }
+.data-table thead th { background: var(--surface-elevated); }
+.data-table td.selected { background: var(--accent-soft); outline-color: var(--focus); }
+.cell-missing { background: var(--tint); color: var(--muted); }
+.filter-list li { border-color: var(--border); border-radius: var(--radius-control); }
+.missing-bar-track > span { background: var(--warning); }
+dialog { background: var(--surface-elevated); border-color: var(--control-border); border-radius: var(--radius-card); box-shadow: var(--shadow-dialog); }
+dialog::backdrop { background: var(--backdrop); }
+progress { accent-color: var(--primary); }
+.scene-tooltip { border-radius: var(--radius-control); }
+
+@media (max-width: 700px) {
+  .button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
+}
+@media (pointer: coarse) {
+  :is(.section-tabs, .analysis-tabs, .scene-toolbar) button { min-height: 44px; }
+}
+@media (forced-colors: active) {
+  body, .page-heading h1, .auth-card h1 { background: Canvas; color: CanvasText; }
+  .button { background: ButtonFace; color: ButtonText; }
+  .button, .section-tabs button:not(.button) { border: 1px solid ButtonText; }
+  .button:disabled { border-color: GrayText; color: GrayText; }
+  .data-table td.selected { outline: 2px solid Highlight; }
+}

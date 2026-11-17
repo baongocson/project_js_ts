@@ -1,5 +1,4 @@
-:root { color-scheme: light; --bg: #f5f7f4; --surface: #fff; --text: #17342f; --muted: #5b7269; --border: #d9e3db; --accent: #1f6655; --danger: #a32132; --tint: #edf3ed; --button-bg: #1f6655; }
-:root[data-theme="dark"] { color-scheme: dark; --bg: #101d1a; --surface: #182b25; --text: #e7f1eb; --muted: #b3c8bc; --border: #3c584b; --accent: #9cd6be; --danger: #ffb3bb; --tint: #243c32; --button-bg: #276f5b; }
+/* Geometry and legacy component rules; semantic colors live in tokens.css. */
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; line-height: 1.6; }
 a { color: var(--accent); text-underline-offset: 3px; }

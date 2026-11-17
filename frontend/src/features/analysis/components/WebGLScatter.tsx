@@ -5,19 +5,25 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Button } from '../../../shared/ui';
 import type { ScatterPoint, ScatterProps } from '../types';
 import { scatterModel } from '../scatter-model';
+import type { ScatterRenderProps, ScatterColors } from '../scatter-colors';
 
 type VisualPoint = { source: ScatterPoint; position: [number, number, number] };
-function TickLabel({text,position}:{text:string;position:[number,number,number]}){
-  const texture=useMemo(()=>{const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;const context=canvas.getContext('2d')!;context.font='26px system-ui';context.textAlign='center';context.fillStyle='#e1edf3';context.fillText(text,128,42);return new CanvasTexture(canvas);},[text]);
+function TickLabel({text,position,color}:{text:string;position:[number,number,number];color:string}){
+  const texture=useMemo(()=>{const canvas=document.createElement('canvas');canvas.width=512;canvas.height=64;const context=canvas.getContext('2d')!;context.font='26px system-ui';context.textAlign='center';context.fillStyle=color;context.fillText(text,256,42,500);return new CanvasTexture(canvas);},[text,color]);
   useEffect(()=>()=>texture.dispose(),[texture]);
-  return <sprite position={position} scale={[1.5,.375,1]}><spriteMaterial map={texture} transparent depthTest={false}/></sprite>;
+  return <sprite position={position} scale={[2.5,.3125,1]}><spriteMaterial map={texture} transparent depthTest={false} toneMapped={false}/></sprite>;
 }
-function CoordinateAxes({model,labels}:{model:ReturnType<typeof scatterModel>;labels:ScatterProps['labels']}){
-  return <><axesHelper args={[8]} position={[-4,-4,-4]}/>{model.ticks.flatMap((ticks,axis)=>ticks.map((tick,index)=>{
+function CoordinateAxes({model,labels,colors}:{model:ReturnType<typeof scatterModel>;labels:ScatterProps['labels'];colors:ScatterColors}){
+  const geometry=useMemo(()=>{
+    const positions:number[]=[],rgb:number[]=[];
+    colors.palette.axes.forEach((hex,axis)=>{const end=[-4,-4,-4];end[axis]=4;positions.push(-4,-4,-4,...end);const color=new Color(hex);rgb.push(color.r,color.g,color.b,color.r,color.g,color.b);});
+    return {positions:new Float32Array(positions),rgb:new Float32Array(rgb)};
+  },[colors.palette.axes]);
+  return <><lineSegments><bufferGeometry><bufferAttribute attach="attributes-position" args={[geometry.positions,3]}/><bufferAttribute attach="attributes-color" args={[geometry.rgb,3]}/></bufferGeometry><lineBasicMaterial vertexColors toneMapped={false}/></lineSegments>{model.ticks.flatMap((ticks,axis)=>ticks.map((tick,index)=>{
     const position:[number,number,number]=[-4,-4,-4];position[axis]=tick.position;
     if(axis===0)position[1]-=.4;else position[0]-=.5;
-    return <TickLabel key={`${axis}:${index}`} text={tick.value.toLocaleString('vi-VN',{maximumSignificantDigits:4})} position={position}/>;
-  }))}{labels.map((label,axis)=>{const position:[number,number,number]=[-4,-4,-4];position[axis]=5;return <TickLabel key={axis} text={`${['X','Y','Z'][axis]} · ${label}`} position={position}/>;})}</>;
+    return <TickLabel key={`${axis}:${index}`} text={tick.value.toLocaleString('vi-VN',{maximumSignificantDigits:4})} position={position} color={colors.palette.text}/>;
+  }))}{labels.map((label,axis)=>{const position:[number,number,number]=[-4,-4,-4];position[axis]=5;return <TickLabel key={axis} text={`${['X','Y','Z'][axis]} · ${label}`} position={position} color={colors.palette.axes[axis]}/>;})}</>;
 }
 function Camera({ reset, turn, zoom }: { reset: number; turn: number; zoom: number }) {
   const { camera, gl, invalidate } = useThree();
@@ -38,8 +44,8 @@ function Camera({ reset, turn, zoom }: { reset: number; turn: number; zoom: numb
   }, [camera, invalidate, reset, turn, zoom]);
   return null;
 }
-function PointCloud({ points, selected, colorMode, onSelect, onHover }: {
-  points: VisualPoint[]; selected?: string; colorMode: ScatterProps['colorMode'];
+function PointCloud({ points, selected, colors, onSelect, onHover }: {
+  points: VisualPoint[]; selected?: string; colors: ScatterColors;
   onSelect(id: string): void; onHover(point: ScatterPoint | null): void;
 }) {
   const mesh = useRef<InstancedMesh>(null);
@@ -50,19 +56,17 @@ function PointCloud({ points, selected, colorMode, onSelect, onHover }: {
     for (const [index, point] of points.entries()) {
       object.position.set(...point.position); object.scale.setScalar(selected === point.source.rowId ? 1.8 : 1); object.updateMatrix();
       mesh.current.setMatrixAt(index, object.matrix);
-      mesh.current.setColorAt(index, new Color(selected === point.source.rowId ? '#ffffff'
-        : colorMode === 'missing' && point.source.missingCount > 0 ? '#f4b963'
-        : colorMode === 'outlier' && point.source.isOutlier ? '#fb7185' : '#55c9c0'));
+      mesh.current.setColorAt(index, new Color(colors.color(point.source, selected === point.source.rowId)));
     }
     mesh.current.instanceMatrix.needsUpdate = true;
     if (mesh.current.instanceColor) mesh.current.instanceColor.needsUpdate = true;
     mesh.current.computeBoundingSphere(); invalidate();
-  }, [points, selected, colorMode, invalidate]);
+  }, [points, selected, colors, invalidate]);
   return <instancedMesh ref={mesh} args={[undefined, undefined, points.length]}
     onClick={event => { const point = event.instanceId === undefined ? undefined : points[event.instanceId]; if (point && event.delta < 5) { event.stopPropagation(); onSelect(point.source.rowId); } }}
     onPointerMove={event => { event.stopPropagation(); onHover(event.instanceId === undefined ? null : points[event.instanceId]?.source ?? null); }}
     onPointerOut={() => onHover(null)}>
-    <sphereGeometry args={[.08, 10, 8]}/><meshStandardMaterial roughness={.4} metalness={.15}/>
+    <sphereGeometry args={[.08, 10, 8]}/><meshBasicMaterial toneMapped={false}/>
   </instancedMesh>;
 }
 function Projection({ position }: { position: [number, number, number] }) {
@@ -73,7 +77,18 @@ function Projection({ position }: { position: [number, number, number] }) {
     return <mesh key={index} position={object.position} quaternion={object.quaternion}><cylinderGeometry args={[.012, .012, a.distanceTo(b), 6]}/><meshBasicMaterial color="#f6d487"/></mesh>;
   })}</>;
 }
-export function WebGLScatter({ points, axes, labels, colorMode, selected, onSelect }: ScatterProps) {
+function ContextLifecycle({onReady}:{onReady(ready:boolean):void}) {
+  const {gl,invalidate}=useThree();
+  useEffect(()=>{
+    const canvas=gl.domElement;
+    const lost=(event:Event)=>{event.preventDefault();onReady(false);};
+    const restored=()=>{onReady(true);invalidate();};
+    canvas.addEventListener('webglcontextlost',lost);canvas.addEventListener('webglcontextrestored',restored);onReady(true);
+    return()=>{canvas.removeEventListener('webglcontextlost',lost);canvas.removeEventListener('webglcontextrestored',restored);};
+  },[gl,invalidate,onReady]);
+  return null;
+}
+export function WebGLScatter({ points, axes, labels, colors, selected, onSelect }: ScatterRenderProps) {
   const model=useMemo(()=>scatterModel(points,axes),[points,axes]),plotted=model.points;
   const ranges=model.min.map((value,index)=>Number.isFinite(value)?value.toLocaleString('vi-VN',{maximumSignificantDigits:6})+' → '+model.max[index].toLocaleString('vi-VN',{maximumSignificantDigits:6}):'N/A');
   const [hover, setHover] = useState<ScatterPoint | null>(null), [pinned, setPinned] = useState<string>();
@@ -86,12 +101,13 @@ export function WebGLScatter({ points, axes, labels, colorMode, selected, onSele
     <div className="scene-canvas" role="group" aria-label="Biểu đồ 3D tương tác" data-testid="webgl-scene" data-ready={ready} data-active-row={inspected?.rowId ?? ''}>
       <Canvas camera={{ position: [12, 11, 13], fov: 45 }} frameloop="demand" dpr={[1, 1.5]} onCreated={({ gl }) => {
         gl.domElement.setAttribute('aria-label', 'Không gian WebGL 3D');
-        gl.domElement.addEventListener('webglcontextlost', event => { event.preventDefault(); setReady(false); });
-        setReady(true);
       }} fallback={<p>WebGL không được hỗ trợ. Chọn hình chiếu tương thích phía trên.</p>}>
-        <color attach="background" args={['#0d1729']}/><ambientLight intensity={1.5}/><directionalLight position={[5, 8, 6]} intensity={2}/>
-        <gridHelper args={[8, 8, '#2f5560', '#203444']} position={[0, -4, 0]}/><CoordinateAxes model={model} labels={labels}/>
-        <PointCloud points={plotted} selected={selected} colorMode={colorMode} onSelect={id => { setPinned(id); onSelect(id); }} onHover={setHover}/>
+        <color attach="background" args={[colors.palette.background]}/>
+        <ContextLifecycle onReady={setReady}/>
+        <gridHelper args={[8, 16, colors.palette.axes[0], colors.palette.grid]} position={[0, -4, 0]}/>
+        <gridHelper args={[8, 8, colors.palette.grid, colors.palette.grid]} position={[0, 0, -4]} rotation={[Math.PI/2,0,0]}/>
+        <CoordinateAxes model={model} labels={labels} colors={colors}/>
+        <PointCloud points={plotted} selected={selected} colors={colors} onSelect={id => { setPinned(id); onSelect(id); }} onHover={setHover}/>
         {projection && active && <Projection position={active.position}/>}
         <Camera reset={reset} turn={turn} zoom={zoom}/>
       </Canvas>
@@ -107,6 +123,5 @@ export function WebGLScatter({ points, axes, labels, colorMode, selected, onSele
       <Button variant="secondary" onClick={() => { setTurn(0); setZoom(1); setReset(value => value + 1); }}>Đặt lại góc nhìn</Button>
       <label>Thu phóng<input aria-label="Thu phóng 3D" type="range" min=".5" max="2" step=".1" value={zoom} onChange={event => setZoom(Number(event.target.value))}/></label>
     </div>
-    <p className="scene-legend">{colorMode === 'missing' ? 'Vàng: dòng có missing' : colorMode === 'outlier' ? 'Đỏ: dòng có outlier' : 'Xanh: điểm dữ liệu'} · Trắng: dòng đang chọn</p>
   </div>;
 }

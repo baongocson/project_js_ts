@@ -1,0 +1,118 @@
+/* Semantic tokens. ThemeEffect remains the only owner of data-theme/preferences. */
+:root {
+  color-scheme: light;
+  --bg: #f4f7fc;
+  --surface: #ffffff;
+  --surface-elevated: #f0f5fc;
+  --text: #17253d;
+  --muted: #52637b;
+  --border: #d7e1ef;
+  --control-border: #74849b;
+  --primary: #3b82f6;
+  --purple: #a855f7;
+  --cyan: #22d3ee;
+  --success: #13734d;
+  --warning: #8a5800;
+  --danger: #be123c;
+  --accent: #1d4ed8;
+  --tint: #eaf1fc;
+  --button-bg: #1d4ed8;
+  --button-hover: #1e40af;
+  --button-active: #1e3a8a;
+  --button-text: #ffffff;
+  --danger-bg: #be123c;
+  --danger-hover: #9f1239;
+  --danger-active: #881337;
+  --focus: #1d4ed8;
+  --placeholder: #64748b;
+  --disabled-bg: #e8edf5;
+  --disabled-text: #5b6b82;
+  --success-tint: #e2f5eb;
+  --danger-tint: #fff0f3;
+  --accent-soft: #dce9ff;
+  --gradient-wash: linear-gradient(125deg, #3b82f608, #a855f706 58%, #22d3ee06);
+  --gradient-brand: linear-gradient(130deg, #1d4ed8, #6d28d9);
+  --shadow-sm: 0 2px 5px #17253d05, 0 8px 24px #17253d05;
+  --shadow-md: 0 6px 18px #17253d08, 0 20px 48px #17253d08;
+  --shadow-dialog: 0 24px 80px #0b122033;
+  --shadow-focus: 0 0 0 3px #3b82f624;
+  --backdrop: #0b1220a6;
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --radius-sm: 6px;
+  --radius-control: 9px;
+  --radius-lg: 12px;
+  --radius-card: 16px;
+  --radius-pill: 999px;
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --control-padding-block: .6875rem;
+  --control-padding-inline: .75rem;
+  --motion-fast: 140ms;
+  --motion-normal: 180ms;
+  --ambient-purple: #a855f710;
+  --ambient-cyan: #0891b212;
+  --grid-line: #1d4ed806;
+  --glass: #fffffff2;
+  --neon-border: linear-gradient(125deg, #3b82f65c, #a855f738 55%, #0891b24a);
+  --glow-color: #3b82f61a;
+  --glow-radius: 24px;
+  --gradient-action: linear-gradient(115deg, #1d4ed8, #6d28d9);
+  --gradient-heading: linear-gradient(110deg, #17253d 10%, #1d4ed8 60%, #6d28d9);
+  --hover-lift: -2px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b1220;
+  --surface: #111c30;
+  --surface-elevated: #17253d;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --border: #30425e;
+  --control-border: #64748b;
+  --primary: #3b82f6;
+  --purple: #a855f7;
+  --cyan: #22d3ee;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #fb7185;
+  --accent: #93c5fd;
+  --tint: #17253d;
+  /* Brand primary stays exact; a darker action fill gives white text adequate contrast. */
+  --button-bg: #2563eb;
+  --button-hover: #1d4ed8;
+  --button-active: #1e40af;
+  --focus: #22d3ee;
+  --placeholder: #94a3b8;
+  --disabled-bg: #1b2b43;
+  --disabled-text: #94a3b8;
+  --success-tint: #123b35;
+  --danger-tint: #3b2032;
+  --accent-soft: #203858;
+  --gradient-wash: linear-gradient(125deg, #3b82f60a, #a855f708 58%, #22d3ee08);
+  --gradient-brand: linear-gradient(130deg, #1d4ed8, #6d28d9);
+  --shadow-sm: 0 2px 6px #00000012, 0 8px 24px #00000014;
+  --shadow-md: 0 6px 18px #0000001a, 0 20px 48px #0000001f;
+  --shadow-dialog: 0 24px 80px #00000066;
+  --shadow-focus: 0 0 0 3px #22d3ee24;
+  --backdrop: #030814bf;
+  --ambient-purple: #9333ea26;
+  --ambient-cyan: #06b6d41c;
+  --grid-line: #93c5fd06;
+  --glass: #111c30f2;
+  --neon-border: linear-gradient(125deg, #22d3ee80, #3b82f64a 40%, #a855f780);
+  --glow-color: #3b82f62b;
+  --glow-radius: 32px;
+  --gradient-heading: linear-gradient(110deg, #f1f5f9 10%, #a5d8ff 55%, #d8b4fe);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-fast: 0s; --motion-normal: 0s; --hover-lift: 0px; }
+  html:focus-within { scroll-behavior: auto; }
+}
