@@ -1,5 +1,5 @@
-# offline/api
+# Offline API boundary
 
-API nghiệp vụ của feature: sử dụng requestJson từ shared/api, không tạo HTTP client khác hoặc hard-code URL gốc.
+Runtime `ProjectApi` ở `../project-sync.ts` dùng `requestJson` của shared/api cho cả chuỗi create/import/preview/Apply/restore/read. Chuỗi được pin vào owner đã xác thực; keys và checkpoint do protocol project-sync quản lý. Không tạo HTTP client thứ hai, không hard-code API URL hoặc lưu token trong outbox.
 
-Hiện là cấu trúc chuẩn bị cho feature, chưa có triển khai nghiệp vụ. `index.ts` là đầu mối export, hiện chưa export thành phần nào. Trách nhiệm tổng thể, luồng và cách chạy/kiểm thử ở [README feature](../README.md). Bổ sung giải thích file và luồng khi thêm code; không coi thư mục rỗng là tính năng đã hoàn thành.
+`OfflineApiAdapter` cũ đã bỏ; pure queue/replay fixtures vẫn có public exports để kiểm protocol cho dataset đã map sẵn. Chúng không thay luồng runtime CSV/ID mapping. Xem [README feature](../README.md).

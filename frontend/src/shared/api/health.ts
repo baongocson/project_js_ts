@@ -8,5 +8,5 @@ export interface HealthResponse {
 
 // Operational endpoint shared by the application shell; not a business feature.
 export function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
-  return requestJson<HealthResponse>('health', { signal });
+  return requestJson<HealthResponse>('health', { signal, auth: false });
 }

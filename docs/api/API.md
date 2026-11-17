@@ -1,6 +1,6 @@
 # Tài liệu API
 
-Chuyển đổi từ `API.xlsx`, giữ nguyên nội dung theo từng sheet.
+Khởi đầu từ `API.xlsx`; hợp đồng thực thi hiện hành được cập nhật tại đây và `dto-contract.md`. Bổ sung 17/11/2026: TF-IDF, thống kê boxplot và metadata 3D; vẫn giữ 27 endpoint.
 
 ## Trang tính1
 
@@ -62,6 +62,7 @@ Chuyển đổi từ `API.xlsx`, giữ nguyên nội dung theo từng sheet.
 | scale_minmax | Scaling | cell / columns / dataset | rangeMin:0; rangeMax:1 | Number; rangeMin<rangeMax; min=max => invalid. Thống kê toàn cột dù chỉ sửa một ô. |
 | standardize | Scaling | cell / columns / dataset | {} | Number; (x-mean)/populationStd; std=0 => invalid. Missing giữ nguyên. |
 | log1p | Transformation | cell / columns / dataset | {} | Number; x>-1, kết quả finite. -0.5 hợp lệ; -1 và nhỏ hơn invalid. Không coi mọi số âm là lỗi. |
+| tfidf | Transformation | columns (đúng một cột text) | lowercase:true; minDf:1; maxFeatures:100; norm:"l2"; sublinearTf:false; keepSource:true | Vector hóa toàn bộ dòng. minDf là số văn bản nguyên ≥1; maxFeatures nguyên1–1000; tổng schema≤1000 cột. Token Unicode chữ/số, IDF làm trơn, L2 hoặc none; không stopwords/stemming. Dòng thiếu/rỗng vector0. Chi tiết công thức và lineage ở phần bổ sung dưới. |
 | square | Transformation | cell / columns / dataset | {} | Number; x*x phải finite; có thể mất dấu, preview phản ánh giá trị thật. |
 | one_hot | Encoding | columns / dataset | keepSource:false; missingCategory:false<br>asCategory:false (number chỉ nhận khi true) | D11–D14: text/boolean; number chỉ khi asCategory=true. Chưa mixed/date/datetime ởV1. Default keepSource=false; true giữ nguồn. Cột mới UUID, number0/1, lineage giữ sourceColumnId và typed category; category theo D17, missing cuối. Tên source_category có suffix unique; bỏ nguồn thay tại vị trí, giữ nguồn chèn sau. MissingCategory=false cho all-null; true gộp1category và tính vào trần100/source. Không sửa nguồn, giữ các trần hiện hành. |
 | ordinal | Encoding | columns (một cột mỗi lần) | mapping:[{value:typed,label:number}]; keepSource:false | D12/D13/D15: một cột/lần; mapping đủ mọi category nonmissing, không thừa hoặc trùng typed key; label hữu hạn, duy nhất, cho âm/thập phân. Category chưa gán invalid; mapping vượt5000 trả413. Giữ token/kind missing gốc. KeepSource=false giữ columnId/name/position, đổi number; true tạo UUID mới với tên source_ordinal có suffix unique, chèn sau nguồn và lineage.sourceColumnId. Không NFC/trim/casefold category. |
@@ -103,3 +104,28 @@ Chuyển đổi từ `API.xlsx`, giữ nguyên nội dung theo từng sheet.
 | 7A Thống kê toàn cột | Toàn bộ giá trị hợp lệ của cột tại baseVersion, dù chỉ sửa một ô. | statisticsScope.type=whole-columns |
 | 8A Specification | method, parameters, scope, statisticsScope, engineVersion; server gán engineVersion. | Preview, specHash, Operation dùng cùng cấu trúc |
 | 9B CSV | Tối đa16.000.000 byte; vẫn chia chunks theo byte. | POST import / validator / Dataset.originalFile.byteSize |
+
+
+## Bổ sung hợp đồng ngày 17/11/2026
+
+28 method xử lý qua các endpoint Preview/Get/Apply hiện có. Panel processing có 27 method (bao gồm TF-IDF); edit_cell dùng từ bảng của điểm được chọn, không xuất hiện trong dropdown. Nút Lưu ô gọi preview/apply nội bộ, dùng khóa idempotency cố định cho từng lần lưu; không đổi API edit_cell hay bỏ kiểm kiểu/ownership/CAS/history.
+
+### TF-IDF
+
+Specification: method=tfidf, scope={type:"columns",columnIds:[một UUID]}, statisticsScope={type:"whole-columns"}. Parameters mặc định: {lowercase:true,minDf:1,maxFeatures:100,norm:"l2",sublinearTf:false,keepSource:true}. Chỉ cột logicalType=text; dataset/cell hoặc nhiều cột trả400, sai dữ liệu/schema trả preview invalid. minDf/maxFeatures là số nguyên, maxFeatures≤1000; tổng cột sau biến đổi≤1000. Từ vựng rỗng hoặc ID cột đã tồn tại làm invalid, không ghi một phần.
+
+Mỗi dòng là một document, kể cả missing/rỗng. Token là chuỗi Unicode chữ/số bắt đầu bằng chữ/số và có thể chứa dấu kết hợp; dấu câu ngăn token. Lowercase tùy chọn, không tự trim/NFC/stemming/stopwords. df là số document chứa term. Lọc df≥minDf, chọn tối đa maxFeatures theo df giảm dần rồi typed codepoint tăng dần; cột kết quả sắp theo codepoint. tf=count hoặc 1+ln(count) khi sublinearTf. idf=1+ln((1+N)/(1+df)). Trọng số=tf×idf, norm=l2 chia độ dài vector; none giữ trọng số. Document rỗng/missing có vector0. Dùng deterministicLog1p chung ESM/CJS để offline/server khớp.
+
+Cột sinh có kiểu number, tên source_tfidf_term (suffix nếu trùng), ID ổn định theo sourceColumnId/term, lineage={sourceColumnId,category:{kind:"text",value:term}}. Giữ rowId/thứ tự dòng; giữ hoặc bỏ cột nguồn theo keepSource. Preview công bố schema/row diff, Apply tạo version/history; sync ánh xạ cột bằng lineage và kiểm đủ giá trị candidate. Engine data-core-unified-0.7.0; 0.6.0 được replay với 27 method cũ vì semantics không đổi, TF-IDF yêu cầu engine khớp. Engine khác vẫn bị chặn và giữ bản local.
+
+### Distribution và boxplot
+
+GET analysis/distribution giữ query hiện hành, bổ sung boxplot=null cho cột không số/không có số hợp lệ, hoặc {min,q1,median,q3,max,lowerWhisker,upperWhisker,lowerFence,upperFence,outlierCount,outliers:[{rowId,value}],truncated}. Quartile nội suy tuyến tính trên toàn bộ số hợp lệ, bỏ missing. Boxplot cố định Tukey1,5×IQR, độc lập lựa chọn IQR/Z-score của outlierBounds. Râu là giá trị thực xa nhất còn trong fence, giá trị ngoài fence là outlier. Cột hằng có boxplot suy biến; IQR0 vẫn kiểm các giá trị khác quartile. Tổng outlierCount đầy đủ, outliers tối đa100 theo thứ tự dòng và truncated công khai.
+
+Histogram tính toàn cột; frequency chart dùng value-counts phân trang20nhóm và tỷ lệ trên toàn dataset. Không dùng trang bảng dữ liệu để tính EDA.
+
+### Points 3D
+
+GET analysis/points-3d thêm axes:[{columnId,min,max}] theo thứ tự X/Y/Z, min/max toàn phiên bản (null nếu không có số); unplottablePoints:[{rowId,missingCount,isOutlier,outlierColumnIds,reason}], unplottableTotal và flaggedCounts:{missingRows,outlierRows}. reason là missing_coordinates hoặc invalid_coordinates. points vẫn chỉ chứa tọa độ số hữu hạn. Dòng không đủ tọa độ được chọn bằng dấu ở vùng riêng, không gán0 giả và không biến đổi dữ liệu nguồn.
+
+Missing xét mọi cột trong dòng. colorMode=outlier xét mọi cột number, bỏ qua giới hạn outlierColumnIds để màu không phụ thuộc trục/cột đang chọn; summary/distribution vẫn giữ scope riêng. Sampling ổn định theo rowId, ưu tiên dòng được tô màu trước, giới hạn maxPoints≤10000. unplottablePoints có giới hạn riêng cùng maxPoints và ưu tiên cùng quy tắc. Counts là toàn phiên bản, UI công khai số chưa vẽ. Cả WebGL và fallback dùng cùng bounds/phép đổi cho điểm và trục; vị trí co giãn chỉ để hiển thị, tooltip giữ số gốc.

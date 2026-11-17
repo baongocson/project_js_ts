@@ -10,7 +10,7 @@ type AdvancedSpec = Extract<ProcessingSpecification, { method: Exclude<Processin
 const numericMethods = new Set(['fill_mean','fill_median','clip_iqr','clip_zscore','scale_minmax','standardize','log1p','square']);
 const fillMethods = new Set(['fill_mean','fill_median','fill_mode','fill_max']);
 const rowMethods = new Set(['drop_missing_rows']);
-const columnMethods = new Set(['drop_missing_columns','one_hot','ordinal']);
+const columnMethods = new Set(['drop_missing_columns','one_hot','ordinal','tfidf']);
 const err = (code:string,message:string,columnId?:string,rowId?:string):Diagnostic => ({code,message,...(columnId ? {columnId}:{}),...(rowId ? {rowId}:{})});
 const bad = (snapshot:Snapshot,errors:Diagnostic[]):EngineResult => ({snapshot,changes:[],schemaChanges:[],errors,warnings:[],canApply:false});
 function done(source:Snapshot,candidate:Snapshot,changes:ChangedCell[],schemaChanges:SchemaChange[],changed:boolean):EngineResult {
@@ -68,6 +68,7 @@ export function processAdvanced(snapshot:Snapshot, raw:ProcessingSpecification):
   if(spec.method==='clip_zscore'&&(!Number.isFinite(spec.parameters.threshold)||spec.parameters.threshold<=0))errors.push(err('INVALID_PARAMETERS','threshold phải dương'));
   if(spec.method==='scale_minmax'&&(!Number.isFinite(spec.parameters.rangeMin)||!Number.isFinite(spec.parameters.rangeMax)||spec.parameters.rangeMin>=spec.parameters.rangeMax))errors.push(err('INVALID_PARAMETERS','Khoảng scale không hợp lệ'));
   if(errors.length)return bad(snapshot,errors);
+  if(spec.method==='tfidf')return tfidf(snapshot,spec,selected);
   if(spec.method==='drop_missing_rows') {
     const kept=snapshot.rows.filter(row=>{
       const checks=selected.map(id=>row.cells[id]&&missingKind(row.cells[id])!==undefined);
@@ -157,6 +158,44 @@ export function processAdvanced(snapshot:Snapshot, raw:ProcessingSpecification):
     return updated?{...row,cells:updated}:row;
   });
   return errors.length?bad(snapshot,errors):done(snapshot,{columns:snapshot.columns,rows},changes,[],changes.length>0);
+}
+/** One text column is one corpus; vocabulary/statistics always use the whole source version. */
+function tfidf(snapshot:Snapshot,spec:Extract<AdvancedSpec,{method:'tfidf'}>,selected:string[]):EngineResult {
+  const p=spec.parameters;
+  if(spec.scope.type!=='columns'||selected.length!==1)return bad(snapshot,[err('INVALID_SCOPE','TF-IDF yêu cầu chọn đúng một cột text')]);
+  if(!Number.isSafeInteger(p.minDf)||p.minDf<1||!Number.isSafeInteger(p.maxFeatures)||p.maxFeatures<1||p.maxFeatures>1000||!['l2','none'].includes(p.norm)||[p.lowercase,p.sublinearTf,p.keepSource].some(value=>typeof value!=='boolean'))return bad(snapshot,[err('INVALID_PARAMETERS','Tham số TF-IDF không hợp lệ')]);
+  const source=snapshot.columns.find(column=>column.columnId===selected[0])!;
+  if(source.logicalType!=='text')return bad(snapshot,[err('NON_TEXT_COLUMN','TF-IDF chỉ nhận cột text',source.columnId)]);
+  const frequencies=new Map<string,number>();
+  const documents=snapshot.rows.map(row=>{
+    const cell=row.cells[source.columnId],counts=new Map<string,number>();
+    if(!cell||missingKind(cell)!==undefined)return counts;
+    if(cell.kind!=='text')return counts;
+    const content=p.lowercase?cell.value.toLowerCase():cell.value;
+    for(const token of content.match(/[\p{L}\p{N}][\p{L}\p{M}\p{N}]*/gu)??[])counts.set(token,(counts.get(token)??0)+1);
+    for(const token of counts.keys())frequencies.set(token,(frequencies.get(token)??0)+1);
+    return counts;
+  });
+  const compare=(a:string,b:string)=>compareCells({kind:'text',value:a},{kind:'text',value:b});
+  const vocabulary=[...frequencies.keys()].filter(term=>frequencies.get(term)!>=p.minDf)
+    .sort((a,b)=>frequencies.get(b)!-frequencies.get(a)!||compare(a,b)).slice(0,p.maxFeatures).sort(compare);
+  if(!vocabulary.length)return bad(snapshot,[err('EMPTY_VOCABULARY','Không có token đạt minDf',source.columnId)]);
+  if(snapshot.columns.length-(p.keepSource?0:1)+vocabulary.length>1000)return bad(snapshot,[err('LIMIT_EXCEEDED','TF-IDF vượt tổng 1000 cột',source.columnId)]);
+  const names=new Set(snapshot.columns.map(column=>column.name)),taken=new Set(snapshot.columns.map(column=>column.columnId));
+  const generated:Column[]=vocabulary.map((term,index)=>({columnId:stableUuid(`${source.columnId}:tfidf:${term}`),
+    name:distinctName(`${source.name}_tfidf_${term}`,names),position:source.position+(index+1)/(vocabulary.length+1),logicalType:'number',format:null,
+    lineage:{sourceColumnId:source.columnId,category:{kind:'text',value:term}}}));
+  if(generated.some(column=>taken.has(column.columnId)))return bad(snapshot,[err('COLUMN_ID_CONFLICT','Đã tồn tại cột TF-IDF tương ứng',source.columnId)]);
+  const idf=vocabulary.map(term=>1+deterministicLog1p((documents.length-frequencies.get(term)!)/(1+frequencies.get(term)!)));
+  const rows=snapshot.rows.map((row,index)=>{
+    const weights=vocabulary.map((term,i)=>{const tf=documents[index].get(term)??0;return tf===0?0:(p.sublinearTf?1+deterministicLog1p(tf-1):tf)*idf[i];});
+    const norm=p.norm==='l2'?Math.sqrt(weights.reduce((sum,value)=>sum+value*value,0)):0;
+    const cells={...row.cells};if(!p.keepSource)delete cells[source.columnId];
+    generated.forEach((column,i)=>{cells[column.columnId]=numeric(norm?weights[i]/norm:weights[i]);});
+    return {...row,cells};
+  });
+  const columns=[...snapshot.columns.filter(column=>p.keepSource||column.columnId!==source.columnId),...generated].sort((a,b)=>a.position-b.position);
+  return done(snapshot,{columns,rows},[],[],true);
 }
 function encode(snapshot:Snapshot,spec:Extract<AdvancedSpec,{method:'one_hot'|'ordinal'}>,selected:string[],errors:Diagnostic[]):EngineResult {
   if(spec.method==='ordinal'){

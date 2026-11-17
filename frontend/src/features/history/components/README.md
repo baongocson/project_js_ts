@@ -1,5 +1,5 @@
 # history/components
 
-Thành phần giao diện riêng của feature. UI nền tảng dùng chung như button/input/dialog khi cần sẽ được đặt ở shared/ui.
+`HistoryPanel.tsx` đọc history phân trang/lọc, xác nhận restore với base version và stable receipt key, rồi refresh workspace.
 
-Hiện là cấu trúc chuẩn bị cho feature, chưa có triển khai nghiệp vụ. `index.ts` là đầu mối export, hiện chưa export thành phần nào. Trách nhiệm tổng thể, luồng và cách chạy/kiểm thử ở [README feature](../README.md). Bổ sung giải thích file và luồng khi thêm code; không coi thư mục rỗng là tính năng đã hoàn thành.
+Dùng public index của feature khi import từ app hoặc feature khác. Không đặt token trong local storage/snapshot/outbox. Luồng và lệnh kiểm thử ở [README feature](../README.md); acceptance dùng HTTPS/Nest/MongoDB replica tạm cục bộ.

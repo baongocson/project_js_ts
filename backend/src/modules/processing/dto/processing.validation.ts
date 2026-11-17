@@ -2,6 +2,7 @@ import { PayloadTooLargeException } from '@nestjs/common';
 import { InputValidator } from '../../../common/validation/validation';
 import type { ApplyPreviewDto, CreatePreviewDto } from './processing.dto';
 const rules: Record<string,{scopes:string[];defaults:Record<string,unknown>}> = {
+ tfidf:{scopes:['columns'],defaults:{lowercase:true,minDf:1,maxFeatures:100,norm:'l2',sublinearTf:false,keepSource:true}},
  edit_cell:{scopes:['cell'],defaults:{value:undefined}},
  remove_duplicates:{scopes:['dataset'],defaults:{keep:'first'}},
  strip_html:{scopes:['cell','columns','dataset'],defaults:{decodeEntities:true}},
@@ -39,9 +40,13 @@ export function parseCreatePreview(input:unknown):CreatePreviewDto {
  v.enumeration(stats.type,'specification.statisticsScope.type',['whole-columns']);
  const supplied=v.object(s.parameters===undefined?{}:s.parameters,'specification.parameters',Object.keys(rule?.defaults??{}));
  const params={...(rule?.defaults??{}),...supplied};const path='specification.parameters.';
+ if(method==='tfidf'&&(scope.type!=='columns'||!Array.isArray(scope.columnIds)||scope.columnIds.length!==1))v.issue('specification.scope','TF-IDF yêu cầu đúng một cột text');
  for(const [key,value]of Object.entries(params)) {
   if(['value','from','to'].includes(key))v.cell(value,path+key);
-  else if(['decodeEntities','allowThousands','caseSensitive','keepSource','missingCategory','asCategory'].includes(key)){if(typeof value!=='boolean')v.issue(path+key,'Phải là boolean');}
+  else if(['decodeEntities','allowThousands','caseSensitive','keepSource','missingCategory','asCategory','lowercase','sublinearTf'].includes(key)){if(typeof value!=='boolean')v.issue(path+key,'Phải là boolean');}
+  else if(key==='minDf')v.integer(value,path+key,1);
+  else if(key==='maxFeatures')v.integer(value,path+key,1,1000);
+  else if(key==='norm')v.enumeration(value,path+key,['l2','none']);
   else if(['factor','threshold'].includes(key))v.number(value,path+key,true);
   else if(['rangeMin','rangeMax'].includes(key))v.number(value,path+key);
   else if(key==='mode')v.enumeration(value,path+key,['trim','collapse','remove']);

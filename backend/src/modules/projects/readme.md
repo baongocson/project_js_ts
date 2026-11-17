@@ -1,6 +1,6 @@
 # ProjectsModule
 
-BE-2 triển khai đủ 6 API project/workspace, dùng global AuthGuard/OwnershipGuard của BE-1. Không dùng ProjectsGuard scaffold để bảo vệ route.
+BE-2 triển khai đủ 6 API project/workspace, dùng global AuthGuard/OwnershipGuard của BE-1. Guard scaffold không dùng đã được bỏ; quyền do global guards và service ownership xác minh.
 
 Trạng thái triển khai và lệnh nghiệm thu ở [báo cáo BE-2](../../../../docs/teamwork/nguyen-be2.md).
 

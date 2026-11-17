@@ -31,6 +31,7 @@ export type MethodParams = {
   standardize: Record<string, never>;
   log1p: Record<string, never>;
   square: Record<string, never>;
+  tfidf: { lowercase: boolean; minDf: number; maxFeatures: number; norm: 'l2' | 'none'; sublinearTf: boolean; keepSource: boolean };
   one_hot: { keepSource: boolean; missingCategory: boolean; asCategory: boolean };
   ordinal: { mapping: { value: Cell; label: number }[]; keepSource: boolean };
 };
@@ -41,7 +42,11 @@ export interface Diagnostic { code: string; message: string; rowId?: string; col
 export interface ChangedCell { rowId: string; columnId: string; before: Cell; after: Cell }
 export interface SchemaChange { columnId: string; before: LogicalType; after: LogicalType }
 export interface EngineResult { snapshot: Snapshot; changes: ChangedCell[]; schemaChanges: SchemaChange[]; errors: Diagnostic[]; warnings: Diagnostic[]; canApply: boolean }
-export const ENGINE_VERSION = 'data-core-unified-0.6.0';
+export const ENGINE_VERSION = 'data-core-unified-0.7.0';
+/** 0.7 adds TF-IDF; the original 27 method semantics are unchanged. Unknown engines remain blocked. */
+export function compatibleEngine(left:string,right:string,method?:string):boolean {
+  return left===right || method!=='tfidf' && [left,right].every(value=>value==='data-core-unified-0.6.0'||value===ENGINE_VERSION);
+}
 
 function invalid(snapshot: Snapshot, errors: Diagnostic[]): EngineResult {
   return { snapshot, changes: [], schemaChanges: [], errors, warnings: [], canApply: false };
@@ -187,7 +192,7 @@ function convert(before: Cell, spec: ProcessingSpecification): { after?: Cell; e
     default: return { error: 'UNSUPPORTED_METHOD' };
   }
 }
-const advancedMethods = new Set<ProcessingMethod>(['fill_mean','fill_median','fill_mode','fill_max','drop_missing_rows','drop_missing_columns','clip_iqr','clip_zscore','scale_minmax','standardize','log1p','square','one_hot','ordinal']);
+const advancedMethods = new Set<ProcessingMethod>(['fill_mean','fill_median','fill_mode','fill_max','drop_missing_rows','drop_missing_columns','clip_iqr','clip_zscore','scale_minmax','standardize','log1p','square','one_hot','ordinal','tfidf']);
 const conversions = new Set<ProcessingMethod>(['convert_number', 'convert_text', 'convert_date', 'convert_datetime', 'convert_boolean']);
 const textMethods = new Set<ProcessingMethod>(['strip_html', 'normalize_whitespace', 'uppercase', 'lowercase']);
 export function processSnapshot(snapshot: Snapshot, spec: ProcessingSpecification): EngineResult {

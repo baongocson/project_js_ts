@@ -220,5 +220,18 @@
       "keepSource": false
     },
     "column": 1
+  },
+  {
+    "method": "tfidf",
+    "csv": "n,t\n1,Cat cat dog\n2,Dog fish\n3,\n",
+    "column": 1,
+    "parameters": {
+      "lowercase": true,
+      "minDf": 1,
+      "maxFeatures": 100,
+      "norm": "l2",
+      "sublinearTf": false,
+      "keepSource": true
+    }
   }
 ]

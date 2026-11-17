@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:unit": "node scripts/run-unit.mjs",
     "predev": "npm run build -w @dashboard/data-core",
     "prebuild": "npm run build -w @dashboard/data-core",
     "pretypecheck": "npm run build -w @dashboard/data-core",
@@ -21,16 +22,20 @@
   },
   "dependencies": {
     "@dashboard/data-core": "0.1.0",
+    "@react-three/fiber": "^9.8.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.18.5"
+    "react-router-dom": "^7.18.5",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.187.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "esbuild": "^0.28.2",
     "typescript": "~5.9.3",
     "vite": "^7.2.0"
   }

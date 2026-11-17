@@ -1,6 +1,6 @@
 # DatasetsModule
 
-BE-2 triển khai 4 API import/metadata/rows/row lookup, dùng global auth/ownership BE-1. Không gắn DatasetsGuard scaffold.
+BE-2 triển khai 4 API import/metadata/rows/row lookup, dùng global auth/ownership BE-1. Guard scaffold không dùng đã được bỏ; quyền do global guards và service ownership xác minh.
 
 Xem [báo cáo hiện tại](../../../../docs/teamwork/nguyen-be2.md).
 

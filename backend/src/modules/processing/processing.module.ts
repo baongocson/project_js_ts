@@ -5,8 +5,7 @@ import { IdempotencyModule } from '../../infrastructure/idempotency/idempotency.
 import { ProcessingRecoveryService } from './processing-recovery.service';
 import { ProcessingService } from './processing.service';
 
-import { ProcessingGuard } from './processing.guard';
 import { ProcessingRepository } from './processing.repository';
 
-@Module({ imports: [DatasetsModule, IdempotencyModule], controllers: [ProcessingController], providers: [ProcessingService, ProcessingGuard, ProcessingRepository, ProcessingRecoveryService], exports: [ProcessingService] })
+@Module({ imports: [DatasetsModule, IdempotencyModule], controllers: [ProcessingController], providers: [ProcessingService, ProcessingRepository, ProcessingRecoveryService], exports: [ProcessingService] })
 export class ProcessingModule {}

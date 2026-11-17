@@ -121,3 +121,12 @@ Không cần duyệt lại D01–D26 để viết service theo hợp đồng nà
 - `npm run test:contracts -w backend`: các ca biên về Unicode/typed-null/precision, auth/profile/query/filter, no-op/autosave, diagnostics và lifecycle/retry.
 - `npm run test:http -w backend`: khởi động backend tạm, kiểm27route và input sai; suite DB-disabled kiểm 501/503 và validation với override tường minh; integration DB-enabled nằm trong test:integration:local.
 - Không thay thế integration tests MongoDB/CSV/storage/engine sau này.
+
+
+## Thay đổi 17/11/2026 — TF-IDF và EDA
+
+Hợp đồng hiện hành có 27 endpoint, 28 method. Thêm union tfidf trong ProcessingParameters/rules và enum validator của processingPreviews/processingOperations. Default, validation, công thức, lỗi và giới hạn: [API.md — bổ sung 17/11](API.md#bổ-sung-hợp-đồng-ngày-17112026). Không thêm endpoint hay đổi envelope.
+
+DistributionResponseDto dùng shared DistributionResult, thêm boxplot nullable với quartile/fences/whiskers/outlierCount/outliers/truncated. Points3dResponseDto dùng shared Points3dResult, thêm axes/full-version bounds, flaggedCounts, unplottablePoints/unplottableTotal. Các field mới additive; frontend có trạng thái chờ/N/A nếu server chưa nâng cấp, không tự suy thống kê từ sample. Color outlier toàn cột number; missing toàn dòng.
+
+Engine0.7 nhận 27 method cũ từ engine0.6 với kiểm candidate/receipt đầy đủ; TF-IDF không chấp nhận engine khác. Migration validator chỉ mở rộng enum, không sửa dữ liệu: xem [database.md](../database/database.md#nâng-cấp-tf-idf-17112026).

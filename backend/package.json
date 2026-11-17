@@ -29,7 +29,8 @@
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix --max-warnings=0",
     "test:be1": "jest --config jest.config.cjs --runInBand --selectProjects integration --runTestsByPath src/test/integration/modules/auth/auth.integration-spec.ts",
-    "auth:init-secret": "node scripts/init-auth-secret.cjs"
+    "auth:init-secret": "node scripts/init-auth-secret.cjs",
+    "db:upgrade:tfidf": "npm run build && node scripts/upgrade-tfidf-validator.cjs"
   },
   "dependencies": {
     "@dashboard/data-core": "0.1.0",

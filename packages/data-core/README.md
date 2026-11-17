@@ -1,6 +1,6 @@
 # data-core — BE-2 contract
 
-Package TypeScript thuần, không NestJS/Node filesystem/MongoDB/HTTP/IndexedDB. Backend dùng dependency `@dashboard/data-core`; package có CommonJS entry cho backend và ESM entry cho browser/offline. Tests chạy cùng fixture qua cả hai entry. Engine BE-3 được hợp nhất trong cùng package, hỗ trợ 27 tên phương pháp qua `processSnapshot` và `ENGINE_VERSION`. Đây chưa phải Processing API/Preview/Apply hoặc bộ thống kê Analysis hoàn chỉnh.
+Package TypeScript thuần, không NestJS/Node filesystem/MongoDB/HTTP/IndexedDB. Backend dùng dependency `@dashboard/data-core`; package có CommonJS entry cho backend và ESM entry cho browser/offline. Tests chạy cùng fixture qua cả hai entry. Engine BE-3 được hợp nhất trong cùng package, hỗ trợ 28 tên phương pháp qua `processSnapshot` và `ENGINE_VERSION`. Package hiện có pure preview projection, analysis calculations và workspace normalization chia sẻ cho browser/server; persistence/API/candidate publication vẫn do host quản lý.
 
 ## Types và CSV
 
@@ -38,3 +38,17 @@ Chạy từ thư mục gốc: `npm run typecheck`, `npm run lint`, `npm run test
 ## BE-3 final engine contract audit
 
 Bổ sung `be3-final-contract-audit.test.mjs` cho D07/D09/D10/D11/D14/D15 và HTML script/style stripping. `ENGINE_VERSION=data-core-unified-0.5.0`. Gói core có 27 phương pháp, nhưng offline UI và Browser E2E thuộc giai đoạn tích hợp chung, không phải chức năng đã có ở package.
+
+
+## Shared preview, analysis và workspace
+
+`projectPreview` là phép chiếu summary/schema/row-change/whole-column statistics dùng chung backend và local preview. `analyzeSummary`, `analyzeDistribution`, `analyzeCorrelation`, `analyzePoints3d`, `analyzeValueCounts` được tách nguyên từ backend để tránh hai bộ semantics offline/online; giữ N/A reasons, valid-pair counts, hidden/sampling counts và typed category denominator. Query/response types thuần cùng package.
+
+`WorkspaceState`, `defaultWorkspace` và `normalizeWorkspace` chia sẻ kiểu, ref/type reconciliation và clamp page theo snapshot cho server và IndexedDB local. Không tự ghi storage hoặc sửa snapshot/outbox. Các extraction không đổi thuật toán/engine processing nên `ENGINE_VERSION` giữ nguyên; không dùng extraction để gán nhãn engine mới cho queue cũ.
+
+
+## TF-IDF và thống kê EDA (17/11/2026)
+
+Engine hiện hành data-core-unified-0.7.0 thêm tfidf (một cột text, minDf/maxFeatures, lowercase, sublinearTf, L2/none, keepSource). Công thức/limits/lineage theo [API.md](../../docs/api/API.md#bổ-sung-hợp-đồng-ngày-17112026). Các27method cũ không đổi; compatibleEngine chỉ cho cầu nối0.6↔0.7 ở method cũ, TF-IDF phải khớp engine. Không đổi codec/storage schema. Fixtures có28method, test/tfidf.test.mjs kiểm công thức/Unicode/zero vector/invalid/ESM-CJS parity.
+
+analyzeDistribution trả thêm boxplot Tukey1,5IQR (quartile tuyến tính, râu thực, tối đa100dấu và tổng đầy đủ). analyzePoints3d cung cấp full-axis bounds, flags toàn dòng, vùng riêng cho missing/invalid coordinates; sampling ưu tiên dòng được tô màu và công khai số chưa vẽ. Frontend scatter-model dùng chung phép biến đổi cho điểm/ticks WebGL/fallback.

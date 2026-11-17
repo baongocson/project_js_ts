@@ -47,7 +47,7 @@ async function main(){
     });
     await new Promise((ready,reject)=>{server.once('error',reject);server.listen(4174,'127.0.0.1',ready);});
     const fingerprint=createHash('sha256').update(new X509Certificate(await readFile(cert)).publicKey.export({type:'spki',format:'der'})).digest('base64');
-    const test=spawn(process.execPath,[require.resolve('@playwright/test/cli'),'test','--config',resolve(frontend,'playwright.acceptance.config.ts')],{cwd:frontend,stdio:'inherit',windowsHide:true,env:{...process.env,ACCEPTANCE_BASE_URL:base,ACCEPTANCE_CERT_SPKI:fingerprint}});
+    const test=spawn(process.execPath,[require.resolve('@playwright/test/cli'),'test','--config',resolve(frontend,'playwright.acceptance.config.ts'),...process.argv.slice(2)],{cwd:frontend,stdio:'inherit',windowsHide:true,env:{...process.env,ACCEPTANCE_BASE_URL:base,ACCEPTANCE_CERT_SPKI:fingerprint}});
     process.exitCode=await completion(test);
   }finally{
     if(server){server.closeAllConnections();await new Promise(done=>server.close(done));}

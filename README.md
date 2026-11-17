@@ -57,9 +57,9 @@ frontend/
   public/, vite.config.ts, tsconfig.json
 ```
 
-`GET /api/v1/health` ping database khi được bật. BE-1 triển khai4API Auth và3API Users. BE-2 bổ sung6API Projects và4API Datasets với CSV/storage/snapshot/idempotency/publish/recovery; xem [báo cáo BE-2](docs/teamwork/nguyen-be2.md). BE-3 triển khai 10 API Processing/History/Analysis và đủ 27 method trong packages/data-core. Trang /offline có auth, CSV, bảng local, xử lý/restore offline, IndexedDB và đồng bộ có ID mapping. Xem [kết quả xử lý checklist](docs/reports/backend-plan-remediation-2026-11-16.md).
+`GET /api/v1/health` ping database khi được bật. BE-1 triển khai 4 API Auth và 3 API Users. BE-2 bổ sung 6 API Projects và 4 API Datasets với CSV/storage/snapshot/idempotency/publish/recovery; xem [báo cáo BE-2](docs/teamwork/nguyen-be2.md). BE-3 triển khai 10 API Processing/History/Analysis và đủ 27 method trong packages/data-core. Trang /offline có auth, CSV, bảng local, xử lý/restore offline, IndexedDB và đồng bộ có ID mapping. Xem [kết quả xử lý checklist](docs/reports/backend-plan-remediation-2026-11-16.md).
 
-AuthGuard và OwnershipGuard đã gắn toàn cục: thiếu JWT/session hợp lệ trả 401 trước kiểm ID, rồi kiểm quyền project/dataset/version/preview. Health và Auth là public; Auth mutations vẫn kiểm Origin và rate limit. Các guard scaffold của những module còn lại chưa được dùng thay guard thật. Xem [BE-1 bàn giao](docs/teamwork/be1-handoff.md).
+AuthGuard và OwnershipGuard đã gắn toàn cục: thiếu JWT/session hợp lệ trả 401 trước kiểm ID, rồi kiểm quyền project/dataset/version/preview. Health và Auth là public; Auth mutations vẫn kiểm Origin và rate limit. Các guard scaffold không dùng của Projects/Datasets/Processing/History/Analysis đã được bỏ; không thay đổi global guards hoặc ownership trong service. Xem [BE-1 bàn giao](docs/teamwork/be1-handoff.md).
 
 ## Kiểm thử
 

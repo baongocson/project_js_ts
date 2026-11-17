@@ -63,3 +63,10 @@ MongoDB không có foreign key/cascade tự động. Ownership, published immuta
 Tham chiếu: [MongoDB unique index và schema validation](https://www.mongodb.com/docs/manual/tutorial/unique-indexes-schema-validation/), [partial indexes](https://www.mongodb.com/docs/manual/core/index-partial/), [TTL](https://www.mongodb.com/docs/manual/core/index-ttl/), [Mongoose 8 validation](https://mongoosejs.com/docs/8.x/docs/validation.html). Unique là ràng buộc của index thật, không phải Mongoose validator.
 
 Kết quả ngày 14/11/2026: provision/verify Atlas thành công; 46/46 database integration tests, 56/56 DTO + HTTP contract tests và typecheck cả backend/frontend đã qua. Bản ghi thử đã rollback hoặc xóa theo `_id`; không giữ dữ liệu mẫu trong database.
+
+
+## Nâng cấp TF-IDF 17/11/2026
+
+Trạng thái hiện tại đã có auth/import/codec/storage/processing/analysis; các mô tả scaffold phía trên là lịch sử ban đầu. TF-IDF thêm method=tfidf vào validator của đúng hai collection processingPreviews và processingOperations. Không thêm collection, không đổi snapshot codec, không sửa tài liệu/version cũ; lineage dùng sourceColumnId và category text cho term.
+
+Với database đã provision engine0.6, chạy npm run db:upgrade:tfidf -w backend. Script kiểm cả hai schema hiện tại là bản cũ đã biết hoặc bản mới; nếu có drift khác thì dừng, không tự ghi đè schema lạ. collMod chỉ thêm enum, không xóa/ghi document hoặc đổi index; chạy lại an toàn. Sau đó kiểm toàn bộ12collection/index bằng verifyDatabase. Database mới dùng db:provision như trước. Backend cần tải lại code core/API0.7.

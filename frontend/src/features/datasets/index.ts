@@ -1,2 +1,6 @@
 // Đầu mối công khai của feature; chỉ export thành phần đã được triển khai.
-export {};
+export { datasetsApi } from './api/datasets-api';
+export type { ImportOptions,Metadata,RowsResult } from './api/datasets-api';
+export { ImportWizard } from './components/ImportWizard';
+export { TypedTable,CellDisplay } from './components/TypedTable';
+export { DataTableView } from './components/DataTableView';

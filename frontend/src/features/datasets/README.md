@@ -1,18 +1,10 @@
 # Feature datasets
 
-Import CSV và đọc dữ liệu/bảng theo version. Chưa có upload, bảng dữ liệu hoặc API wrapper nghiệp vụ.
+`datasetsApi` đọc metadata/rows/getRow theo immutable version và import multipart qua shared transport. `ImportWizard` dùng chung online/local, `DataTableView` dùng chung controls và `TypedTable`/`CellDisplay` render typed cells.
 
-## Cấu trúc và luồng dự kiến
+- Wizard kiểm UTF-8 CSV <=16.000.000 byte bằng core, giữ nguồn, chọn comma/semicolon/tab và override logicalType theo position. Preview tính lại từ toàn nguồn sau mỗi override; chỉ render tối đa 10 dòng mẫu, không tự giới hạn dữ liệu import. Encoding/header cố định theo API V1.
+- Inferred schema được giữ để sửa lại override invalid. Lỗi CSV có code/recordIndex/physical lines/columnPosition; quá kích thước/blank record/quoted errors chặn submit. Async inspection có generation fence; logical import key giữ qua retry, local creation cũng có key.
+- Bảng phân biệt number/text/date/datetime/boolean/null/empty/whitespace/N/A. Filter typed hỗ trợ nhiều điều kiện AND, xóa từng điều kiện, sort/page/selection theo IDs. Online đọc API; local queryRows từ toàn snapshot. GetRow độc lập filter/page được app/analysis sử dụng.
+- Selection không tự sửa published data: chọn ô, chọn edit_cell trong ProcessingPanel rồi Preview và Apply typed value. Scope không bị filter bảng ngầm giới hạn. Callback double-click vẫn là extension boundary; full editor UX/keyboard được audit riêng.
 
-- `api/`: endpoint riêng của feature, gọi transport ở shared/api.
-- `components/`: UI đặc thù của feature.
-- `hooks/`: logic/trạng thái tái sử dụng trong feature.
-- `pages/`: màn hình được app router lắp ghép.
-- `types.ts`: kiểu dữ liệu riêng của feature.
-- `index.ts`: API công khai, chỉ export thành phần thực sự được triển khai.
-
-Luồng dự kiến khi có nghiệp vụ: app router → page → hooks/API → shared/api → backend. Feature được dùng shared; không import ngược app. Chưa có code nghiệp vụ nên index/types hiện chỉ đánh dấu TypeScript module (`export {}`), không giả lập thành công.
-
-## Chạy và kiểm tra
-
-Từ gốc repo: `npm run dev -w frontend`, `npm run typecheck -w frontend`. E2E chung: `npm run test:e2e:frontend`. Hiện chưa có test chứng minh nghiệp vụ datasets hoàn thành; chỉ có E2E trang hệ thống. Khi triển khai, thêm test luồng tương ứng và export qua index, cập nhật README.
+Kiểm thử: `npm run test:acceptance -w frontend` có online/local wizard BOM/quoted multiline/missing/semicolon/override, exact source/hash/options/rawToken giữ trong IndexedDB rồi sync, CSV blank/oversize/header-only; table online và local persistence/CAS/multi-filter/sort/selection qua reload. Không dùng sample 10 dòng để kết luận toàn file hợp lệ; core đã kiểm toàn file trước submit.

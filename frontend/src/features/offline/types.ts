@@ -68,10 +68,12 @@ export interface SyncAdapter {
 export class SyncHttpError extends Error {
   readonly status: number;
   readonly code: string;
-  constructor(status: number, code: string, message: string) {
+  readonly retryAfter?:number;
+  constructor(status: number, code: string, message: string,retryAfter?:number) {
     super(message);
     this.status = status;
     this.code = code;
     this.name = 'SyncHttpError';
+    this.retryAfter=retryAfter;
   }
 }
