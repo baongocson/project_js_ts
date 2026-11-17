@@ -209,3 +209,8 @@ Lệnh hiện có: `npm run lint -w frontend`, `npm run typecheck -w frontend`, 
 5. Lặp lại ca mất response sau commit, retry không trùng; tạo server version mới trước sync để chứng minh conflict không ghi đè/mất bản local.
 
 Các kịch bản trên là gate tích hợp quan trọng nhất. Chúng không thay thế việc nghiệm thu các endpoint/method còn lại trong ma trận hợp đồng.
+
+
+## Phạm vi bổ sung đã được chủ dự án yêu cầu — 17/11/2026
+
+Bổ sung vào FE-06/FE-07: edit_cell chuyển từ panel xử lý sang bảng dòng khi click điểm3D; EDA gồm boxplot chọn cột, histogram/phân phối và frequency chart; sửa hệ tọa độ/trục; màu missing/outlier xét toàn dòng/mọi cột number. Transformation thêm TF-IDF, mở rộng API/core/validator và sync offline tương ứng. Tổng hiện tại28method (27panel+edit_cell qua bảng điểm);27endpoint giữ nguyên. Quyết định kỹ thuật/công thức/limits ghi tại API.md; kết quả kiểm thử và giới hạn ở [báo cáo bổ sung](../reports/frontend-eda-tfidf-2026-11-17.md). Các mốc27method trong kế hoạch gốc là phạm vi trước bổ sung.

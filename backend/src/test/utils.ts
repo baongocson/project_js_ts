@@ -6,24 +6,57 @@ import { ConfigService } from '@nestjs/config';
 import { json } from 'express';
 import request, { type Test as HttpTest } from 'supertest';
 import { ApiExceptionFilter } from '../common/filters/api-exception.filter';
+import { AuthGuard } from '../modules/auth/auth.guard';
+import { OwnershipGuard } from '../modules/auth/security/ownership.guard';
+import { AuthMutationGuard } from '../modules/auth/security/auth-mutation.guard';
+import { randomBytes } from 'node:crypto';
+import type { ExecutionContext } from '@nestjs/common';
+import type { AuthRequest } from '../modules/auth/security/auth-context';
 export function record(value: unknown): Record<string, unknown> {
     assert.ok(typeof value === 'object' && value !== null && !Array.isArray(value));
     return value as Record<string, unknown>;
 }
-export async function createTestApp(databaseEnabled = false) {
+export async function createTestApp(databaseEnabled = false, validationOnly = false) {
     const previous = process.env.DATABASE_ENABLED;
+    const previousSecret = process.env.AUTH_ACCESS_TOKEN_SECRET;
+    const previousCleanup = process.env.ACCOUNT_CLEANUP_ENABLED;
+    const previousProjectCleanup = process.env.PROJECT_CLEANUP_ENABLED;
+    const previousImportRecovery = process.env.IMPORT_RECOVERY_ENABLED;
+    process.env.PROJECT_CLEANUP_ENABLED = 'false';
+    process.env.IMPORT_RECOVERY_ENABLED = 'false';
+    process.env.AUTH_ACCESS_TOKEN_SECRET = previousSecret || randomBytes(48).toString('base64url');
+    process.env.ACCOUNT_CLEANUP_ENABLED = 'false';
     process.env.DATABASE_ENABLED = String(databaseEnabled);
     let app: INestApplication | undefined;
     function restore() { if (previous === undefined)
         delete process.env.DATABASE_ENABLED;
     else
-        process.env.DATABASE_ENABLED = previous; }
+        process.env.DATABASE_ENABLED = previous;
+        if (previousSecret === undefined) delete process.env.AUTH_ACCESS_TOKEN_SECRET;
+        else process.env.AUTH_ACCESS_TOKEN_SECRET = previousSecret;
+        if (previousCleanup === undefined) delete process.env.ACCOUNT_CLEANUP_ENABLED;
+        else process.env.ACCOUNT_CLEANUP_ENABLED = previousCleanup;
+        if (previousProjectCleanup === undefined) delete process.env.PROJECT_CLEANUP_ENABLED;
+        else process.env.PROJECT_CLEANUP_ENABLED = previousProjectCleanup;
+        if (previousImportRecovery === undefined) delete process.env.IMPORT_RECOVERY_ENABLED;
+        else process.env.IMPORT_RECOVERY_ENABLED = previousImportRecovery;
+    }
     try {
         // AppModule reads DATABASE_ENABLED at import time, so import after setting it.
         const { AppModule } = await import('../app.module');
-        const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
-        app = module.createNestApplication();
-        app.useLogger(false);
+        const builder = Test.createTestingModule({ imports: [AppModule] });
+        if (validationOnly) {
+            if (databaseEnabled) throw new Error('Validation-only overrides cannot be used with a real database');
+            builder.overrideProvider(AuthGuard).useValue({ canActivate(context: ExecutionContext) {
+                context.switchToHttp().getRequest<AuthRequest>().principal = { userId: '0123456789abcdef01234567', sessionId: '0123456789abcdef01234568' };
+                return true;
+            } });
+            builder.overrideProvider(OwnershipGuard).useValue({ canActivate: () => true });
+            builder.overrideGuard(AuthMutationGuard).useValue({ canActivate: () => true });
+        }
+        const module = await builder.compile();
+        app = module.createNestApplication({ bodyParser: false });
+        app.useLogger(process.env.TEST_LOG_ERRORS === 'true' ? ['error'] : false);
         // Match main.ts without changing the production bootstrap in this refactor.
         app.setGlobalPrefix('api/v1');
         const config = app.get(ConfigService);

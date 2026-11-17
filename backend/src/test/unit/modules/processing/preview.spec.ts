@@ -10,6 +10,15 @@ const request = (method: string, parameters: Record<string, unknown> = {}, scope
 function code(error: unknown): unknown { assert.ok(error instanceof HttpException); const body = error.getResponse(); assert.ok(typeof body === 'object' && body !== null && 'code' in body); return body.code; }
 
 describe('modules/processing/preview contracts (unit)', () => {
+    test('TF-IDF defaults and limits are validated for exactly one column', () => {
+        const scope = { type: 'columns', columnIds: [col] };
+        const specification = parseCreatePreview(request('tfidf', {}, scope)).specification;
+        assert.equal(specification.method, 'tfidf');
+        assert.deepEqual(specification.parameters, { lowercase: true, minDf: 1, maxFeatures: 100, norm: 'l2', sublinearTf: false, keepSource: true });
+        for (const parameters of [{ minDf: 0 }, { minDf: 1.5 }, { maxFeatures: 1001 }, { norm: 'l1' }, { lowercase: 'yes' }, { unknown: true }]) assert.throws(() => parseCreatePreview(request('tfidf', parameters, scope)));
+        assert.throws(() => parseCreatePreview(request('tfidf')));
+        assert.throws(() => parseCreatePreview(request('tfidf', {}, { type: 'columns', columnIds: [col, row] })));
+    });
     test('preview validation defaults safely; no hidden pipeline or scope fields', () => {
         const preview = parseCreatePreview(request('edit_cell', { value: { kind: 'null', value: null } }));
         assert.equal(preview.specification.statisticsScope.type, 'whole-columns');

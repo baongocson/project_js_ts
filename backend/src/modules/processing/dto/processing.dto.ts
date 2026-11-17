@@ -2,6 +2,7 @@ import type { CellInputDto } from '../../../common/dto/cell.dto';
 import type { DiagnosticsDto } from '../../../common/dto/response.dto';
 export type ProcessingScopeDto = {type:'cell';rowId:string;columnId:string} | {type:'columns';columnIds:string[]} | {type:'dataset'};
 export interface ProcessingParametersByMethod {
+ tfidf:{lowercase:boolean;minDf:number;maxFeatures:number;norm:'l2'|'none';sublinearTf:boolean;keepSource:boolean};
  edit_cell:{value:CellInputDto};remove_duplicates:{keep:'first'};strip_html:{decodeEntities:boolean};normalize_whitespace:{mode:'trim'|'collapse'|'remove'};
  convert_number:{decimalSeparator:'.'|',';allowThousands:boolean};convert_text:{format:'canonical'};convert_date:{inputFormat:'YYYY-MM-DD'};
  convert_datetime:{inputFormat:'ISO8601';timezone:string};convert_boolean:{trueValues:string[];falseValues:string[];caseSensitive:boolean};

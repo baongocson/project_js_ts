@@ -1,25 +1,11 @@
-# UsersModule
+# Users — BE-1
 
-Hồ sơ và tài khoản.
+GET/PATCH/DELETE /users/me đã triển khai khi database bật, dùng Principal của global AuthGuard. UsersGuard là alias ủy nhiệm AuthGuard nếu module khác cần dùng tường minh; không gắn lặp vào route hiện tại.
 
-## Cấu trúc
+GET dùng publicUser projection, không lộ hash/session/lifecycle/writeEpoch. PATCH giữ nested merge: chỉ displayName/preferences.theme đã gửi, null xóa tên; UsersRepository dùng transaction + OwnershipService.fence để kiểm lại session/user active và tránh race với logout/delete.
 
-| Thành phần | Trách nhiệm |
-| --- | --- |
-| users.controller.ts | Khai báo route và gọi validation DTO trước khi chuyển đến service. |
-| users.service.ts | Điều phối nghiệp vụ; bản main hiện còn trả HTTP 501 cho nghiệp vụ chưa triển khai. |
-| users.guard.ts | File guard riêng. Khung hiện từ chối với 501 nếu được gọi; chưa gắn vào controller. |
-| users.repository.ts | Ranh giới truy cập dữ liệu, đang là khung, chưa có CRUD. |
-| users.module.ts | Đăng ký controller, service, guard và repository với NestJS. |
-| security/ | Chính sách bảo mật riêng của module khi triển khai; không chứa secret. |
-| dto/ | Kiểu request/response và validation hiện có; xem README bên trong. |
+DELETE gọi AccountCleanupService: transaction mark user deleting/revoke sessions/fence projects, sau đó xóa phụ thuộc và file nguồn. Chỉ204 sau khi hoàn tất. Lỗi trả503, giữ marker để startup/worker dọn tiếp, user không còn dùng Bearer API được. Không xóa account khác hoặc bỏ validation/schema để dọn.
 
-## Luồng và trạng thái
+users.controller.ts xử lý DTO/status, service điều phối, repository truy cập users. AccountCleanupModule trong infrastructure/database được import để dùng chung với BE-2; không viết bản cascade riêng. Schema vẫn tập trung trong infrastructure.
 
-Luồng đang chạy: HTTP → DTO/pipe → controller → service → HTTP 501 khi chưa có nghiệp vụ. Luồng dự kiến sau khi triển khai bảo mật: HTTP → guard → DTO → controller → service → repository → database. Guard đã đăng ký provider nhưng chưa dùng @UseGuards để không thay hành vi API của main bằng một kiểm tra bảo mật giả. Không dùng guard này để tuyên bố route đã được bảo vệ.
-
-Schema/validator/index vẫn do infrastructure/database quản lý tập trung. Không tạo bản schema thứ hai trong module. Chưa triển khai thêm nghiệp vụ, kết nối hay collection trong đợt cấu hình này.
-
-## Kiểm thử
-
-Test tập trung trong backend/src/test: unit/, e2e/, integration/. Chạy npm run test:unit hoặc npm run test:e2e:backend từ gốc repo. Test hiện kiểm hợp đồng và trạng thái khung, không chứng minh CRUD đã hoàn thành. Mã nguồn JS/TS, không dùng kiểu any.
+Test: npm run test:be1 -w backend (Atlas thật) và unit/e2e chung. Checklist/handoff tại docs/plans/be1-handoff.md. Auth UI/offline sync và những API ngoài Users/Auth chưa thuộc gói này.

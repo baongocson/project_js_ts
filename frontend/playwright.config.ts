@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   testDir: './test/E2E',
+  outputDir: './test-results/health',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,

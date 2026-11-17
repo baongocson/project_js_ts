@@ -57,9 +57,9 @@ frontend/
   public/, vite.config.ts, tsconfig.json
 ```
 
-`GET /api/v1/health` ping database khi được bật. 27 endpoint nghiệp vụ có DTO/validation/response contract nhưng vẫn trả **501 NOT_IMPLEMENTED** với error envelope; chưa có auth, idempotency hay thuật toán thực thi. Schema MongoDB và index đã có, chưa nối nghiệp vụ vào persistence. Frontend hiển thị trạng thái kết nối, chưa phải dashboard hoàn chỉnh.
+`GET /api/v1/health` ping database khi được bật. BE-1 triển khai 4 API Auth và 3 API Users. BE-2 bổ sung 6 API Projects và 4 API Datasets với CSV/storage/snapshot/idempotency/publish/recovery; xem [báo cáo BE-2](docs/teamwork/nguyen-be2.md). BE-3 triển khai 10 API Processing/History/Analysis và đủ 27 method trong packages/data-core. Trang /offline có auth, CSV, bảng local, xử lý/restore offline, IndexedDB và đồng bộ có ID mapping. Xem [kết quả xử lý checklist](docs/reports/backend-plan-remediation-2026-11-16.md).
 
-Mỗi module đã có guard riêng và repository đặt phẳng. Đây là khung cấu trúc: guard chưa gắn vào controller, repository chưa thực hiện CRUD. Không coi những file này là chức năng bảo mật/persistence đã hoàn thành.
+AuthGuard và OwnershipGuard đã gắn toàn cục: thiếu JWT/session hợp lệ trả 401 trước kiểm ID, rồi kiểm quyền project/dataset/version/preview. Health và Auth là public; Auth mutations vẫn kiểm Origin và rate limit. Các guard scaffold không dùng của Projects/Datasets/Processing/History/Analysis đã được bỏ; không thay đổi global guards hoặc ownership trong service. Xem [BE-1 bàn giao](docs/teamwork/be1-handoff.md).
 
 ## Kiểm thử
 
@@ -74,7 +74,7 @@ npm run lint -w backend       # chỉ backend
 
 Lint bổ sung cho typecheck, kiểm kiến trúc và test. Xem [quy tắc và cách dùng ESLint](docs/architecture/code-quality.md).
 
-Backend dùng Jest, ts-jest, Nest Testing và Supertest, tập trung trong `backend/src/test/`. Bên trong chia theo common/module/infrastructure tương ứng, còn contract liên module ở unit/contracts. File ví dụ: `e2e/modules/auth/auth.e2e-spec.ts`, `unit/modules/auth/auth.service.spec.ts`. Test đọc source TypeScript; production build loại `src/test` khỏi `dist`. Frontend dùng Playwright Chromium để kiểm trang hệ thống với backend thật và các ca lỗi có kiểm soát; chưa có E2E đăng nhập vì nghiệp vụ đó chưa triển khai.
+Backend dùng Jest, ts-jest, Nest Testing và Supertest, tập trung trong `backend/src/test/`. Test đọc source TypeScript; production build loại `src/test` khỏi `dist`. Bộ DTO contract cũ có override guard tường minh khi database tắt; bộ security HTTP và integration BE-1 kiểm guard thật. Frontend dùng Playwright Chromium: bộ health/transport riêng và bộ acceptance HTTPS với auth, cookie, offline/reload, sync, retry/conflict và MongoDB replica tạm.
 
 ```powershell
 npm run test:unit
@@ -84,10 +84,25 @@ npm run test:e2e:backend            # chỉ backend
 npm run test:e2e:frontend           # chỉ browser + health backend
 # Cần Atlas đã cấu hình; có dữ liệu thử và cleanup/rollback
 npm run test:integration
+npm run test:be1 -w backend        # HTTP + Atlas thật, có dữ liệu thử/cleanup
 ```
 
-Xem [cấu trúc và phạm vi test](backend/src/test/readme.md). Test Auth hiện kiểm hợp đồng 400/501 của bản main, chưa phải test đăng nhập thành công.
+Trước khi chạy backend với database bật, chạy `npm run auth:init-secret -w backend` để tạo secret cục bộ nếu chưa có; lệnh không in secret hoặc thay khóa hợp lệ. HTTPS cùng origin hoặc reverse proxy HTTPS được yêu cầu khi nghiệm thu cookie Secure trong trình duyệt. Xem [cấu trúc test](backend/src/test/readme.md) và [BE-1 bàn giao](docs/teamwork/be1-handoff.md).
 
 Frontend tổ chức theo chiều import `app → features → shared` và `app → shared`; typecheck kiểm cả chiều import và vòng phụ thuộc. E2E frontend tự build hai workspace, chạy preview 4173 và Nest 4300 với database tắt, không dùng Atlas. Xem [frontend README](frontend/README.md) và [trạng thái thực hiện refactor](docs/refactor/refactor-status.md).
 
 Xem [kiến trúc và bước tiếp theo](docs/architecture/architecture.md). Cấu trúc tham chiếu tài liệu chính thức [NestJS](https://docs.nestjs.com/modules) và [Vite](https://vite.dev/guide/).
+
+## Nghiệm thu backend + offline qua HTTPS
+
+```powershell
+npm run build -w @dashboard/data-core
+npm run test:integration:local -w backend
+npm run test:acceptance -w frontend
+```
+
+Bộ acceptance cần Chromium (`npm run test:e2e:install -w frontend`) và OpenSSL trong PATH hoặc biến OPENSSL_BIN. Runner tạo chứng chỉ một ngày, MongoDB replica riêng, backend 4310 và HTTPS reverse proxy 4174; không thay .env. Các cổng phải rảnh. Chứng chỉ test được chấp nhận bằng fingerprint chỉ trong browser test; không thay đổi TLS của ứng dụng. Runner tự dừng server/replica và xóa thư mục tạm.
+
+Mở `/offline` để lưu CSV, chọn method/cột/tham số, xử lý hoặc restore khi mất mạng. Sau khi có mạng, đăng nhập/khôi phục phiên và chọn đồng bộ. Bản local/CSV/checkpoint nằm trong IndexedDB, không chứa token. Đồng bộ dùng key cố định cho create/import/Preview/Apply/restore, kiểm tài khoản, source hash, typed data/position/lineage và server head; không ghi đè khi conflict hoặc tự chuyển sang tài khoản khác. Lần đầu cần mở online để cache app shell; xóa browser storage sẽ xóa dữ liệu local.
+
+Các ca kiểm và giới hạn được ghi tại [báo cáo remediation](docs/reports/backend-plan-remediation-2026-11-16.md).

@@ -1,0 +1,38 @@
+import { useId } from 'react';
+import type { Cell,ProcessingMethod } from '@dashboard/data-core';
+import { CellDisplay } from '../../datasets';
+import { Button } from '../../../shared/ui';
+
+export function TypedValueEditor({label,value,onChange}:{label:string;value:unknown;onChange(cell:Cell):void}){
+  const id=useId();const cell=value&&typeof value==='object'&&'kind'in value&&'value'in value?value as Cell:{kind:'text' as const,value:''};
+  const kinds=['text','number','boolean','date','datetime','null'] as const;
+  function kind(next:Cell['kind']){onChange(next==='null'?{kind:next,value:null}:next==='number'?{kind:next,value:0}:next==='boolean'?{kind:next,value:false}:{kind:next,value:next==='date'?'2026-01-01':next==='datetime'?'2026-01-01T00:00:00.000Z':''});}
+  return <fieldset className="typed-input"><legend>{label}</legend><div className="form-grid"><div className="field"><label htmlFor={`${id}-kind`}>{label} · kiểu</label><select id={`${id}-kind`} value={cell.kind} onChange={event=>kind(event.target.value as Cell['kind'])}>{kinds.map(item=><option key={item}>{item}</option>)}</select></div><div className="field"><label htmlFor={`${id}-value`}>{label} · nội dung</label>{cell.kind==='boolean'?<select id={`${id}-value`} value={String(cell.value)} onChange={event=>onChange({kind:'boolean',value:event.target.value==='true'})}><option>true</option><option>false</option></select>:<input id={`${id}-value`} type={cell.kind==='number'?'number':'text'} step="any" disabled={cell.kind==='null'} value={cell.kind==='null'?'null':Number.isNaN(cell.value)?'':String(cell.value)} onChange={event=>onChange(cell.kind==='number'?{kind:'number',value:event.target.value===''?NaN:Number(event.target.value)}:{kind:cell.kind as 'text'|'date'|'datetime',value:event.target.value})}/>}</div></div>{cell.kind==='datetime'&&<small>ISO UTC, ví dụ 2026-01-01T00:00:00.000Z</small>}</fieldset>;
+}
+export function MethodParameters({method,parameters,onChange,loadCategories,busy=false}:{method:ProcessingMethod;parameters:Record<string,unknown>;onChange(value:Record<string,unknown>):void;loadCategories?:()=>Promise<void>;busy?:boolean}){
+  const id=useId();
+  const set=(key:string,value:unknown)=>onChange({...parameters,[key]:value});
+  const bool=(key:string,label:string)=><label className="check" key={key}><input type="checkbox" checked={parameters[key]===true} onChange={event=>set(key,event.target.checked)}/>{label}</label>;
+  const number=(key:string,label:string)=><div className="field" key={key}><label htmlFor={`${id}-${key}`}>{label}</label><input id={`${id}-${key}`} type="number" step="any" value={typeof parameters[key]==='number'&&Number.isFinite(parameters[key])?String(parameters[key]):''} onChange={event=>set(key,event.target.value===''?NaN:Number(event.target.value))}/></div>;
+  const enumeration=(key:string,label:string,values:Record<string,string>)=><div className="field" key={key}><label htmlFor={`${id}-${key}`}>{label}</label><select id={`${id}-${key}`} value={String(parameters[key])} onChange={event=>set(key,event.target.value)}>{Object.entries(values).map(([value,text])=><option key={value} value={value}>{text}</option>)}</select></div>;
+  const mapping=Array.isArray(parameters.mapping)?parameters.mapping as {value:Cell;label:number}[]:[];
+  return <div className="method-parameters">
+    {method==='tfidf'&&<>{bool('lowercase','Chuyển token thành chữ thường')}{bool('sublinearTf','TF theo log (1 + ln số lần)')}{bool('keepSource','Giữ cột văn bản nguồn')}{number('minDf','Số văn bản tối thiểu chứa token')}{number('maxFeatures','Số token tối đa')}{enumeration('norm','Chuẩn hóa vector',{l2:'L2',none:'Không chuẩn hóa'})}<p className="muted">Chọn đúng một cột text. Tách token chữ/số Unicode, IDF làm trơn trên toàn bộ dòng; dòng rỗng có vector 0. Xem trước để kiểm tra cột mới trước Apply.</p></>}
+    {['edit_cell','fill_constant'].includes(method)&&<TypedValueEditor label="Giá trị mới" value={parameters.value} onChange={value=>set('value',value)}/>}
+    {method==='replace_value'&&<><TypedValueEditor label="Giá trị cần tìm" value={parameters.from} onChange={value=>set('from',value)}/><TypedValueEditor label="Giá trị thay thế" value={parameters.to} onChange={value=>set('to',value)}/><p className="muted">So khớp kind + giá trị chính xác, không regex hoặc tự trim.</p></>}
+    {method==='strip_html'&&bool('decodeEntities','Giải mã HTML entities')}
+    {method==='normalize_whitespace'&&enumeration('mode','Chế độ khoảng trắng',{trim:'Bỏ khoảng trắng đầu/cuối',collapse:'Gộp khoảng trắng',remove:'Xóa mọi khoảng trắng'})}
+    {method==='convert_number'&&<>{enumeration('decimalSeparator','Dấu thập phân',{'.':'Dấu chấm',',':'Dấu phẩy'})}{bool('allowThousands','Cho phép phân nhóm hàng nghìn hợp lệ')}</>}
+    {method==='convert_text'&&<p>Chuyển thành text canonical, giữ nguyên missing.</p>}
+    {method==='convert_date'&&<p>Ngày YYYY-MM-DD. Datetime → date theo ngày UTC.</p>}
+    {method==='convert_datetime'&&<div className="field"><label htmlFor={`${id}-timezone`}>Múi giờ IANA</label><input id={`${id}-timezone`} list={`${id}-zones`} value={String(parameters.timezone??'UTC')} onChange={event=>set('timezone',event.target.value)}/><datalist id={`${id}-zones`}><option>UTC</option><option>Asia/Ho_Chi_Minh</option><option>America/New_York</option></datalist><small>Offset của nguồn được ưu tiên; giờ DST mơ hồ hoặc không tồn tại sẽ báo lỗi.</small></div>}
+    {method==='convert_boolean'&&<>{(['trueValues','falseValues'] as const).map(key=><div className="field" key={key}><label htmlFor={`${id}-${key}`}>{key==='trueValues'?'Các giá trị true':'Các giá trị false'}</label><textarea id={`${id}-${key}`} value={Array.isArray(parameters[key])?(parameters[key] as string[]).join('\n'):''} onChange={event=>set(key,event.target.value.split('\n'))}/><small>Mỗi dòng một giá trị; không tự trim nội dung.</small></div>)}{bool('caseSensitive','Phân biệt hoa/thường')}</>}
+    {['drop_missing_rows','drop_missing_columns'].includes(method)&&enumeration('condition','Điều kiện thiếu',{any:'Bất kỳ ô thiếu',all:'Tất cả ô đều thiếu'})}
+    {method==='clip_iqr'&&number('factor','Hệ số IQR (>0)')}
+    {method==='clip_zscore'&&number('threshold','Ngưỡng z-score (>0)')}
+    {method==='scale_minmax'&&<div className="form-grid">{number('rangeMin','Giá trị nhỏ nhất')}{number('rangeMax','Giá trị lớn nhất')}</div>}
+    {method==='one_hot'&&<>{bool('keepSource','Giữ cột nguồn')}{bool('missingCategory','Tạo category missing riêng')}{bool('asCategory','Xem cột number như category')}<p className="muted">Tối đa 100 category mỗi nguồn; missing mặc định all-null. Cột mới có lineage và ID xác định.</p></>}
+    {method==='ordinal'&&<>{bool('keepSource','Giữ cột nguồn')}{loadCategories&&<Button type="button" variant="secondary" disabled={busy} onClick={()=>void loadCategories()}>Tải category từ toàn cột</Button>}<p className="muted">Gán nhãn hữu hạn, duy nhất cho mọi category non-missing; tối đa 5000.</p><div className="mapping-list">{mapping.map((item,index)=><div className="mapping-row" key={JSON.stringify(item.value)}><CellDisplay cell={item.value}/><label htmlFor={`${id}-label-${index}`}>Nhãn {index+1}</label><input id={`${id}-label-${index}`} type="number" step="any" value={Number.isFinite(item.label)?item.label:''} onChange={event=>{const next=mapping.map((entry,i)=>i===index?{...entry,label:event.target.value===''?NaN:Number(event.target.value)}:entry);set('mapping',next);}}/></div>)}</div></>}
+    {['remove_duplicates','uppercase','lowercase','fill_mean','fill_median','fill_mode','fill_max','standardize','log1p','square'].includes(method)&&<p className="muted">Không có tham số bổ sung. Mọi thống kê dựa trên toàn cột, không bị giới hạn bởi filter hoặc trang bảng.</p>}
+  </div>;
+}

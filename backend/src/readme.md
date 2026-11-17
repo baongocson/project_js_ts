@@ -16,7 +16,7 @@ Source backend và test.
 
 ## Luồng và phạm vi
 
-main.ts khởi động AppModule; module nhận HTTP và gọi service. Database kết nối tại infrastructure; DTO/policy dùng chung tại common. test/ chứa unit, E2E và integration, không nằm trong bản build production. Các route nghiệp vụ hiện vẫn là khung trả 501.
+main.ts khởi động AppModule; module nhận HTTP và gọi service. Database kết nối tại infrastructure; DTO/policy dùng chung tại common và packages/data-core. test/ chứa unit, E2E và integration, không nằm trong bản build production. Auth/Users và10API Projects/Datasets có nghiệp vụ;10API BE-3 vẫn scaffold. Xem docs/teamwork/nguyen-be2.md.
 
 ## Bảo trì
 

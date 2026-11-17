@@ -1,9 +1,9 @@
 import { beforeAll, afterAll, describe, it, expect } from '@jest/globals';
 import request from 'supertest';
 import { createTestApp, record } from '../../../utils';
-describe('Auth (E2E — HTTP contracts of the main scaffold)', () => {
+describe('Auth DTO contracts (explicit guard overrides, database disabled)', () => {
     let fixture: Awaited<ReturnType<typeof createTestApp>>;
-    beforeAll(async () => { fixture = await createTestApp(); });
+    beforeAll(async () => { fixture = await createTestApp(false, true); });
     afterAll(async () => { await fixture?.close(); });
     it('returns 501 for valid registration while authentication is unimplemented', async () => {
         const response = await request(fixture.server).post('/api/v1/auth/register').send({ email: 'test@example.com', password: 'abcdefghijkl' }).expect(501);

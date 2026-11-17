@@ -1,25 +1,11 @@
 # DatasetsModule
 
-Import và truy xuất dataset.
+BE-2 triển khai 4 API import/metadata/rows/row lookup, dùng global auth/ownership BE-1. Guard scaffold không dùng đã được bỏ; quyền do global guards và service ownership xác minh.
 
-## Cấu trúc
+Xem [báo cáo hiện tại](../../../../docs/teamwork/nguyen-be2.md).
 
-| Thành phần | Trách nhiệm |
-| --- | --- |
-| datasets.controller.ts | Khai báo route và gọi validation DTO trước khi chuyển đến service. |
-| datasets.service.ts | Điều phối nghiệp vụ; bản main hiện còn trả HTTP 501 cho nghiệp vụ chưa triển khai. |
-| datasets.guard.ts | File guard riêng. Khung hiện từ chối với 501 nếu được gọi; chưa gắn vào controller. |
-| datasets.repository.ts | Ranh giới truy cập dữ liệu, đang là khung, chưa có CRUD. |
-| datasets.module.ts | Đăng ký controller, service, guard và repository với NestJS. |
-| security/ | Chính sách bảo mật riêng của module khi triển khai; không chứa secret. |
-| dto/ | Kiểu request/response và validation hiện có; xem README bên trong. |
+`datasets.service` điều phối CSV nguồn, receipt và publish V1; `datasets.repository` ghi datasets/versions/columns/chunks, kiểm checksum và chỉ đọc published snapshots. `csv-upload.interceptor` giới hạn nguồn và map lỗi413. `dataset-mappers` chỉ trả allowlist public; không lộ storageKey/rawToken. Parser/inference/codec/query chạy từ package `@dashboard/data-core`.
 
-## Luồng và trạng thái
+`SnapshotPublisherService` export cho BE-3: prepare staged candidate ngoài publish transaction; publish nhận expected current/revision, history/receipt và hook transaction cho CAS preview. Không thực thi engine hoặc nghiệp vụ preview/restore thay BE-3. `ImportRecoveryService` dọn import thất bại/hết lease và orphan source sau khi kiểm durable references; startup và mỗi60giây. Mỗi batch ghi/publish có lease/user/project/session fence.
 
-Luồng đang chạy: HTTP → DTO/pipe → controller → service → HTTP 501 khi chưa có nghiệp vụ. Luồng dự kiến sau khi triển khai bảo mật: HTTP → guard → DTO → controller → service → repository → database. Guard đã đăng ký provider nhưng chưa dùng @UseGuards để không thay hành vi API của main bằng một kiểm tra bảo mật giả. Không dùng guard này để tuyên bố route đã được bảo vệ.
-
-Schema/validator/index vẫn do infrastructure/database quản lý tập trung. Không tạo bản schema thứ hai trong module. Chưa triển khai thêm nghiệp vụ, kết nối hay collection trong đợt cấu hình này.
-
-## Kiểm thử
-
-Test tập trung trong backend/src/test: unit/, e2e/, integration/. Chạy npm run test:unit hoặc npm run test:e2e:backend từ gốc repo. Test hiện kiểm hợp đồng và trạng thái khung, không chứng minh CRUD đã hoàn thành. Mã nguồn JS/TS, không dùng kiểu any.
+Chạy `npm run test:be2:local -w backend` hoặc `npm run test:integration:local -w backend` để kiểm MongoDB replica set riêng; xem contracts codec/sync tại packages/data-core/README.md.

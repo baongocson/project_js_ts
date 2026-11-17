@@ -13,4 +13,5 @@ playwright/.cache/
 .npm-cache/
 
 .artifact-work/
+backend/storage/
 /trao đổi/

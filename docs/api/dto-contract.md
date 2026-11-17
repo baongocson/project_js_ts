@@ -8,7 +8,7 @@ Ngày cập nhật: 14/11/2026. Chủ dự án đã chọn 8 nguyên tắc ban �
 | --- | --- |
 | Import | Endpoint POST projects/:projectId/datasets giữ nguyên; importOptions.columnTypes?=[{position,logicalType}] cho chọn lại kiểu sau preview cục bộ. Position 0-based, tối đa theo1000cột hiện có, phải khớp header và không trùng. Không nhận userId/ownerId/engineVersion. |
 | Suy kiểu | Suy toàn cột, bỏ missing khi suy; leading-zero và integer không safe giữ text; allmissing mặc định text. Chỉ chuyển type nếu toàn bộ nonmissing hợp lệ; khác loại giữ text/mixed theo kiểu người dùng chọn, không ép bằng parseFloat. Server xác minh lại thay vì tin sample frontend. |
-| Bảo toàn | Blob CSV byte-for-byte ở storage riêng, storageKey private trong originalFile; checksum byte nguồn. Codec có rawToken khi cần giữ lexeme của typed value. Preview sửa kiểu không ghi đè file gốc. Storage provider/codec chưa triển khai. |
+| Bảo toàn | Blob CSV byte-for-byte ở storage riêng, storageKey private trong originalFile; checksum byte nguồn. Codec có rawToken khi cần giữ lexeme của typed value. Preview sửa kiểu không ghi đè file gốc. Storage local/typed codec đã triển khai ở BE-2; bản nguồn bất biến. |
 | Missing | CellInputDto 6kind, mixed chỉ là kiểu cột; kind null có value=null. Không nhận missingKind từ client. CellOutputDto thêm missingKind khi missing, giữ nguyên token. Nonmissing đúng schema, missing được giữ text nguồn kể cả cột number. |
 | Duplicate | Exact typed equality, không trim/casefold/NFC; không so rowId/position. Canonical request chỉ ổn định thứ tự key và defaults, không sửa chuỗi dữ liệu/array UI. |
 | No-op | ready, canApply=false, warning NO_CHANGES_DETECTED; Apply409 NO_CHANGES_TO_APPLY. Không version/history. So cả dữ liệu, token, schema/metadata và order. |
@@ -37,7 +37,7 @@ Ngày cập nhật: 14/11/2026. Chủ dự án đã chọn 8 nguyên tắc ban �
 | D07 | Chuyển số nhận trim ngoài, dấu +/-, E/e; parse đầy đủ; integer không safe không âm thầm làm tròn. |
 | D08 | V1 date YYYY-MM-DD, datetime ISO8601; không tự đoán DD/MM/YYYY. |
 | D09 | Thiếu offset dùng timezone chọn, mặc định UTC; offset nguồn ưu tiên. DST ambiguous/nonexistent báo lỗi. |
-| D10 | Date→datetime lấy 00:00 theo zone; chiều ngược lấy ngày theo zone. Boolean dùng mapping tường minh, default true/1 và false/0. |
+| D10 | Date→datetime lấy 00:00 theo zone chọn; datetime→date ở V1 lấy ngày UTC, vì convert_date không nhận timezone theo API hiện hành. Boolean dùng mapping tường minh, default true/1 và false/0. |
 | D11 | One-hot nhận text/boolean; number chỉ khi asCategory=true. Chưa mixed/date/datetime ở V1. |
 | D12 | Encoding mặc định bỏ nguồn, có tùy chọn giữ nguồn. |
 | D13 | source_category hoặc source_ordinal, suffix nếu trùng; bỏ nguồn thay tại vị trí nguồn, giữ nguồn chèn sau. |
@@ -106,18 +106,27 @@ Prefix chung `/api/v1`. Request dưới đây là DTO đã validate/điền defa
 - ID tài nguyên hex24, row/column UUIDv4; sau validate canonical lowercase ID. Không lowercase chuỗi dữ liệu, mapping category hay selection order. Object-key canonicalization ổn định hash; upload hash phải có checksum file gốc.
 - Filter query là JSON sau URL decoding một lần; dùng cùng validator với workspace. Không tự thêm byte-limit filter hoặc cap bins100.
 - Kiểm owner, tồn tại row/column trong snapshot, scope compatibility, coverage ordinal và category count vẫn thuộc service vì cần dữ liệu thật; không thể bảo đảm bằng DTO thuần.
-- Guard và parser hạ tầng phải được nối đúng thứ tự D26 khi triển khai auth. Placeholder hiện chưa có auth/ownership; việc DTO trả400 không chứng minh security guard đã có.
+- Guard và parser hạ tầng phải được nối đúng thứ tự D26 khi triển khai auth. AuthGuard/OwnershipGuard toàn cục và write fences đã triển khai; DTO trả400 riêng lẻ không thay thế security integration tests.
 
 ## Phạm vi thực thi và bước tiếp theo
 
 Đã có request/body/query/path/header validators cho27route, union method-specific cho27phương pháp, response types, user projection mapper và pure policies cho missing/equality/sort/filter/no-op/autosave/diagnostics/restore/expiry/retry.
 
-Các route hợp lệ vẫn trả501 NOT_IMPLEMENTED. Đã có kết nối Atlas và12schema/validator/index thật theo ERD; xem [database.md](database.md). Chưa có xác thực/ownership, multipart upload/parser, infer/convert engine, storage/previewUI, correlation/histogram computation hoặc transaction nghiệp vụ. Các policy chỉ tính trong bộ nhớ; service phải CAS và kiểm receipt/lifecycle nguyên tử trước trả thành công. Các response types chưa đồng nghĩa mọi serializer và thuật toán đã thực thi.
+Đã triển khai 27 API với auth/ownership, CSV/storage/typed snapshot, 27 phương pháp Data Core, Preview/Apply, History/Restore và Analysis. Publish dùng transaction/receipt/CAS/lifecycle fence; schema provision/verify tại [database.md](../database/database.md). Bộ integration replica tạm kiểm HTTP/DB thật. DB-disabled vẫn có nhánh scaffold riêng; không dùng nó thay bằng chứng nghiệp vụ. Trạng thái nghiệm thu và giới hạn xem [báo cáo xử lý checklist](../reports/backend-plan-remediation-2026-11-16.md).
 
 Không cần duyệt lại D01–D26 để viết service theo hợp đồng này. Chỉ hỏi lại nếu phát sinh thay đổi chức năng, giới hạn mới hoặc nguy cơ làm mất dữ liệu.
 
 ## Kiểm tra
 
 - `npm run test:contracts -w backend`: các ca biên về Unicode/typed-null/precision, auth/profile/query/filter, no-op/autosave, diagnostics và lifecycle/retry.
-- `npm run test:http -w backend`: khởi động backend tạm, kiểm27route và input sai; request hợp lệ vẫn501 vì chưa có nghiệp vụ.
+- `npm run test:http -w backend`: khởi động backend tạm, kiểm27route và input sai; suite DB-disabled kiểm 501/503 và validation với override tường minh; integration DB-enabled nằm trong test:integration:local.
 - Không thay thế integration tests MongoDB/CSV/storage/engine sau này.
+
+
+## Thay đổi 17/11/2026 — TF-IDF và EDA
+
+Hợp đồng hiện hành có 27 endpoint, 28 method. Thêm union tfidf trong ProcessingParameters/rules và enum validator của processingPreviews/processingOperations. Default, validation, công thức, lỗi và giới hạn: [API.md — bổ sung 17/11](API.md#bổ-sung-hợp-đồng-ngày-17112026). Không thêm endpoint hay đổi envelope.
+
+DistributionResponseDto dùng shared DistributionResult, thêm boxplot nullable với quartile/fences/whiskers/outlierCount/outliers/truncated. Points3dResponseDto dùng shared Points3dResult, thêm axes/full-version bounds, flaggedCounts, unplottablePoints/unplottableTotal. Các field mới additive; frontend có trạng thái chờ/N/A nếu server chưa nâng cấp, không tự suy thống kê từ sample. Color outlier toàn cột number; missing toàn dòng.
+
+Engine0.7 nhận 27 method cũ từ engine0.6 với kiểm candidate/receipt đầy đủ; TF-IDF không chấp nhận engine khác. Migration validator chỉ mở rộng enum, không sửa dữ liệu: xem [database.md](../database/database.md#nâng-cấp-tf-idf-17112026).

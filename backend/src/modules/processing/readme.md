@@ -1,25 +1,14 @@
-# ProcessingModule
+# ProcessingModule — BE-3B
 
-Preview và Apply phép xử lý.
+Đã triển khai 3 API: `POST /datasets/:datasetId/previews`, `GET /datasets/:datasetId/previews/:previewId`, `POST /datasets/:datasetId/operations`.
 
-## Cấu trúc
+- `ProcessingService` kiểm tra ownership, version/revision, engine result và quyền ghi; candidate không publish khi tạo preview.
+- `ProcessingRepository` lưu preview và chỉ mục thay đổi có phân trang. TTL 30 phút, background cleanup và BE-2 orphan candidate recovery.
+- Apply sử dụng `SnapshotPublisherService` (BE-2) để commit version, operation, preview state và idempotency receipt qua transaction.
+- Bộ 27 phương pháp nằm trong `@dashboard/data-core`, dùng chung CJS/ESM.
+- Không dùng placeholder guard `processing.guard.ts` để xác thực; các route đi qua auth toàn cục và `OwnershipService`.
 
-| Thành phần | Trách nhiệm |
-| --- | --- |
-| processing.controller.ts | Khai báo route và gọi validation DTO trước khi chuyển đến service. |
-| processing.service.ts | Điều phối nghiệp vụ; bản main hiện còn trả HTTP 501 cho nghiệp vụ chưa triển khai. |
-| processing.guard.ts | File guard riêng. Khung hiện từ chối với 501 nếu được gọi; chưa gắn vào controller. |
-| processing.repository.ts | Ranh giới truy cập dữ liệu, đang là khung, chưa có CRUD. |
-| processing.module.ts | Đăng ký controller, service, guard và repository với NestJS. |
-| security/ | Chính sách bảo mật riêng của module khi triển khai; không chứa secret. |
-| dto/ | Kiểu request/response và validation hiện có; xem README bên trong. |
+**Kiểm thử đã đạt trên máy người triển khai trước audit:** Data Core 62, Backend Unit 54, Backend E2E 49; MongoDB integration 5/5 suites.
+**Sau audit:** thay đổi engine và thêm tests (xem `docs/teamwork/be3-final-handoff.md`); phải chạy lại toàn bộ test trên máy local trước PR.
 
-## Luồng và trạng thái
-
-Luồng đang chạy: HTTP → DTO/pipe → controller → service → HTTP 501 khi chưa có nghiệp vụ. Luồng dự kiến sau khi triển khai bảo mật: HTTP → guard → DTO → controller → service → repository → database. Guard đã đăng ký provider nhưng chưa dùng @UseGuards để không thay hành vi API của main bằng một kiểm tra bảo mật giả. Không dùng guard này để tuyên bố route đã được bảo vệ.
-
-Schema/validator/index vẫn do infrastructure/database quản lý tập trung. Không tạo bản schema thứ hai trong module. Chưa triển khai thêm nghiệp vụ, kết nối hay collection trong đợt cấu hình này.
-
-## Kiểm thử
-
-Test tập trung trong backend/src/test: unit/, e2e/, integration/. Chạy npm run test:unit hoặc npm run test:e2e:backend từ gốc repo. Test hiện kiểm hợp đồng và trạng thái khung, không chứng minh CRUD đã hoàn thành. Mã nguồn JS/TS, không dùng kiểu any.
+**Giới hạn cần phối hợp:** offline outbox chưa nối UI/IndexedDB E2E; 27 phương pháp chưa có đầy đủ ca HTTP boundary; performance trên snapshot lớn chưa chứng minh toàn diện.

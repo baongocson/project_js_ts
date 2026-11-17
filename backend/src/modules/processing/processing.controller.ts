@@ -1,4 +1,5 @@
 import { parseEmptyQuery } from '../../common/validation/query.validation';
+import { CurrentPrincipal, type Principal } from '../auth/security/auth-context';
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ProcessingService } from './processing.service';
 import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
@@ -14,18 +15,20 @@ export class ProcessingController {
   constructor(private readonly service: ProcessingService) {}
 
   @Post('previews')
-  createPreview(@Param(new DtoValidationPipe(resourceParams(['datasetId']))) _params: ResourceParamsDto, @Body(new DtoValidationPipe(parseCreatePreview)) _body: CreatePreviewDto, @IdempotencyKey() _key: string, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
-    return this.service.pending('createPreview');
+  createPreview(@CurrentPrincipal() principal: Principal, @Param(new DtoValidationPipe(resourceParams(['datasetId']))) params: ResourceParamsDto, @Body(new DtoValidationPipe(parseCreatePreview)) body: CreatePreviewDto, @IdempotencyKey() key: string, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
+    return this.service.createPreview(principal, params.datasetId!.toLowerCase(), body, key);
   }
 
   @Get('previews/:previewId')
-  getPreview(@Param(new DtoValidationPipe(resourceParams(['datasetId', 'previewId']))) _params: ResourceParamsDto, @Query(new DtoValidationPipe(parsePreviewQuery)) _query: PreviewQueryDto) {
-    return this.service.pending('getPreview');
+  getPreview(@CurrentPrincipal() principal: Principal, @Param(new DtoValidationPipe(resourceParams(['datasetId', 'previewId']))) params: ResourceParamsDto, @Query(new DtoValidationPipe(parsePreviewQuery)) query: PreviewQueryDto) {
+    return this.service.getPreview(principal, params.datasetId!.toLowerCase(), params.previewId!.toLowerCase(), query);
   }
 
+  // Do not require the preview record before the idempotency replay check.
+  // ProcessingService authorizes and resolves the preview for new Apply requests.
   @Post('operations')
-  apply(@Param(new DtoValidationPipe(resourceParams(['datasetId']))) _params: ResourceParamsDto, @Body(new DtoValidationPipe(parseApplyPreview)) _body: ApplyPreviewDto, @IdempotencyKey() _key: string, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
-    return this.service.pending('apply');
+  apply(@CurrentPrincipal() principal: Principal, @Param(new DtoValidationPipe(resourceParams(['datasetId']))) params: ResourceParamsDto, @Body(new DtoValidationPipe(parseApplyPreview)) body: ApplyPreviewDto, @IdempotencyKey() key: string, @Query(new DtoValidationPipe(parseEmptyQuery)) _query: Record<string, never>) {
+    return this.service.apply(principal, params.datasetId!.toLowerCase(), body, key);
   }
 
 }

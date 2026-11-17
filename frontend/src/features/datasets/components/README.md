@@ -1,5 +1,5 @@
 # datasets/components
 
-Thành phần giao diện riêng của feature. UI nền tảng dùng chung như button/input/dialog khi cần sẽ được đặt ở shared/ui.
+`ImportWizard.tsx` dùng typed CSV core cho preview/override và exact source/options. `DataTableView.tsx` quản lý typed filter/sort/page/selection; `TypedTable.tsx` hiển thị typed cells/missing rõ ràng.
 
-Hiện là cấu trúc chuẩn bị cho feature, chưa có triển khai nghiệp vụ. `index.ts` là đầu mối export, hiện chưa export thành phần nào. Trách nhiệm tổng thể, luồng và cách chạy/kiểm thử ở [README feature](../README.md). Bổ sung giải thích file và luồng khi thêm code; không coi thư mục rỗng là tính năng đã hoàn thành.
+Dùng public index của feature khi import từ app hoặc feature khác. Không đặt token trong local storage/snapshot/outbox. Luồng và lệnh kiểm thử ở [README feature](../README.md); acceptance dùng HTTPS/Nest/MongoDB replica tạm cục bộ.

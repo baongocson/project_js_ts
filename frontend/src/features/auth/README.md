@@ -1,18 +1,13 @@
 # Feature auth
 
-Đăng ký, đăng nhập và phiên xác thực. Backend hiện trả 501 cho nghiệp vụ hợp lệ; chưa có form hay token flow frontend.
+AuthPage cung cấp register/login với field errors, loading và chống submit lặp. ProfilePage GET/PATCH name/theme, logout/delete có xác nhận, kiểm dữ liệu local/pending và bản nháp workspace trước khi dọn dữ liệu. Backend nghiệp vụ chạy khi DB bật; chế độ DB-disabled 501 là gate hạ tầng riêng.
 
-## Cấu trúc và luồng dự kiến
+Session external store giữ access token trong bộ nhớ, bootstrap refresh/me, single-flight refresh, logout/generation fence và coordination qua BroadcastChannel/Web Locks. Cookie refresh HttpOnly/Secure do server cấp; không ghi token vào localStorage/IndexedDB/service-worker cache. LocalStorage chỉ giữ lựa chọn giao diện, dấu signout và bản nháp workspace không chứa token.
 
-- `api/`: endpoint riêng của feature, gọi transport ở shared/api.
-- `components/`: UI đặc thù của feature.
-- `hooks/`: logic/trạng thái tái sử dụng trong feature.
-- `pages/`: màn hình được app router lắp ghép.
-- `types.ts`: kiểu dữ liệu riêng của feature.
-- `index.ts`: API công khai, chỉ export thành phần thực sự được triển khai.
+Shared HTTP transport gắn owner vào request/replay và chỉ replay safe/keyed mutation một lần. Project sync pin owner cho toàn chuỗi request. Session lỗi không biến guest local thành user server; route guard không thay quyền backend. Offline local mode vẫn mở được khi không xác thực API.
 
-Luồng dự kiến khi có nghiệp vụ: app router → page → hooks/API → shared/api → backend. Feature được dùng shared; không import ngược app. Chưa có code nghiệp vụ nên index/types hiện chỉ đánh dấu TypeScript module (`export {}`), không giả lập thành công.
+App ghép SessionBootstrap, RequireSession, ThemeEffect và callbacks inspect/lock local data; feature không import app hoặc offline runtime. Profile cleanup chỉ xóa local khi người dùng chọn rõ; giữ bản local không chuyển queue sang user khác.
 
-## Chạy và kiểm tra
+`npm run test:unit -w frontend` kiểm refresh single-flight/logout fence/bootstrap, envelope/multipart/abort/replay/owner. `npm run test:acceptance -w frontend` kiểm auth/profile/theme reload, cookie/response loss/account/conflict và online/offline UI. Acceptance account-lifecycle kiểm pending/draft confirmation, logout nhiều tab, stale dialog/account switch, cleanup đúng owner, offline local signout và session hết hạn giữa autosave/sync. Unit kiểm response delete muộn và logout chờ cookie lock không dọn phiên login mới.
 
-Từ gốc repo: `npm run dev -w frontend`, `npm run typecheck -w frontend`. E2E chung: `npm run test:e2e:frontend`. Hiện chưa có test chứng minh nghiệp vụ auth hoàn thành; chỉ có E2E trang hệ thống. Khi triển khai, thêm test luồng tương ứng và export qua index, cập nhật README.
+`AccountActions` được export để Profile và offline dùng cùng quy trình. Delete cho lựa chọn xóa local hoặc xác nhận giữ bản phục hồi; không ép xóa dữ liệu chưa sync. Chữ ký withAccountLock nhận ownerId cố định, recheck identity sau mỗi bước đọc/cleanup bất đồng bộ trước khi logout/delete.
