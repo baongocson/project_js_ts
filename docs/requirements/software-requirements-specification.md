@@ -1,6 +1,6 @@
 # Đặc tả yêu cầu phần mềm — Dashboard 3D
 
-Phiên bản tài liệu: **1.0 — 18/11/2026**.
+Phiên bản tài liệu: **1.1 — 18/11/2026**.
 
 ## 1. Mục đích và quy ước
 
@@ -73,7 +73,11 @@ Danh mục phương pháp và tiêu chí chấp nhận nằm trong FR; tiêu ch�
 
 Nghiệm thu theo tiêu chí của từng FR/NFR và luồng ngoại lệ UC. Dùng fixture cho CSV/typed data/28 phương pháp, kiểm online/offline parity, API quyền sở hữu, conflict/idempotency và luồng browser HTTPS với MongoDB replica cô lập. Test hợp đồng với mock không thay thế kiểm tích hợp thật. Lượt lập tài liệu này không chạy lại bộ test ứng dụng.
 
-Các SLA độ trễ, số user đồng thời, thời gian phục hồi, chính sách backup server và danh sách browser được hỗ trợ cần chốt sau benchmark/kế hoạch triển khai; chưa có giá trị cam kết trong bộ yêu cầu này. Xem bằng chứng triển khai theo thời điểm ở [báo cáo frontend 18/11](../reports/frontend-fix-review-2026-11-18.md) và [backend/offline](../reports/backend-plan-remediation-2026-11-16.md).
+Mục tiêu nghiệm thu hiệu suất và phục hồi được quy định tại [NFR mục 3–4](non-functional-requirements.md#3-giới-hạn-tài-nguyên-và-khả-năng-đáp-ứng): 20 phiên đăng nhập với 5 người dùng thao tác tích cực, API thông thường 10 request/giây trong 10 phút với lỗi ngoài dự kiến <1%; độ trễ p95 theo nhóm tác vụ, AI p95 ≤60 giây/lượt khi model đã nạp. Backend phục hồi trong 5 phút sau khi hạ tầng/database bình thường; mất storage áp dụng RPO ≤24 giờ và RTO ≤2 giờ, backup ít nhất mỗi 24 giờ. Dữ liệu local đã commit và thao tác server đã commit khi storage còn nguyên không được mất do reload hoặc process dừng.
+
+Đánh giá trên production build/HTTPS/MongoDB replica set, máy backend/AI i5-12450H hoặc tương đương, RAM 16 GB và GPU RTX 3050 4 GB VRAM. Dataset chuẩn đồng thời ≤5.000.000 byte, ≤10.000 dòng và ≤20 cột; đây là điều kiện đo, không thay trần CSV 16.000.000 byte. Dùng k6 cho tải HTTP, đo browser cho LCP/CLS/FPS và diễn tập restore cho RPO/RTO. Báo cáo phải ghi môi trường, workload, số mẫu, số đo và kết luận từng tiêu chí; mục tiêu thiết kế không phải kết quả đã đạt. Thời hạn giữ backup, uptime SLA và ma trận browser đầy đủ được xác định trong kế hoạch vận hành.
+
+Xem bằng chứng triển khai theo thời điểm ở [báo cáo frontend 18/11](../reports/frontend-fix-review-2026-11-18.md) và [backend/offline](../reports/backend-plan-remediation-2026-11-16.md). Các báo cáo trước không thay thế kết quả benchmark hoặc diễn tập theo bộ mục tiêu này.
 
 ## Bổ sung SRS — Gợi ý AI local (18/11/2026)
 

@@ -53,7 +53,9 @@ Ngoài phạm vi hợp đồng hiện hành: chia sẻ project/cộng tác nhi�
 - Preview invalid, no-op, hết hạn hoặc dựa trên phiên bản cũ không tạo phiên bản xử lý mới.
 - Luồng local còn dữ liệu sau reload; sau khi có mạng và xác thực đúng tài khoản, đồng bộ tiếp tục hoặc báo xung đột, giữ bản local.
 - App offline cần được tải/cache trước; xóa storage trình duyệt sẽ xóa dữ liệu local. MongoDB online cần hỗ trợ transaction và production cần HTTPS cho cookie xác thực.
-- Tiêu chí chi tiết nằm trong [FR](functional-requirements.md), [NFR](non-functional-requirements.md) và [use case](../useCase/use-cases.md). Chưa đặt SLA độ trễ hoặc tải đồng thời khi chưa có benchmark được duyệt.
+- Hỗ trợ 20 phiên đăng nhập với 5 người dùng thao tác tích cực; API thông thường đạt 10 request/giây trong 10 phút, lỗi ngoài dự kiến <1%. Độ trễ và điều kiện đo từng nhóm tác vụ theo NFR-18–20, trên dataset chuẩn ≤5.000.000 byte, ≤10.000 dòng và ≤20 cột; bộ chuẩn không thay đổi giới hạn nhập CSV.
+- Không mất thao tác local đã xác nhận lưu hoặc thao tác server đã commit do reload/process dừng khi storage còn nguyên. Khi mất storage server, mục tiêu RPO ≤24 giờ và RTO ≤2 giờ; backup ít nhất mỗi 24 giờ và phải kiểm chứng bằng diễn tập restore.
+- Tiêu chí chi tiết nằm trong [FR](functional-requirements.md), [NFR](non-functional-requirements.md) và [use case](../useCase/use-cases.md). Các chỉ tiêu là yêu cầu nghiệm thu; kết quả đáp ứng cần được xác nhận bằng đo kiểm theo môi trường quy định.
 
 ## 8. Căn cứ
 
