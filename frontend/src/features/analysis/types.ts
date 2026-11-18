@@ -10,3 +10,5 @@ export interface ScatterProps {
   selected?: string;
   onSelect(id: string): void;
 }
+
+export interface AnalysisSettings {xColumnId:string|null;yColumnId:string|null;zColumnId:string|null;colorMode:'normal'|'missing'|'outlier';outlierColumnIds:string[];outlierMethod:'iqr'|'zscore';threshold:number}

@@ -1,20 +1,11 @@
-import { useEffect,useState } from 'react';
-import type { Column,DistributionResult } from '@dashboard/data-core';
-import type { AnalysisAdapter } from '../api/analysis-adapters';
+import { useBoxplot, type BoxplotProps } from '../hooks/useBoxplot';
+
 import { Feedback } from '../../../shared/ui';
 
-export function BoxplotPanel({adapter,columns}:{adapter:AnalysisAdapter;columns:Column[]}){
-  const numbers=columns.filter(column=>column.logicalType==='number');
-  const [chosen,setChosen]=useState(numbers[0]?.columnId??''),[data,setData]=useState<DistributionResult>(),[error,setError]=useState('');
-  useEffect(()=>{
-    if(!chosen)return;const abort=new AbortController();
-    void adapter.distribution(chosen,{bins:20,outlierMethod:'iqr',threshold:1.5},abort.signal).then(value=>{if(!abort.signal.aborted){setData(value);setError('');}}).catch(error=>{if(!abort.signal.aborted)setError(error instanceof Error?error.message:'Không đọc được boxplot');});
-    return()=>abort.abort();
-  },[adapter,chosen]);
-  const box=data?.columnId===chosen?data.boxplot:undefined;
-  const x=(value:number)=>{if(!box||box.max===box.min)return 320;const scale=Math.max(1,Math.abs(box.min),Math.abs(box.max));return 45+(value/scale-box.min/scale)/(box.max/scale-box.min/scale)*550;};
-  const f=(value:number)=>value.toLocaleString('vi-VN',{maximumSignificantDigits:6});
-  return <div className="summary-chart boxplot-panel" data-testid="boxplot-panel"><h3>Outlier Boxplot · 1,5 × IQR</h3>
+export function BoxplotPanel(props:BoxplotProps){
+  const {numbers,chosen,setChosen,data,error,box,x,f}=useBoxplot(props);
+
+return <div className="summary-chart boxplot-panel" data-testid="boxplot-panel"><h3>Outlier Boxplot · 1,5 × IQR</h3>
     <label htmlFor="boxplot-column">Cột boxplot</label><select id="boxplot-column" value={chosen} onChange={event=>setChosen(event.target.value)}>{numbers.map(column=><option key={column.columnId} value={column.columnId}>{column.name}</option>)}</select>
     {!numbers.length?<p>Chưa có cột number để vẽ boxplot.</p>:box===undefined?<p>Đang tải thống kê toàn cột…</p>:box===null?<p>Không có giá trị số hợp lệ.</p>:<>
       <svg viewBox="0 0 640 190" role="img" aria-label={`Boxplot ${numbers.find(column=>column.columnId===chosen)?.name}`} className="boxplot-chart">

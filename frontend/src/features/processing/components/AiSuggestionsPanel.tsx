@@ -1,44 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
-import type { Column, ProcessingSpecification } from '@dashboard/data-core';
-import { Button, Feedback, type ProcessingGroup } from '../../../shared/ui';
-import type { ProcessingAdapter } from '../types';
-import { labels } from '../methods';
-import { scanSuggestions, suggestionSpecification, type AiSuggestions, type AiSuggestion } from '../ai-suggestions';
+import { useAiSuggestions, type AiSuggestionsProps } from '../hooks/useAiSuggestions';
 
-export function AiSuggestionsPanel({ adapter, group, columns, locked, onPreview }: {
-  adapter: ProcessingAdapter; group: ProcessingGroup; columns: Column[]; locked: boolean;
-  onPreview(specification: ProcessingSpecification): void;
-}) {
-  const [state, setState] = useState<{ context: string; data?: AiSuggestions; error?: string; loading?: boolean; stopped?: boolean }>();
-  const [visibleCount, setVisibleCount] = useState(10);
-  const columnIds = columns.map(column => column.columnId);
-  const context = JSON.stringify({ group, columnIds });
-  const current = useRef(context);
-  const controller = useRef<AbortController | undefined>(undefined);
-  useEffect(() => { current.current = context; return () => { controller.current?.abort(); }; }, [context, adapter]);
-  const visible = state?.context === context ? state : undefined;
-  async function suggest() {
-    if (!adapter.suggestions) return;
-    controller.current?.abort(); const abort = new AbortController(); controller.current = abort;
-    setVisibleCount(10); setState({ context, loading: true });
-    try {
-      await scanSuggestions(adapter.suggestions, group, columnIds, abort.signal, data => {
-        if (!abort.signal.aborted && current.current === context) setState({ context, loading: true, data });
-      });
-      if (!abort.signal.aborted && current.current === context) setState(value => value?.context === context ? { ...value, loading: false } : value);
-    } catch (error) {
-      if (!abort.signal.aborted && current.current === context) setState(value => ({ ...value, context, loading: false, error: error instanceof Error ? error.message : 'Không lấy được gợi ý AI.' }));
-    }
-  }
-  function stop() {
-    controller.current?.abort();
-    setState(value => value?.context === context ? { ...value, loading: false, stopped: true } : value);
-  }
-  function preview(suggestion: AiSuggestion) {
-    try { onPreview(suggestionSpecification(suggestion, group, columnIds)); }
-    catch (error) { setState(value => ({ ...value, context, error: error instanceof Error ? error.message : 'Gợi ý không hợp lệ.' })); }
-  }
-  return <aside className="ai-suggestions" aria-label="Gợi ý AI">
+import { Button, Feedback } from '../../../shared/ui';
+
+import { labels } from '../methods';
+
+export function AiSuggestionsPanel(props:AiSuggestionsProps){
+  const {adapter,columns,locked,visibleCount,setVisibleCount,visible,suggest,stop,preview}=useAiSuggestions(props);
+
+return <aside className="ai-suggestions" aria-label="Gợi ý AI">
     <h3>Gợi ý AI · Qwen3 4B</h3>
     <p>AI tự rà soát toàn bộ {columns.length.toLocaleString('vi-VN')} cột và gợi ý phương pháp phù hợp với tab hiện tại. Bạn không cần chọn cột hoặc phương pháp trước.</p>
     <p className="muted">Gợi ý không tự thay đổi dữ liệu; bạn xem Preview và quyết định Apply.</p>

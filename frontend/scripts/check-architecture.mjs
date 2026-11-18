@@ -23,6 +23,16 @@ const files = listFiles(root);
 const graph = new Map(files.map(file => [file, []]));
 const errors = [];
 
+// Required feature folders must contain implementations, not only placeholder barrels.
+for (const feature of fs.readdirSync(path.join(root, 'features'), { withFileTypes: true }).filter(entry => entry.isDirectory())) {
+  for (const folder of ['api', 'hooks', 'components', 'pages']) {
+    const directory = path.join(root, 'features', feature.name, folder);
+    if (!fs.existsSync(directory) || !fs.readdirSync(directory).some(name => /\.tsx?$/.test(name) && name !== 'index.ts')) {
+      errors.push(`Thiếu triển khai trong thư mục bắt buộc: features/${feature.name}/${folder}`);
+    }
+  }
+}
+
 for (const file of files) {
   const source = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
   function checkSpecifier(specifier) {
@@ -52,6 +62,18 @@ for (const file of files) {
     }
   }
   function visit(node) {
+    if (ts.isImportDeclaration(node) && relative(file).startsWith('features/')) {
+      const folder = relative(file).split('/')[2];
+      const bindings = node.importClause?.namedBindings;
+      if (['components', 'pages'].includes(folder) && bindings && ts.isNamedImports(bindings) &&
+          bindings.elements.some(item => !node.importClause.isTypeOnly && !item.isTypeOnly && item.name.text === 'requestJson')) {
+        errors.push(`Gọi HTTP phải qua api/hook, không đặt trong giao diện: ${relative(file)}`);
+      }
+      if (folder === 'pages' && node.moduleSpecifier.text === 'react' && bindings && ts.isNamedImports(bindings) &&
+          bindings.elements.some(item => ['useState', 'useEffect', 'useReducer'].includes(item.name.text))) {
+        errors.push(`State/effect nghiệp vụ phải đặt trong hooks: ${relative(file)}`);
+      }
+    }
     if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) checkSpecifier(node.moduleSpecifier);
     if (ts.isCallExpression(node) && (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
         (ts.isIdentifier(node.expression) && node.expression.text === 'require'))) {

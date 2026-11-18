@@ -16,12 +16,13 @@ src/
   shared/
     api/, ui/, style/, index.ts, README.md
   assets/               # chưa có tài nguyên triển khai
-  components/           # placeholder cũ, không đặt component mới tại đây
 test/E2E/               # Playwright trên browser + backend thật
 scripts/                # kiểm chiều import và vòng phụ thuộc
 ```
 
-main mount AppProviders → App → router → page. Trang hệ thống dùng hook gọi shared/api → Vite proxy → Nest. App ghép features qua public index; feature dùng shared hoặc public boundary feature khác, không tạo vòng import. Shared không phụ thuộc app/features. Index là đầu mối export, type dùng `export type`; CSS được nạp một lần qua index.css. Các index/types rỗng trong feature được ghi rõ là khung, không đại diện cho nghiệp vụ đã hoàn thành.
+main mount AppProviders → App → router → page. Trang hệ thống dùng hook gọi shared/api → Vite proxy → Nest. App ghép features qua public index; feature dùng shared hoặc public boundary feature khác, không tạo vòng import. Shared không phụ thuộc app/features. Index là đầu mối export, type dùng `export type`; CSS được nạp một lần qua index.css.
+
+Các feature đều có triển khai trong `api/components/hooks/pages`: page ghép hook với giao diện; hook quản lý state/effect/nghiệp vụ; API/adapter giao tiếp dữ liệu; component hiển thị model và phát sự kiện. Các page Analysis/Processing/History/Import được nhúng vào workspace, không tạo URL riêng. Workspace liên feature được app/pages/WorkspacePage ghép từ app/hooks/useWorkspace và app/components/WorkspaceView. Xem [báo cáo cấu trúc và kiểm chứng](../docs/reports/frontend-feature-structure-2026-11-18.md).
 
 HTTP client trước ở lib đã chuyển nguyên trách nhiệm sang shared/api. src/types cũ chỉ có .gitkeep nên được bỏ; type HealthResponse thuộc shared/api vì là hợp đồng health hạ tầng. Không có type nghiệp vụ dùng chung nào bị nhân bản. Styles light/dark/responsive nằm trong shared/style/global.css. Session chung chỉ giữ access token trong bộ nhớ; cookie refresh HttpOnly/Secure theo backend.
 

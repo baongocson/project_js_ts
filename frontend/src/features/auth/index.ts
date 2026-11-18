@@ -5,3 +5,6 @@ export { ProfilePage } from './pages/ProfilePage';
 export { AccountActions } from './components/AccountActions';
 export type { LocalAccountSafety, AccountSafetyProps } from './components/AccountActions';
 export type { User, Theme, SessionState } from './types';
+
+export {authApi} from './api/auth-api';
+export type {AccountAction} from './types';

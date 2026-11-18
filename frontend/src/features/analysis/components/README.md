@@ -1,5 +1,11 @@
 # analysis/components
 
-`AnalysisPanel.tsx` lắp summary/missing bar, distribution/value-counts, Pearson heatmap và row inspector. `Scatter3D.tsx` lazy-load `WebGLScatter.tsx`: Three.js/Fiber instanced points, OrbitControls, hover/pin/projection/zoom/reset. Renderer chỉ nhận Points3dResult, không import engine/storage/API. `ScatterFallback.tsx` giữ hình chiếu SVG và keyboard selection khi WebGL lỗi hoặc người dùng chọn. State camera không mở rộng DTO; range trục chỉ mô tả tập điểm hiển thị. Service worker cache cả lazy chunk trước offline readiness.
+Giao diện của feature: hiển thị model, nhận callback và phát sự kiện tương tác. Logic tải/xử lý/lưu dữ liệu ở hooks, HTTP/adapter ở api. Page là đầu mối ghép màn hình; renderer giữ state trình bày khi cần.
 
-Dùng public index của feature khi import từ app hoặc feature khác. Không đặt token trong local storage/snapshot/outbox. Luồng và lệnh kiểm thử ở [README feature](../README.md); acceptance dùng HTTPS/Nest/MongoDB replica tạm cục bộ.
+- [AnalysisPanel.tsx](AnalysisPanel.tsx)
+- [BoxplotPanel.tsx](BoxplotPanel.tsx)
+- [PointRowTable.tsx](PointRowTable.tsx)
+- [Scatter3D.tsx](Scatter3D.tsx)
+- [ScatterFallback.tsx](ScatterFallback.tsx)
+
+Dùng public index của feature từ app/feature khác; không import sâu component nội bộ. Tên public cũ như ProcessingPanel/AnalysisPanel/HistoryPanel/ImportWizard hiện trỏ đến page container để giữ tương thích, không dùng chúng để bỏ qua hook.

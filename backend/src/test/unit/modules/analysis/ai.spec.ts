@@ -45,6 +45,14 @@ describe('AI input and candidates', () => {
     for (const env of [{ AI_OLLAMA_URL: 'https://example.com' }, { AI_OLLAMA_URL: 'http://127.0.0.1:11434/remote' }, { AI_TIMEOUT_MS: 9999999 }, { AI_MODEL: 'cloud-model' }]) expect(() => validateEnvironment(env)).toThrow();
     expect(() => validateEnvironment({ AI_OLLAMA_URL: 'http://127.0.0.1:11434', AI_ENABLED: 'true' })).not.toThrow();
   });
+  test('container Ollama requires an explicit operator hostname allowlist', () => {
+    expect(() => validateEnvironment({ AI_OLLAMA_URL: 'http://ollama:11434' })).toThrow();
+    const settings = { AI_OLLAMA_ALLOWED_HOSTS: 'ollama', AI_OLLAMA_URL: 'http://ollama:11434' };
+    expect(() => validateEnvironment(settings)).not.toThrow();
+    for (const target of ['http://ollama.example.com:11434', 'http://user@ollama:11434', 'http://ollama:11434/path', 'http://ollama:11434/?q=1', 'https://ollama:11434']) {
+      expect(() => validateEnvironment({ ...settings, AI_OLLAMA_URL: target })).toThrow();
+    }
+  });
 });
 
 describe('AI service ownership and immutable suggestions', () => {

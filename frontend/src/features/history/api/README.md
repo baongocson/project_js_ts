@@ -1,5 +1,9 @@
 # history/api
 
-API nghiệp vụ của feature: sử dụng requestJson từ shared/api, không tạo HTTP client khác hoặc hard-code URL gốc.
+historyApi.list và historyApi.restore gọi API lịch sử/khôi phục; response types nằm ở types.ts.
 
-Hiện là cấu trúc chuẩn bị cho feature, chưa có triển khai nghiệp vụ. `index.ts` là đầu mối export, hiện chưa export thành phần nào. Trách nhiệm tổng thể, luồng và cách chạy/kiểm thử ở [README feature](../README.md). Bổ sung giải thích file và luồng khi thêm code; không coi thư mục rỗng là tính năng đã hoàn thành.
+## File triển khai
+
+- [history-api.ts](history-api.ts)
+
+`index.ts` export code thực tế. Luồng chung: page → hook → API/adapter; component nhận dữ liệu và callback để hiển thị. Component con có thể dùng custom hook của feature; state thuần giao diện như camera/focus vẫn ở renderer. Không gọi HTTP hoặc ghi dữ liệu trực tiếp trong phần JSX.

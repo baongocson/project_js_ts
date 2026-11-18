@@ -1,0 +1,21 @@
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+.git
+.agents
+.codex
+.aws
+**/.env
+**/.env.*
+**/*.env
+**/*.pem
+**/*.key
+.env.docker
+.artifact-work
+.npm-cache
+**/coverage
+**/test-results
+**/playwright-report
+backend/storage
+trao đổi
+*.log

@@ -1,0 +1,111 @@
+name: dashboard-3d
+
+x-backend: &backend
+  image: dashboard-3d-backend:local
+  build:
+    context: .
+    target: backend
+  env_file: .env.docker
+  environment:
+    HOST: 0.0.0.0
+    PORT: '3000'
+    DATABASE_ENABLED: 'true'
+    MONGODB_URI: mongodb://mongo:27017/dashboard_3d?replicaSet=rs0
+    MONGODB_DB_NAME: dashboard_3d
+    FRONTEND_ORIGIN: https://localhost:8443
+    ORIGINAL_STORAGE_ROOT: /app/backend/storage/originals
+    AI_ENABLED: 'false'
+    AI_OLLAMA_URL: http://ollama:11434
+    AI_OLLAMA_ALLOWED_HOSTS: ollama
+    AI_MODEL: qwen3:4b
+    AI_TIMEOUT_MS: '120000'
+
+services:
+  mongo:
+    image: mongo:8.0
+    command: [mongod, --replSet, rs0, --bind_ip_all]
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "try { rs.status() } catch (e) { if (e.code === 94) rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}); else throw e; } if (!db.hello().isWritablePrimary) quit(1);"
+      interval: 5s
+      timeout: 10s
+      start_period: 15s
+      retries: 30
+
+  db-init:
+    <<: *backend
+    command: [node, backend/dist/infrastructure/database/database.cli.js, provision]
+    healthcheck:
+      disable: true
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  backend:
+    <<: *backend
+    restart: unless-stopped
+    init: true
+    volumes:
+      - originals:/app/backend/storage/originals
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+
+  web:
+    image: dashboard-3d-web:local
+    build:
+      context: .
+      target: web
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:18080:80'
+      - '127.0.0.1:8443:443'
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, --no-check-certificate, 'https://localhost/api/v1/health']
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  ollama:
+    image: ollama/ollama:0.13.0
+    profiles: [ai]
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: [CMD, ollama, list]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  ollama-init:
+    image: ollama/ollama:0.13.0
+    profiles: [ai]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: [ollama]
+    command: [pull, 'qwen3:4b']
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
+  originals:
+  caddy-data:
+  caddy-config:
+  ollama-data:

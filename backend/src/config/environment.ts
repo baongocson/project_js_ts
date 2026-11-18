@@ -2,7 +2,8 @@ export function validateEnvironment(env: Record<string, unknown>) {
   if (env.AI_ENABLED !== undefined && !['true', 'false'].includes(String(env.AI_ENABLED))) throw new Error('AI_ENABLED must be true or false');
   if (env.AI_OLLAMA_URL !== undefined) {
     const url = new URL(String(env.AI_OLLAMA_URL));
-    if (url.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) || url.username || url.password || url.search || url.hash || url.pathname !== '/') throw new Error('AI_OLLAMA_URL must be a loopback HTTP origin');
+    const allowedHosts = ['localhost', '127.0.0.1', '[::1]', ...String(env.AI_OLLAMA_ALLOWED_HOSTS ?? '').split(',').map(host => host.trim()).filter(Boolean)];
+    if (url.protocol !== 'http:' || !allowedHosts.includes(url.hostname) || url.username || url.password || url.search || url.hash || url.pathname !== '/') throw new Error('AI_OLLAMA_URL must be an allowed internal HTTP origin');
   }
   if (env.AI_MODEL !== undefined && env.AI_MODEL !== 'qwen3:4b') throw new Error('AI_MODEL must be qwen3:4b for this integration');
   if (env.AI_TIMEOUT_MS !== undefined && (!Number.isSafeInteger(Number(env.AI_TIMEOUT_MS)) || Number(env.AI_TIMEOUT_MS) < 1000 || Number(env.AI_TIMEOUT_MS) > 180000)) throw new Error('AI_TIMEOUT_MS must be 1000..180000');

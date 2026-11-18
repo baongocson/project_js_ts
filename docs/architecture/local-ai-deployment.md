@@ -1,6 +1,6 @@
 # Sử dụng AI trong team và kế hoạch đóng gói Docker
 
-Cập nhật ngày **18/11/2026**. Tài liệu phân biệt chức năng đã có với công việc triển khai còn cần thực hiện. Lượt cập nhật này chỉ sửa tài liệu, không bổ sung Dockerfile, Compose hoặc thay cấu hình backend.
+Cập nhật ngày **18/11/2026**: đã bổ sung Dockerfile, Compose, MongoDB replica set và chế độ Ollama tùy chọn. Hướng dẫn chạy hiện hành ở [Docker](../docker.md). Các phần “Kế hoạch Docker Compose” và “Tiêu chí nghiệm thu” bên dưới được giữ làm kế hoạch/tiêu chí ban đầu, không phải mô tả trạng thái cấu hình hiện tại. Validator nay cho phép hostname nội bộ do người vận hành chỉ định bằng `AI_OLLAMA_ALLOWED_HOSTS`; mặc định vẫn chỉ nhận loopback.
 
 ## Trạng thái hiện tại
 
@@ -8,7 +8,7 @@ Cập nhật ngày **18/11/2026**. Tài liệu phân biệt chức năng đã c�
 | --- | --- |
 | Mỗi thành viên chạy ứng dụng và AI trên máy Windows riêng | Có script thiết lập; mỗi máy cần tải runtime/model và cấu hình ứng dụng/database riêng. Đã kiểm chứng trên máy phát triển hiện tại, chưa nghiệm thu trên mọi máy của team. |
 | Team mở website trên một server chung | Kiến trúc cho phép backend gọi Ollama cùng máy qua loopback; cần triển khai, cấu hình và nghiệm thu server thực tế. Người dùng trình duyệt không cần cài mô hình. |
-| Backend và Ollama ở các container Compose riêng | Chưa có bộ đóng gói trong repository; validator hiện từ chối hostname dịch vụ như `ollama`. Cần triển khai các hạng mục bên dưới trước khi dùng. |
+| Backend và Ollama ở các container Compose riêng | Đã có cấu hình trong repository, volume model và bước tải model trước khi bật AI. Xem [Docker](../docker.md); kiểm thử model thật/CPU/GPU và nhiều người dùng vẫn cần thực hiện trên máy triển khai. |
 
 “AI local” là mô hình tự chạy trong môi trường của backend, không phải bắt buộc chạy trên máy của từng người mở trình duyệt. Với server chung, thống kê dataset được xử lý bởi mô hình trên server đó. Backend chỉ gửi evidence thống kê/phương pháp ứng viên, không gửi tên cột hoặc nội dung ô tới Ollama. Dataset local trong IndexedDB vẫn chưa hỗ trợ gợi ý AI.
 

@@ -14,6 +14,8 @@ Bộ tài liệu được bổ sung ngày **18/11/2026**, mô tả yêu cầu c�
 
 ## Tài liệu kỹ thuật và triển khai
 
+- [Kiểm thử hiệu năng k6 và hướng dẫn đọc kết quả](performance/README.md), [báo cáo đo ngày 18/11/2026](performance/report-2026-11-18.md).
+- [Chuẩn hóa frontend theo api/hooks/components/pages](reports/frontend-feature-structure-2026-11-18.md).
 - [Hợp đồng API](api/API.md), [DTO contract](api/dto-contract.md), [bảng API gốc](api/API.xlsx).
 - [Kiến trúc](architecture/architecture.md), [chất lượng mã nguồn](architecture/code-quality.md).
 - [AI local: thiết kế và thiết lập](architecture/local-ai.md), [sử dụng trong team và kế hoạch Docker/server chung](architecture/local-ai-deployment.md). Script Windows đã có; Docker Compose tách Ollama còn cần triển khai và nghiệm thu.

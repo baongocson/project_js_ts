@@ -8,6 +8,10 @@
     "packages/data-core"
   ],
   "scripts": {
+    "test:perf": "npm run build -w backend && node scripts/performance/run-local.cjs",
+    "test:perf:load": "npm run test:perf -- --profile=load",
+    "test:perf:data": "npm run test:perf -- --profile=data",
+    "test:perf:ai": "npm run test:perf -- --profile=ai",
     "ai:setup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-local-ai.ps1",
     "ai:start": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local-ai.ps1",
     "ai:check": "npm run build -w backend && node scripts/check-local-ai.cjs",

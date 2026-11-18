@@ -1,5 +1,10 @@
 # processing/components
 
-`MethodParameters.tsx` cung cấp typed controls cho 27 method. `ProcessingPanel.tsx` tách Preview khỏi Apply, chặn stale/no-op/expiry và retry key cũ. `PreviewView.tsx` hiển thị diff/schema/diagnostics/pagination.
+Giao diện của feature: hiển thị model, nhận callback và phát sự kiện tương tác. Logic tải/xử lý/lưu dữ liệu ở hooks, HTTP/adapter ở api. Page là đầu mối ghép màn hình; renderer giữ state trình bày khi cần.
 
-Dùng public index của feature khi import từ app hoặc feature khác. Không đặt token trong local storage/snapshot/outbox. Luồng và lệnh kiểm thử ở [README feature](../README.md); acceptance dùng HTTPS/Nest/MongoDB replica tạm cục bộ.
+- [ProcessingPanel.tsx](ProcessingPanel.tsx)
+- [AiSuggestionsPanel.tsx](AiSuggestionsPanel.tsx)
+- [MethodParameters.tsx](MethodParameters.tsx)
+- [PreviewView.tsx](PreviewView.tsx)
+
+Dùng public index của feature từ app/feature khác; không import sâu component nội bộ. Tên public cũ như ProcessingPanel/AnalysisPanel/HistoryPanel/ImportWizard hiện trỏ đến page container để giữ tương thích, không dùng chúng để bỏ qua hook.

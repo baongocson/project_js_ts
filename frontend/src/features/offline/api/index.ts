@@ -1,2 +1,2 @@
-// Chỉ export code đã triển khai tại thư mục này.
-export {};
+export {localVersion,localProcessing} from './local-processing';
+export {object,objectId,ProjectApi} from './project-api';

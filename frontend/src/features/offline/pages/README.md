@@ -1,5 +1,9 @@
 # offline/pages
 
-`OfflineWorkspace.tsx` lắp local workspace, tài khoản chung, import, history/restore, recovery và sync. Không tự định nghĩa engine hoặc HTTP client riêng.
+OfflineWorkspace ghép useOfflineWorkspace với OfflineWorkspaceView. LocalWorkspacePane nhận các page con Analysis/Processing và adapter local.
 
-Dùng public index của feature khi import từ app hoặc feature khác. Không đặt token trong local storage/snapshot/outbox. Luồng và lệnh kiểm thử ở [README feature](../README.md); acceptance dùng HTTPS/Nest/MongoDB replica tạm cục bộ.
+## File triển khai
+
+- [OfflineWorkspace.tsx](OfflineWorkspace.tsx)
+
+`index.ts` export code thực tế. Luồng chung: page → hook → API/adapter; component nhận dữ liệu và callback để hiển thị. Component con có thể dùng custom hook của feature; state thuần giao diện như camera/focus vẫn ở renderer. Không gọi HTTP hoặc ghi dữ liệu trực tiếp trong phần JSX.

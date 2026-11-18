@@ -1,0 +1,29 @@
+import type { WorkspaceModel } from '../hooks/useWorkspace';
+
+import { Link } from 'react-router-dom';
+
+import { DatasetImportPage, DataTableView } from '../../features/datasets';
+import { ProcessingPage } from '../../features/processing';
+import { HistoryPage } from '../../features/history';
+import { AnalysisPage } from '../../features/analysis';
+
+import { Button, Feedback, WorkspaceLayout } from '../../shared/ui';
+export function WorkspaceView(model:WorkspaceModel){
+  const {projectId,drafts,draftProblem,detail,metadata,rows,error,loading,saveStatus,cellDetail,setCellDetail,readGeneration,navigationLocked,setNavigationLocked,rowEditingLocked,setRowEditingLocked,setPickedRow,pickedRowId,load,dataset,version,datasetId,processor,analysis,selectedValue,save,removeDraft,recoverDraft,exportDraft,selected}=model;
+if(loading)return <main><p role="status">Đang mở workspace…</p></main>;
+if(!detail)return <main><h1>Không mở được project</h1><Feedback error>{error}</Feedback><Link to="/projects">Về projects</Link></main>;
+return <main className="workspace"><div className="page-heading"><div><Link to="/projects">← Projects</Link><h1>{detail.project.name}</h1><p className="muted">{dataset?`Phiên bản ${metadata?.version.versionNumber??'…'} · ${metadata?.version.rowCount??'…'} dòng · ${metadata?.columns.length??'…'} cột`:'Project chưa có dataset'}</p></div><div className="save-state" role="status">{saveStatus}</div></div>
+    {error&&<Feedback error>{error}</Feedback>}{(saveStatus.startsWith('Xung đột')||saveStatus.startsWith('Chưa lưu'))&&<Button onClick={()=>void load()}>Tải lại workspace</Button>}
+    {draftProblem&&<div className="notice error" role="alert">{draftProblem}<Button variant="secondary" onClick={()=>exportDraft()}>Xuất bản nháp hiện tại</Button></div>}
+    {drafts.length>0&&<section role="region" aria-label="Phục hồi workspace"><h2>Có bản nháp chưa được xác nhận</h2><p>Bản server đang được hiển thị. Chọn khôi phục để xem và lưu lại bản nháp; không tự ghi đè trạng thái server.</p>{drafts.map(draft=><div key={draft.id} className="draft-card"><p>{new Date(draft.updatedAt).toLocaleString('vi-VN')} · revision {draft.revision} → {detail.workspace.revision}</p>{draft.boundVersionId!==detail.workspace.boundVersionId?<p>Dataset đã đổi phiên bản; giữ hoặc xuất bản nháp để đối chiếu, không khôi phục tham chiếu cũ tự động.</p>:draft.revision!==detail.workspace.revision?<p>Workspace server đã đổi. Khôi phục sẽ áp dụng các phần trong bản nháp lên revision server hiện tại sau xác nhận này.</p>:<p>Dataset và revision vẫn khớp; có thể khôi phục thay đổi chưa lưu.</p>}<div className="toolbar"><Button disabled={draft.boundVersionId!==detail.workspace.boundVersionId} onClick={()=>recoverDraft(draft)}>Khôi phục bản nháp</Button><Button variant="secondary" onClick={()=>exportDraft(draft)}>Xuất bản nháp</Button><Button variant="secondary" onClick={()=>removeDraft(draft)}>Bỏ bản nháp này</Button></div></div>)}</section>}
+    {detail.workspaceAdjusted&&<div className="notice">{detail.adjustments.map(item=>item.reason).join('; ')}</div>}
+    {!dataset?<div className="collection-import"><DatasetImportPage projectId={projectId} onImported={load}/><section className="import-welcome"><p className="eyebrow">01 / COLLECTION</p><h2>Khám phá dữ liệu của bạn</h2><p>Nhập CSV để xem tổng quan, phân phối và không gian 3D trước khi xử lý.</p><div className="file-mark">CSV</div><p className="muted">Tối đa 16.000.000 byte · Giữ nguyên file nguồn</p></section></div>:datasetId&&version&&processor&&metadata&&analysis&&
+      <WorkspaceLayout activeTab={detail.workspace.activeTab} onTab={activeTab=>save({activeTab,chartConfig:{...detail.workspace.chartConfig,colorMode:activeTab==='missing'?'missing':activeTab==='outliers'?'outlier':'normal'}})} navigationLocked={navigationLocked||rowEditingLocked}
+        analysis={<AnalysisPage key={`analysis:${version}:${readGeneration}:${detail.workspace.activeTab}`} editor={processor} onEdited={load} initialRowId={pickedRowId??detail.workspace.selection.cell?.rowId} onEditingLock={setRowEditingLocked} adapter={analysis} columns={metadata.columns} initialConfig={detail.workspace.chartConfig}
+          initialTab={pickedRowId||detail.workspace.selection.cell?'points':detail.workspace.activeTab==='collection'?'summary':'points'} onConfig={chartConfig=>save({chartConfig})} onRow={row=>{setPickedRow({projectId,rowId:row.rowId});setCellDetail(`Dòng ${row.position+1} · ${row.rowId}`);const columnId=detail.workspace.chartConfig.xColumnId??metadata.columns.find(column=>column.logicalType==='number')?.columnId;if(columnId)save({selection:{...detail.workspace.selection,cell:{rowId:row.rowId,columnId}}});}}/>}
+        processing={detail.workspace.activeTab!=='collection'&&detail.workspace.activeTab!=='history'&&<ProcessingPage key={`process:${version}:${detail.workspace.activeTab}`} group={detail.workspace.activeTab} onNavigationLock={setNavigationLocked} adapter={processor} columns={metadata.columns} selectedCell={detail.workspace.selection.cell} selectedValue={selectedValue} onApplied={load}/>}
+        table={<><DataTableView columns={metadata.columns} data={rows} state={detail.workspace.tableState} selected={detail.workspace.selection.cell} onState={tableState=>save({tableState})} onSelect={(row,column)=>void selected(row,column)}/>{cellDetail&&selectedValue&&<p className="notice">{cellDetail}</p>}</>}
+        history={<HistoryPage key={`history:${version}`} datasetId={datasetId} currentVersionId={version} onRestored={load}/>}
+      />}
+  </main>;
+}

@@ -1,0 +1,8 @@
+# Use together with compose.yaml and --profile ai.
+services:
+  backend:
+    environment:
+      AI_ENABLED: 'true'
+    depends_on:
+      ollama-init:
+        condition: service_completed_successfully

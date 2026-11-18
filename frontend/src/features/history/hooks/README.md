@@ -1,5 +1,9 @@
 # history/hooks
 
-Logic trạng thái và xử lý tái sử dụng trong feature. Cleanup effect và hủy yêu cầu khi component unmount.
+useHistory tải/lọc/phân trang lịch sử, quản lý dialog Restore, stable key và trạng thái chưa rõ kết quả.
 
-Hiện là cấu trúc chuẩn bị cho feature, chưa có triển khai nghiệp vụ. `index.ts` là đầu mối export, hiện chưa export thành phần nào. Trách nhiệm tổng thể, luồng và cách chạy/kiểm thử ở [README feature](../README.md). Bổ sung giải thích file và luồng khi thêm code; không coi thư mục rỗng là tính năng đã hoàn thành.
+## File triển khai
+
+- [useHistory.ts](useHistory.ts)
+
+`index.ts` export code thực tế. Luồng chung: page → hook → API/adapter; component nhận dữ liệu và callback để hiển thị. Component con có thể dùng custom hook của feature; state thuần giao diện như camera/focus vẫn ở renderer. Không gọi HTTP hoặc ghi dữ liệu trực tiếp trong phần JSX.

@@ -6,7 +6,7 @@
 - features/: khung các tính năng nghiệp vụ; xem trạng thái tại từng README.
 - shared/: transport HTTP, UI và style dùng chung.
 - assets/: tài nguyên tĩnh; hiện chỉ có placeholder.
-- components/: placeholder có trước, hiện không có code để di chuyển. Không thêm component mới tại đây; dùng feature/components hoặc shared/ui theo phạm vi.
+- Component nằm tại feature/components hoặc shared/ui theo phạm vi; app/components dành cho giao diện ghép nhiều feature. Mỗi feature có api, hooks, components và pages đã triển khai; xem README từng thư mục.
 - index.css: nạp shared/style/global.css, giữ giao diện hiện tại.
 
 Chiều import: app → features → shared và app → shared. Chạy `npm run typecheck -w frontend` để kiểm kiểu và kiến trúc. Cách chạy ứng dụng/test xem [frontend README](../README.md).

@@ -13,5 +13,7 @@ playwright/.cache/
 .npm-cache/
 
 .artifact-work/
+.env.docker
+docker/local-root.crt
 backend/storage/
 /trao đổi/

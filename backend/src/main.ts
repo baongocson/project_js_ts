@@ -15,6 +15,6 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }));
   app.useGlobalFilters(new ApiExceptionFilter());
   app.enableShutdownHooks();
-  await app.listen(config.getOrThrow<number>('PORT'), '127.0.0.1');
+  await app.listen(config.getOrThrow<number>('PORT'), config.get<string>('HOST') ?? '127.0.0.1');
 }
 void bootstrap();

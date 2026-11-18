@@ -2,7 +2,16 @@
 
 Khung dự án theo yêu cầu giảng viên: NestJS modular monolith và React/Vite, dùng TypeScript. Định tuyến theo sheet **Trang tính1** trong tài liệu API đã cung cấp.
 
-## Chạy phát triển
+## Chạy bằng Docker Desktop
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/init-docker.ps1
+docker compose up -d --build --wait --wait-timeout 180
+```
+
+Mở https://localhost:8443. MongoDB và dữ liệu Docker độc lập với Atlas hiện tại; đăng ký tài khoản mới. HTTPS dùng CA cục bộ nên trình duyệt có thể cảnh báo. Xem [hướng dẫn Docker](docs/docker.md) để tin cậy CA, bật Ollama, giữ dữ liệu và triển khai lên server.
+
+## Chạy phát triển với Node.js
 
 Yêu cầu Node.js 22.13 trở lên trong nhánh 22.x, hoặc Node.js >=24, và npm. Tại thư mục gốc:
 
@@ -111,4 +120,4 @@ Các ca kiểm và giới hạn được ghi tại [báo cáo remediation](docs/
 
 Qwen3 4B qua Ollama gợi ý trên toàn bộ cột của dataset online theo sáu tab xử lý, không cần chọn cột/phương pháp trước. AI chỉ tham khảo; người dùng xem Preview rồi mới Apply. Chạy `npm run ai:setup` một lần, sau đó `npm run dev:ai`; kiểm tra mô hình thật bằng `npm run ai:check`. Không thêm lưu trữ/ERD. Xem [kiến trúc, thiết lập và giới hạn](docs/architecture/local-ai.md).
 
-Các script AI hiện dành cho Windows; runtime/model không đi kèm Git, mỗi máy thành viên cần thiết lập riêng. Team có thể dùng một server chung để người dùng chỉ mở website. Bộ Docker Compose chưa được triển khai; backend hiện chỉ nhận địa chỉ Ollama loopback nên chưa kết nối container Ollama riêng qua hostname dịch vụ. Xem [hướng dẫn cho team và kế hoạch Docker](docs/architecture/local-ai-deployment.md).
+Các script AI local hiện dành cho Windows; runtime/model không đi kèm Git. Docker Compose có chế độ Ollama riêng, xem [hướng dẫn Docker](docs/docker.md). Team có thể dùng một server chung để người dùng chỉ mở website. Xem thêm [hướng dẫn AI cho team](docs/architecture/local-ai-deployment.md).

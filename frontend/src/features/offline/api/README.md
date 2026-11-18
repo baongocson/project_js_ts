@@ -1,5 +1,10 @@
-# Offline API boundary
+# offline/api
 
-Runtime `ProjectApi` ở `../project-sync.ts` dùng `requestJson` của shared/api cho cả chuỗi create/import/preview/Apply/restore/read. Chuỗi được pin vào owner đã xác thực; keys và checkpoint do protocol project-sync quản lý. Không tạo HTTP client thứ hai, không hard-code API URL hoặc lưu token trong outbox.
+ProjectApi thực hiện HTTP sync có owner binding; localProcessing tạo adapter Preview–Apply local. Các đường dẫn root cũ chỉ re-export để giữ tương thích.
 
-`OfflineApiAdapter` cũ đã bỏ; pure queue/replay fixtures vẫn có public exports để kiểm protocol cho dataset đã map sẵn. Chúng không thay luồng runtime CSV/ID mapping. Xem [README feature](../README.md).
+## File triển khai
+
+- [local-processing.ts](local-processing.ts)
+- [project-api.ts](project-api.ts)
+
+`index.ts` export code thực tế. Luồng chung: page → hook → API/adapter; component nhận dữ liệu và callback để hiển thị. Component con có thể dùng custom hook của feature; state thuần giao diện như camera/focus vẫn ở renderer. Không gọi HTTP hoặc ghi dữ liệu trực tiếp trong phần JSX.
