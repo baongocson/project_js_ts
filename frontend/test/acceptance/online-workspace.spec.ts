@@ -25,7 +25,8 @@ test('auth/profile, server projects, CSV typed table and serialized workspace au
   await page.getByRole('button',{name:'Bỏ lọc',exact:true}).click();await expect(page.getByRole('button',{name:'Dòng 1, cột score',exact:true})).toBeVisible();
   await expect(page.getByRole('status')).toHaveText('Đã lưu workspace');
   await page.goto('/profile');await page.getByLabel('Tên hiển thị',{exact:true}).fill('Nhóm phân tích');
-  await page.getByLabel('Giao diện',{exact:true}).selectOption('dark');await page.getByRole('button',{name:'Lưu hồ sơ',exact:true}).click();
+  await page.getByLabel('Giao diện',{exact:true}).selectOption('dark');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  await page.getByRole('button',{name:'Lưu hồ sơ',exact:true}).click();
   await expect(page.getByRole('status')).toHaveText('Đã cập nhật hồ sơ trên server.');await page.reload();
   await expect(page.getByLabel('Tên hiển thị',{exact:true})).toHaveValue('Nhóm phân tích');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   await page.goto('/projects');await page.getByRole('button',{name:'Đổi tên',exact:true}).click();

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "pretest:unit": "npm run build -w @dashboard/data-core",
     "test:unit": "node scripts/run-unit.mjs",
     "predev": "npm run build -w @dashboard/data-core",
     "prebuild": "npm run build -w @dashboard/data-core",
