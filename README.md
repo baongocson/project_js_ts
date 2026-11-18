@@ -106,3 +106,9 @@ Bộ acceptance cần Chromium (`npm run test:e2e:install -w frontend`) và Open
 Mở `/offline` để lưu CSV, chọn method/cột/tham số, xử lý hoặc restore khi mất mạng. Sau khi có mạng, đăng nhập/khôi phục phiên và chọn đồng bộ. Bản local/CSV/checkpoint nằm trong IndexedDB, không chứa token. Đồng bộ dùng key cố định cho create/import/Preview/Apply/restore, kiểm tài khoản, source hash, typed data/position/lineage và server head; không ghi đè khi conflict hoặc tự chuyển sang tài khoản khác. Lần đầu cần mở online để cache app shell; xóa browser storage sẽ xóa dữ liệu local.
 
 Các ca kiểm và giới hạn được ghi tại [báo cáo remediation](docs/reports/backend-plan-remediation-2026-11-16.md).
+
+## Gợi ý AI local
+
+Qwen3 4B qua Ollama gợi ý trên toàn bộ cột của dataset online theo sáu tab xử lý, không cần chọn cột/phương pháp trước. AI chỉ tham khảo; người dùng xem Preview rồi mới Apply. Chạy `npm run ai:setup` một lần, sau đó `npm run dev:ai`; kiểm tra mô hình thật bằng `npm run ai:check`. Không thêm lưu trữ/ERD. Xem [kiến trúc, thiết lập và giới hạn](docs/architecture/local-ai.md).
+
+Các script AI hiện dành cho Windows; runtime/model không đi kèm Git, mỗi máy thành viên cần thiết lập riêng. Team có thể dùng một server chung để người dùng chỉ mở website. Bộ Docker Compose chưa được triển khai; backend hiện chỉ nhận địa chỉ Ollama loopback nên chưa kết nối container Ollama riêng qua hostname dịch vụ. Xem [hướng dẫn cho team và kế hoạch Docker](docs/architecture/local-ai-deployment.md).

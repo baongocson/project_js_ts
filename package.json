@@ -8,6 +8,10 @@
     "packages/data-core"
   ],
   "scripts": {
+    "ai:setup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-local-ai.ps1",
+    "ai:start": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local-ai.ps1",
+    "ai:check": "npm run build -w backend && node scripts/check-local-ai.cjs",
+    "dev:ai": "npm run ai:start && npm run dev",
     "dev": "concurrently -k -n api,web \"npm run start:dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w backend && npm run build -w frontend",
     "typecheck": "npm run typecheck --workspaces",

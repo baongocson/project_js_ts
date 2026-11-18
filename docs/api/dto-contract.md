@@ -130,3 +130,7 @@ Hợp đồng hiện hành có 27 endpoint, 28 method. Thêm union tfidf trong P
 DistributionResponseDto dùng shared DistributionResult, thêm boxplot nullable với quartile/fences/whiskers/outlierCount/outliers/truncated. Points3dResponseDto dùng shared Points3dResult, thêm axes/full-version bounds, flaggedCounts, unplottablePoints/unplottableTotal. Các field mới additive; frontend có trạng thái chờ/N/A nếu server chưa nâng cấp, không tự suy thống kê từ sample. Color outlier toàn cột number; missing toàn dòng.
 
 Engine0.7 nhận 27 method cũ từ engine0.6 với kiểm candidate/receipt đầy đủ; TF-IDF không chấp nhận engine khác. Migration validator chỉ mở rộng enum, không sửa dữ liệu: xem [database.md](../database/database.md#nâng-cấp-tf-idf-17112026).
+
+## DTO gợi ý AI local — 18/11/2026
+
+POST version `/ai/suggestions` nhận `{group,batch?}`: sáu nhóm processing, batch nguyên 0–1000 mặc định 0. Không nhận cột/phương pháp/model/URL/prompt; tự rà soát mọi dòng/cột của published version. Response gắn versionId/group, columnIds toàn schema, columnCount/rowCount, candidateCount/reviewedCandidateCount, batch/totalBatches/nextBatch, model/generatedAt và tối đa năm gợi ý mỗi lượt. UI tự gọi tiếp mọi lượt để không cắt bỏ ứng viên cuối. Không mutation và không yêu cầu idempotency key. Chi tiết endpoint/mã lỗi tại [API](API.md#bổ-sung-gợi-ý-ai-local--18112026).
