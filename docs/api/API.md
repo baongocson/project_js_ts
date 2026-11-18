@@ -129,3 +129,21 @@ Histogram tính toàn cột; frequency chart dùng value-counts phân trang20nh�
 GET analysis/points-3d thêm axes:[{columnId,min,max}] theo thứ tự X/Y/Z, min/max toàn phiên bản (null nếu không có số); unplottablePoints:[{rowId,missingCount,isOutlier,outlierColumnIds,reason}], unplottableTotal và flaggedCounts:{missingRows,outlierRows}. reason là missing_coordinates hoặc invalid_coordinates. points vẫn chỉ chứa tọa độ số hữu hạn. Dòng không đủ tọa độ được chọn bằng dấu ở vùng riêng, không gán0 giả và không biến đổi dữ liệu nguồn.
 
 Missing xét mọi cột trong dòng. colorMode=outlier xét mọi cột number, bỏ qua giới hạn outlierColumnIds để màu không phụ thuộc trục/cột đang chọn; summary/distribution vẫn giữ scope riêng. Sampling ổn định theo rowId, ưu tiên dòng được tô màu trước, giới hạn maxPoints≤10000. unplottablePoints có giới hạn riêng cùng maxPoints và ưu tiên cùng quy tắc. Counts là toàn phiên bản, UI công khai số chưa vẽ. Cả WebGL và fallback dùng cùng bounds/phép đổi cho điểm và trục; vị trí co giãn chỉ để hiển thị, tooltip giữ số gốc.
+
+## Bổ sung gợi ý AI local — 18/11/2026 (sửa luồng toàn dataset)
+
+`POST /api/v1/datasets/:datasetId/versions/:versionId/ai/suggestions`
+
+Yêu cầu đăng nhập, sở hữu dataset/version đã published. Đây là tính toán chỉ đọc dù dùng POST; không yêu cầu Idempotency-Key, không tạo preview/version/operation. Body nhận `group` (cleaning|missing|outliers|scaling|transformation|encoding) và `batch` tùy chọn (số nguyên 0–1000, mặc định 0). Không nhận cột, phương pháp, prompt, model hay URL từ client; luôn thống kê toàn bộ dòng/cột của version, độc lập filter/trang và form thủ công.
+
+```json
+{"group":"cleaning"}
+```
+
+Response 201: `{versionId, group, columnIds, columnCount, model, generatedAt, rowCount, candidateCount, reviewedCandidateCount, batch, totalBatches, nextBatch, suggestions}`. columnIds chứa tất cả cột theo thứ tự schema; mỗi lượt xét tối đa 12 ứng viên và trả tối đa 5 gợi ý `{id, specification, evidence, caution, reason}`. UI tự gọi batch=nextBatch cho tới null, gộp kết quả; không cắt bỏ các cột/ứng viên sau lượt đầu. reviewedCandidateCount là số ứng viên đã xét lũy kế đến lượt này, không phải số gợi ý. Không có ứng viên: totalBatches=1, batch=0, nextBatch=null và danh sách rỗng.
+
+Specification do code tạo, có statisticsScope whole-columns và được dry-run; mô hình chỉ chọn ID/viết reason. Scope thông thường là một cột dataset bất kỳ; remove_duplicates xét toàn dataset. Không cần người dùng chọn trước phương pháp hoặc cột. Mỗi lượt đọc lại version published bất biến; không lưu kết quả gợi ý vào database. Kết quả rỗng không khẳng định dataset sạch.
+
+Lỗi: 400 VALIDATION_ERROR/AI_BATCH_INVALID (batch vượt số lượt); 401/403/404 theo auth/ownership; 503 DATABASE_UNAVAILABLE, AI_DISABLED, AI_BUSY, AI_TIMEOUT, AI_UNAVAILABLE; AI_CANCELLED nếu request bị hủy khi inference. Một inference/process; timeout mặc định 120 giây/lượt. Server hủy fetch Ollama khi client ngắt request đang tính. Không cloud fallback.
+
+Client chỉ vô hiệu hóa gợi ý khi đổi tab/version/schema; thay cột/phương pháp thủ công không hủy hay đổi phạm vi AI. Hiển thị tiến độ, giữ rõ trạng thái chưa hoàn tất khi lỗi/dừng giữa chừng. Xem trước gợi ý tự điền method/parameters/scope của gợi ý và gọi Preview cũ; Apply vẫn riêng. Chỉ evidence thống kê gửi tới Ollama, không tên cột/nội dung ô. Dataset IndexedDB offline chưa dùng AI. [Kiến trúc](../architecture/local-ai.md).

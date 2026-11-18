@@ -7,17 +7,19 @@ import { processingApi } from '../api/processing-api';
 import { allowedScopes,labels,makeSpecification,presets,methodGroups } from '../methods';
 import { MethodParameters } from './MethodParameters';
 import { PreviewView } from './PreviewView';
-import type { Preview,PreviewPage } from '../types';
+import type { ProcessingAdapter,PreviewPage } from '../types';
 import { PreviewRejected } from '../types';
+import type { AiSuggestions } from '../ai-suggestions';
+import { AiSuggestionsPanel } from './AiSuggestionsPanel';
 
-export interface ProcessingAdapter {
-  preview(specification:ProcessingSpecification,key:string):Promise<Preview>;
-  get(previewId:string,page:number):Promise<PreviewPage>;
-  apply(previewId:string,key:string):Promise<unknown>;
-  categories(columnId:string):Promise<Cell[]>;
-}
+export type { ProcessingAdapter } from '../types';
 export function onlineProcessing(datasetId:string,versionId:string):ProcessingAdapter{
   return {
+    suggestions:async(group,signal,batch=0)=>{
+      const data=await requestJson<AiSuggestions>(`datasets/${datasetId}/versions/${versionId}/ai/suggestions`,{method:'POST',json:{group,batch},signal,replay:'safe'});
+      if(data.versionId!==versionId)throw new Error('Gợi ý thuộc phiên bản dữ liệu khác; hãy tải lại.');
+      return data;
+    },
     preview:(spec,key)=>processingApi.preview(datasetId,versionId,spec,key),
     get:(id,page)=>processingApi.get(datasetId,id,page),
     apply:(id,key)=>processingApi.apply(datasetId,id,key),
@@ -55,15 +57,24 @@ export function ProcessingPanel({adapter,columns,selectedCell,selectedValue:_sel
   async function preview(){
     const scope:Scope=scopeType==='dataset'?{type:'dataset'}:scopeType==='columns'?{type:'columns',columnIds}:{type:'cell',rowId:selectedCell?.rowId??'',columnId:selectedCell?.columnId??''};
     const spec=makeSpecification(method,advancedEnabled?JSON.parse(advanced) as Record<string,unknown>:parameters,scope);
-    if(pending.current?.payload!==payload)pending.current={payload,key:crypto.randomUUID()};
+    await createPreview(spec,payload);
+  }
+  async function createPreview(spec:ProcessingSpecification,previewContext:string){
+    if(pending.current?.payload!==previewContext)pending.current={payload:previewContext,key:crypto.randomUUID()};
     try{
       const value=await adapter.preview(spec,pending.current.key);
       if(!active.current)return;
       // Keep the receipt target even if loading its first diff page fails.
-      setResult({preview:value,changes:[],page:1,limit:50,totalChanges:0,totalPages:0});setPreviewLoaded(false);setPreviewPayload(payload);setRetryApply(false);
+      setResult({preview:value,changes:[],page:1,limit:50,totalChanges:0,totalPages:0});setPreviewLoaded(false);setPreviewPayload(previewContext);setRetryApply(false);
       applyAttempt.current={id:value.previewId,key:crypto.randomUUID(),sent:false};
       const page=await adapter.get(value.previewId,1);if(active.current){setResult(page);setPreviewLoaded(true);}
     }catch(error){if(error instanceof ApiError&&error.status===410)pending.current=undefined;throw error;}
+  }
+  async function previewSuggestion(spec:ProcessingSpecification){
+    const nextColumns=spec.scope.type==='columns'?spec.scope.columnIds:columnIds;
+    selectMethod(spec.method);setParameters(spec.parameters);setScopeType(spec.scope.type);setColumnIds(nextColumns);
+    const context=JSON.stringify({method:spec.method,parameters:spec.parameters,scopeType:spec.scope.type,columnIds:nextColumns,selectedCell:null});
+    await createPreview(spec,context);
   }
   async function page(number:number){if(!result)return;const next=await adapter.get(result.preview.previewId,number);if(active.current){setResult(next);setPreviewLoaded(true);}}
   async function apply(){
@@ -79,6 +90,7 @@ export function ProcessingPanel({adapter,columns,selectedCell,selectedValue:_sel
       {' '}<Button variant="secondary" disabled={busy||retryApply} onClick={()=>{setResult(undefined);setPreviewLoaded(false);setPreviewPayload('');pending.current=undefined;applyAttempt.current=undefined;}}>Hủy bản xem trước</Button>
     </div>;
   return <section aria-label="Xử lý dữ liệu"><h2>{local?'Xử lý bản local':'Xử lý dữ liệu'}</h2><p className="muted">Xem trước để kiểm tra; chỉ Apply mới tạo phiên bản. Thống kê tính trên toàn cột. Bộ lọc bảng không giới hạn phạm vi xử lý.</p>
+    <AiSuggestionsPanel adapter={adapter} group={group} columns={columns} locked={busy||retryApply} onPreview={spec=>void work(()=>previewSuggestion(spec))}/>
     <fieldset disabled={busy||retryApply}><legend>Phương pháp và phạm vi</legend><div className="form-grid"><div className="field"><label htmlFor="processing-method">Phương pháp</label><select id="processing-method" value={method} onChange={event=>selectMethod(event.target.value as ProcessingMethod)}>{methodGroups[group].map(key=><option key={key} value={key}>{key} · {labels[key as ProcessingMethod]}</option>)}</select></div><div className="field"><label htmlFor="processing-scope">Phạm vi</label><select id="processing-scope" value={scopeType} onChange={event=>setScopeType(event.target.value as Scope['type'])}>{allowedScopes(method).map(type=><option key={type} value={type}>{type==='cell'?'Ô đang chọn':type==='columns'?'Các cột chọn':'Toàn dataset'}</option>)}</select></div></div>
     {scopeType==='columns'&&<div className="field"><label htmlFor="processing-columns">Các cột xử lý</label><select id="processing-columns" multiple value={columnIds} onChange={event=>setColumnIds(Array.from(event.target.selectedOptions,item=>item.value))}>{columns.map(column=><option key={column.columnId} value={column.columnId}>{column.name}</option>)}</select><small>Ctrl/Cmd để chọn nhiều cột; ordinal chỉ một cột.</small></div>}
     {scopeType==='cell'&&<p>{selectedCell?`Ô được chọn: dòng ${selectedCell.rowId}, cột ${columns.find(column=>column.columnId===selectedCell.columnId)?.name??selectedCell.columnId}`:'Chọn một ô ở bảng trước.'}</p>}

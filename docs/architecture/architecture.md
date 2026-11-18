@@ -42,3 +42,9 @@ Mỗi collection có một nơi sở hữu ghi. Định nghĩa persistence tập
 1. Chạy gate kiểm thử trong báo cáo remediation trên commit bàn giao.
 2. Hoàn thiện các màn hình chuyên sâu frontend và kiểm thử browser đa nền tảng.
 3. Kiểm chứng môi trường triển khai HTTPS/MongoDB test, benchmark tải thực và giám sát.
+
+## Gợi ý AI local — 18/11/2026
+
+Bổ sung AiModule trong modular monolith: ownership → đọc snapshot published → tính thống kê/tạo ứng viên → Ollama Qwen3 4B loopback → validate/dry-run → response gắn version. ProcessingPanel đặt gợi ý trước form, tự rà soát toàn bộ cột theo tab, không nhận lựa chọn cột/phương pháp; chia lượt để xét hết ứng viên, nối vào Preview/Apply hiện có. Không collection/migration/ERD mới, không tự thay đổi dữ liệu. Xem [thiết kế, sơ đồ, cấu hình và giới hạn](local-ai.md).
+
+Phân phối mã nguồn chưa phân phối runtime/model: từng máy Windows dùng script thiết lập riêng; server chung đặt Ollama ở môi trường backend để người dùng trình duyệt không cần cài AI. Docker Compose với Ollama tách container chưa được đóng gói/nghiệm thu và cần mở rộng validator loopback có kiểm soát. Volume model là tài nguyên triển khai, không phải collection mới trong ERD. Xem [trạng thái hiện có, thiết kế triển khai và tiêu chí bàn giao](local-ai-deployment.md).

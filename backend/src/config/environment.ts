@@ -1,4 +1,11 @@
 export function validateEnvironment(env: Record<string, unknown>) {
+  if (env.AI_ENABLED !== undefined && !['true', 'false'].includes(String(env.AI_ENABLED))) throw new Error('AI_ENABLED must be true or false');
+  if (env.AI_OLLAMA_URL !== undefined) {
+    const url = new URL(String(env.AI_OLLAMA_URL));
+    if (url.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) || url.username || url.password || url.search || url.hash || url.pathname !== '/') throw new Error('AI_OLLAMA_URL must be a loopback HTTP origin');
+  }
+  if (env.AI_MODEL !== undefined && env.AI_MODEL !== 'qwen3:4b') throw new Error('AI_MODEL must be qwen3:4b for this integration');
+  if (env.AI_TIMEOUT_MS !== undefined && (!Number.isSafeInteger(Number(env.AI_TIMEOUT_MS)) || Number(env.AI_TIMEOUT_MS) < 1000 || Number(env.AI_TIMEOUT_MS) > 180000)) throw new Error('AI_TIMEOUT_MS must be 1000..180000');
   const port = Number(env.PORT ?? 3000);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT must be 1..65535');
   const enabled = String(env.DATABASE_ENABLED ?? 'false');

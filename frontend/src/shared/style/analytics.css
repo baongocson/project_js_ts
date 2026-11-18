@@ -42,3 +42,8 @@
 @media (forced-colors: active) {
   .stat-grid > div, .row-inspector, .preview-stage { border-color: CanvasText; }
 }
+.ai-suggestions { margin-block: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; overflow-wrap: anywhere; }
+.ai-suggestion-list { display: grid; gap: 16px; list-style: none; padding: 0; }
+.ai-suggestion-list > li { padding-block: 12px; border-top: 1px solid var(--border); }
+.ai-suggestion-list h4 { margin-block: 0 8px; }
+.ai-suggestions .button { max-width: 100%; white-space: normal; }

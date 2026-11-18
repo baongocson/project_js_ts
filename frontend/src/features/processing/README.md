@@ -29,3 +29,7 @@ Chạy frontend unit và browser design-system theo shared/style README. Browser
 React, data-core hiện hữu, shared/ui và các adapter đã có. Không thêm dependency hoặc sửa core.
 ## 10. Giới hạn và lưu ý
 Skin không chứng minh toàn bộ methods hoặc server API. Bảng cuộn trong vùng có focus, header sticky; trên mobile phải kiểm tràn với cột dài. Không thay thuật toán outlier/missing/normalization.
+
+## AI local — 18/11/2026
+
+Online adapter cung cấp suggestions(group,signal,batch), không gửi lựa chọn form. AiSuggestionsPanel nằm trước form, tự gọi tiếp nextBatch để xét toàn bộ ứng viên trên tất cả cột; hiển thị tiến độ và kết quả chưa hoàn tất nếu lỗi/dừng giữa chừng; chỉ hủy/bỏ khi đổi tab/version, hiển thị evidence/caution và nút Xem trước gợi ý. Gợi ý kiểm lại method/scope/parameters, nạp form và gọi Preview; không gọi Apply. Apply vẫn dùng receipt/idempotency hiện có. Local adapter chưa có suggestions nên hiển thị giới hạn và giữ xử lý thủ công. [Thiết kế](../../../../docs/architecture/local-ai.md).
