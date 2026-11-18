@@ -16,18 +16,6 @@ export default defineConfig({
       this.emitFile({type:'asset',fileName:'offline-worker.js',source:worker.replace("const CACHE='dashboard3d-shell-v2';",`const CACHE='dashboard3d-shell-${version}';`)});
     },
   }],
-  build: {
-    // vendor-three (~940 kB) is lazy-loaded and inherently large; app chunks stay well below this.
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        // Keep the 3D libraries in their own long-lived chunk so app changes do not re-download them.
-        manualChunks(id) {
-          if (/[\\/]node_modules[\\/](three|@react-three)[\\/]/.test(id)) return 'vendor-three';
-        },
-      },
-    },
-  },
   server: { host: '127.0.0.1', port: 5173, strictPort: true, proxy },
   preview: { host: '127.0.0.1', strictPort: true, proxy },
 });

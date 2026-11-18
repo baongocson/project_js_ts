@@ -1,6 +1,6 @@
 # Feature auth
 
-AuthPage cung cấp register/login với field errors, loading và chống submit lặp. ProfilePage GET/PATCH name/theme, logout/delete có xác nhận, kiểm dữ liệu local/pending và bản nháp workspace trước khi dọn dữ liệu. Backend nghiệp vụ chạy khi DB bật; chế độ DB-disabled 501 là gate hạ tầng riêng.
+AuthPage cung cấp register/login với field errors, loading và chống submit lặp. ProfilePage đọc hồ sơ và PATCH tên hiển thị; theme được lưu riêng qua ThemeSwitcher trên header để lưu tên không ghi đè lựa chọn giao diện mới. Logout/delete có xác nhận, kiểm dữ liệu local/pending và bản nháp workspace trước khi dọn dữ liệu. Backend nghiệp vụ chạy khi DB bật; chế độ DB-disabled 501 là gate hạ tầng riêng.
 
 Session external store giữ access token trong bộ nhớ, bootstrap refresh/me, single-flight refresh, logout/generation fence và coordination qua BroadcastChannel/Web Locks. Cookie refresh HttpOnly/Secure do server cấp; không ghi token vào localStorage/IndexedDB/service-worker cache. LocalStorage chỉ giữ lựa chọn giao diện, dấu signout và bản nháp workspace không chứa token.
 
