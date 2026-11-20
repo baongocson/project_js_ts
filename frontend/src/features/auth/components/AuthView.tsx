@@ -22,7 +22,7 @@ return <main className="auth-layout"><div className="auth-card"><span className=
           error={fields.confirmation} required disabled={busy} onChange={event => setConfirmation(event.target.value)} />}
         <label className="check"><input type="checkbox" checked={visible} onChange={event => setVisible(event.target.checked)} /> Hiện mật khẩu</label>
         {error && <Feedback error>{error}</Feedback>}
-        <Button type="submit" disabled={busy}>{busy ? 'Đang xử lý…' : register ? 'Đăng ký' : 'Đăng nhập'}</Button>
+        <Button type="submit" className="auth-submit" disabled={busy} aria-busy={busy}>{busy && <span className="auth-loading-ring" aria-hidden="true"/>}{busy ? 'Đang xử lý…' : register ? 'Đăng ký' : 'Đăng nhập'}</Button>
       </form>}
     <p><Link to={register ? '/login' : '/register'}>{register ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký'}</Link></p>
     <Link to="/local/projects">Làm việc trên máy</Link>

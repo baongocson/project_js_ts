@@ -163,3 +163,13 @@
 .auth-globe-controls .button { min-width: 34px; min-height: 34px; padding: 3px 8px; font-size: .8rem; }
 
 .auth-globe[data-ready="false"] .auth-globe-canvas { visibility: hidden; }
+
+.auth-submit { display: inline-flex; align-items: center; gap: .55rem; }
+.auth-loading-ring {
+  width: 1em; height: 1em; border: 2px solid currentColor;
+  border-inline-end-color: transparent; border-radius: 50%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .auth-loading-ring { animation: auth-submit-spin 650ms linear infinite; }
+}
+@keyframes auth-submit-spin { to { transform: rotate(360deg); } }

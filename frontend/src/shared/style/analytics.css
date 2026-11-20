@@ -233,3 +233,12 @@
 
 .analysis-chart-options select { display: block; }
 .analysis-chart-card:focus-within { border-color: var(--control-border); }
+
+.dashboard-hero {
+  background-image: radial-gradient(ellipse at 95% 0%, var(--spot-far), transparent 60%);
+}
+.neon-bars li { transition: opacity var(--motion-fast) var(--ease-out); }
+.neon-bars:has(.chart-target:is(:hover,:focus-visible)) li:not(:has(.chart-target:is(:hover,:focus-visible))) { opacity: .65; }
+.neon-bars .chart-target:is(:hover,:focus-visible) .neon-bar-track i {
+  box-shadow: 0 0 12px var(--glow-color);
+}

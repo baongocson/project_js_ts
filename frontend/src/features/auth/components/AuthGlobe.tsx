@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { BufferGeometry, Float32BufferAttribute, Vector3, type PointLight, type Points, type PointsMaterial } from 'three';
+import { BufferGeometry, Float32BufferAttribute, Vector3, type Mesh, type PointLight, type Points, type PointsMaterial } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { useMediaQuery } from '../../../shared/ui/useMediaQuery';
 
@@ -77,8 +77,9 @@ function Network({ light, motion, hovered }: { light: boolean; motion: boolean; 
   const spark = useRef<Points>(null);
   const ambient = useRef<Points>(null);
   const rim = useRef<PointLight>(null);
+  const rings = useRef<(Mesh | null)[]>([]);
   const nodeMaterials = useRef<(PointsMaterial | null)[]>([]);
-  const colors = light ? ['#e5b958', '#516b9a', '#aa7622'] : ['#70f4ff', '#496dff', '#ae62ff'];
+  const colors = light ? ['#e5b958', '#516b9a', '#aa7622'] : ['#70f4ff', '#427cff', '#ae62ff'];
   const geometry = useMemo(() => {
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new Float32BufferAttribute(pulses.flatMap(([a]) => a.toArray()), 3));
@@ -88,6 +89,12 @@ function Network({ light, motion, hovered }: { light: boolean; motion: boolean; 
   useFrame(({ clock }, delta) => {
     if (!motion) return;
     const time = clock.elapsedTime;
+    rings.current.forEach((ring, index) => {
+      if (!ring) return;
+      const direction = index === 1 ? -1 : 1;
+      ring.rotation.y += Math.min(delta, .05) * (.08 + index * .04) * direction;
+      ring.rotation.x += Math.min(delta, .05) * (.03 + index * .03) * -direction;
+    });
     const positions = geometry.getAttribute('position');
     pulses.forEach(([a, b], index) => {
       const t = (time * (.26 + index % 4 * .06) + index * .38) % 1;
@@ -122,7 +129,7 @@ function Network({ light, motion, hovered }: { light: boolean; motion: boolean; 
       <bufferGeometry><bufferAttribute attach="attributes-position" args={[stars, 3]} /></bufferGeometry>
       <pointsMaterial color={colors[2]} size={.027} transparent opacity={.55} />
     </points>
-    {[.85, 1.47, -.55].map((angle, index) => <mesh key={angle} rotation={[angle, index * .45, .25]}>
+    {[.85, 1.47, -.55].map((angle, index) => <mesh key={angle} ref={mesh => { rings.current[index] = mesh; }} rotation={[angle, index * .45, .25]}>
       <torusGeometry args={[1.92 + .17 * index, .008, 6, 96]} />
       <meshBasicMaterial color={colors[index]} transparent opacity={.58} />
     </mesh>)}

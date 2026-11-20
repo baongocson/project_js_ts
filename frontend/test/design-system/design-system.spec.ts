@@ -1,6 +1,16 @@
 import { test, expect } from '@playwright/test';
 import { PerspectiveCamera, Vector3 } from 'three';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function readProjectName(body: string | null) {
+  const value: unknown = JSON.parse(body ?? 'null');
+  if (!isRecord(value) || typeof value.name !== 'string') throw new Error('Expected a project name');
+  return value.name;
+}
+
 const fixture = '/test/design-system/fixture.html';
 for (const theme of ['light', 'dark'] as const) {
   test(`${theme}: controls, contrast, focus, dialog and responsive surfaces`, async ({ page }) => {
@@ -180,15 +190,18 @@ test('WebGL initializes, camera controls work, and context restoration preserves
   await expect(scene).toHaveAttribute('data-ready','true',{timeout:20000});
   await page.getByRole('button',{name:'Xoay phải',exact:true}).click();
   await page.getByRole('button',{name:'Đặt lại góc nhìn',exact:true}).click();
+  await expect(scene.locator('canvas')).toHaveAttribute('data-camera-motion', 'idle');
+  await expect(scene.locator('canvas')).toHaveAttribute('data-point-motion', 'idle');
   const box=await scene.locator('canvas').boundingBox();
-  expect(box).not.toBeNull();
-  const camera=new PerspectiveCamera(44,box!.width/box!.height,.1,1000);
+  if (!box) throw new Error('Scatter canvas is not visible');
+  const camera=new PerspectiveCamera(44, box.width / box.height, .1, 1000);
   camera.position.set(Math.sin(Math.PI/4)*17,17*.65,Math.cos(Math.PI/4)*17);camera.lookAt(0,0,0);camera.updateMatrixWorld();
-  camera.setViewOffset(box!.width, box!.height, 0, box!.height * .05, box!.width, box!.height);
+  camera.setViewOffset(box.width, box.height, 0, box.height * .05, box.width, box.height);
   const projected=new Vector3(-4,0,4).project(camera);
-  await page.mouse.move(box!.x+(projected.x+1)*box!.width/2,box!.y+(1-projected.y)*box!.height/2);
+  const pointer = { x: box.x + (projected.x + 1) * box.width / 2, y: box.y + (1 - projected.y) * box.height / 2 };
+  await page.mouse.move(pointer.x, pointer.y);
   await expect(scene).not.toHaveAttribute('data-active-row','');
-  await page.mouse.click(box!.x+(projected.x+1)*box!.width/2,box!.y+(1-projected.y)*box!.height/2);
+  await page.mouse.click(pointer.x, pointer.y);
   await expect(page.getByLabel('Dòng đã chọn')).not.toHaveText('Chưa chọn');
   await expect(scene.locator('.scene-tooltip')).toContainText('Đã ghim');
   await page.getByRole('checkbox',{name:'Chiếu điểm xuống mặt phẳng'}).check();
@@ -197,7 +210,8 @@ test('WebGL initializes, camera controls work, and context restoration preserves
   await expect(page.getByLabel('Chú giải màu điểm')).toContainText('-50 → 50');
   await page.screenshot({path:test.info().outputPath('webgl-dark.png'),fullPage:true});
   const supported=await scene.locator('canvas').evaluate(element=>{
-    const gl=(element as HTMLCanvasElement).getContext('webgl2'); const ext=gl?.getExtension('WEBGL_lose_context');
+    if (!(element instanceof HTMLCanvasElement)) return false;
+    const gl=element.getContext('webgl2'); const ext=gl?.getExtension('WEBGL_lose_context');
     if(!ext)return false; ext.loseContext(); setTimeout(()=>ext.restoreContext(),1000); return true;
   });
   expect(supported).toBe(true);
@@ -210,7 +224,7 @@ test('WebGL initializes, camera controls work, and context restoration preserves
 test('unavailable WebGL is contained and SVG remains keyboard accessible', async ({ page }) => {
   await page.addInitScript(()=>{
     const original=HTMLCanvasElement.prototype.getContext;
-    Object.defineProperty(HTMLCanvasElement.prototype,'getContext',{value:function(this:HTMLCanvasElement,type:string,...args:unknown[]){return type.startsWith('webgl')?null:Reflect.apply(original,this,[type,...args]);}});
+    Object.defineProperty(HTMLCanvasElement.prototype,'getContext',{value:function(this:HTMLCanvasElement,type:string,options?:CanvasRenderingContext2DSettings){return type.startsWith('webgl')?null:original.call(this,type,options);}});
   });
   await page.goto('/test/design-system/visualization.html?count=100');
   await expect(page.getByRole('heading',{name:/Fixture visualization/})).toBeVisible();
@@ -227,7 +241,13 @@ for(const [count,width] of [[100,375],[1000,768],[4000,1366],[10000,1920]]) {
     await page.goto(`/test/design-system/visualization.html?count=${count}`);
     await page.locator('html').evaluate(element=>{element.dataset.theme='dark';});
     await expect(page.getByTestId('webgl-scene')).toHaveAttribute('data-ready','true',{timeout:20000});
+    const canvas = page.getByTestId('webgl-scene').locator('canvas');
+    await expect(canvas).toHaveAttribute('data-point-motion', 'idle');
+    await page.getByRole('button',{name:'Đổi phép chiếu X/Z',exact:true}).click();
+    await expect(page.locator('.scene-x')).toHaveText('X · z');
+    await expect(canvas).toHaveAttribute('data-point-motion', 'idle');
     await page.getByRole('button',{name:'Xoay phải',exact:true}).click();
+    await expect(canvas).toHaveAttribute('data-camera-motion', 'idle');
     await page.getByRole('button',{name:'Dùng hình chiếu tương thích',exact:true}).click();
     await expect(page.locator('circle[data-point]')).toHaveCount(count);
     await page.getByRole('button',{name:'Đặt lại góc nhìn',exact:true}).click();
@@ -256,16 +276,16 @@ test('project CRUD and account theme controls keep their existing frontend API c
     const json=(data:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
     if(path.endsWith('/auth/refresh'))return json({accessToken:'fixture-only-token',expiresIn:3600});
     if(path.endsWith('/users/me')){
-      if(method==='PATCH'){const patch=request.postDataJSON() as {preferences:{theme:string}};user={...user,preferences:patch.preferences};}
+      if(method==='PATCH'){const raw: unknown = request.postDataJSON();if (!isRecord(raw) || !isRecord(raw.preferences) || typeof raw.preferences.theme !== 'string') return json({},400);user={...user,preferences:{theme:raw.preferences.theme}};}
       return json(user);
     }
     if(path.endsWith('/projects')){
-      if(method==='POST'){project={...project,name:(request.postDataJSON() as {name:string}).name};exists=true;createdKey=request.headers()['idempotency-key'];return json({project},201);}
+      if(method==='POST'){project={...project,name:readProjectName(request.postData())};exists=true;createdKey=request.headers()['idempotency-key'];return json({project},201);}
       return json({items:exists?[project]:[],page:1,limit:12,total:exists?1:0});
     }
     if(path.endsWith('/projects/ui-project')){
       if(method==='DELETE'){exists=false;return route.fulfill({status:204});}
-      if(method==='PATCH'){project={...project,name:(request.postDataJSON() as {name:string}).name};return json(project);}
+      if(method==='PATCH'){project={...project,name:readProjectName(request.postData())};return json(project);}
       return json({project,workspace,dataset:null,workspaceAdjusted:false,adjustments:[]});
     }
     return json({error:{code:'UNEXPECTED_TEST_REQUEST',message:path}},404);
@@ -294,9 +314,11 @@ test('auth scene and spotlight follow theme, pointer and reduced motion without 
   await page.route('**/api/v1/**', route => route.fulfill({ status: 401, json: {} }));
   await page.addInitScript(() => {
     const getContext = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...args: unknown[]) {
-      return kind.startsWith('webgl') ? null : Reflect.apply(getContext, this, [kind, ...args]);
-    } as typeof getContext;
+    Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+      value(this: HTMLCanvasElement, kind: string, options?: CanvasRenderingContext2DSettings) {
+        return kind.startsWith('webgl') ? null : getContext.call(this, kind, options);
+      },
+    });
   });
   await page.goto('/login');
   const scene = page.locator('.auth-scene');
@@ -327,4 +349,32 @@ test('auth scene and spotlight follow theme, pointer and reduced motion without 
   await expect(scene).toBeHidden();
   await expect(page.getByRole('link', { name: 'Làm việc trên máy' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('Scatter settles axis motion and does not restart it on presentation changes', async ({ page }) => {
+  await page.goto('/test/design-system/visualization.html?count=1000');
+  const canvas = page.getByTestId('webgl-scene').locator('canvas');
+  await expect(canvas).toHaveAttribute('data-point-motion', 'idle');
+  const observed = await canvas.evaluate(async element => {
+    const states: string[] = [];
+    const observer = new MutationObserver(() => states.push(element.getAttribute('data-point-motion') ?? ''));
+    observer.observe(element, { attributes: true, attributeFilter: ['data-point-motion'] });
+    const toggle = [...document.querySelectorAll('button')].find(button => button.textContent === 'Đổi phép chiếu X/Z');
+    if (!toggle) throw new Error('Missing projection toggle');
+    toggle.click();
+    await new Promise(resolve => setTimeout(resolve, 650));
+    observer.disconnect();
+    return states;
+  });
+  expect(observed).toContain('running');
+  expect(observed.at(-1)).toBe('idle');
+  await page.getByLabel('Màu điểm kiểm thử').selectOption('missing');
+  await expect(canvas).toHaveAttribute('data-point-motion', 'idle');
+  await page.getByRole('button', { name: 'Xoay phải', exact: true }).click();
+  await expect(canvas).toHaveAttribute('data-camera-motion', 'idle');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.getByRole('button', { name: 'Đổi phép chiếu X/Z' }).click();
+  await expect(canvas).toHaveAttribute('data-point-motion', 'idle');
+  await page.getByRole('button', { name: 'Đặt lại góc nhìn' }).click();
+  await expect(canvas).toHaveAttribute('data-camera-motion', 'idle');
 });
