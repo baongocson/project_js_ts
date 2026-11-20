@@ -10,7 +10,7 @@ import { AnalysisPage } from '../../features/analysis';
 import { Button, Feedback, WorkspaceLayout } from '../../shared/ui';
 export function WorkspaceView(model:WorkspaceModel){
   const {projectId,drafts,draftProblem,detail,metadata,rows,error,loading,saveStatus,cellDetail,setCellDetail,readGeneration,navigationLocked,setNavigationLocked,rowEditingLocked,setRowEditingLocked,setPickedRow,pickedRowId,load,dataset,version,datasetId,processor,analysis,selectedValue,save,removeDraft,recoverDraft,exportDraft,selected}=model;
-if(loading)return <main><p role="status">Đang mở workspace…</p></main>;
+if(loading)return <main><div className="loading-panel" role="status">Đang mở workspace…<span className="skeleton-line" aria-hidden="true"/></div></main>;
 if(!detail)return <main><h1>Không mở được project</h1><Feedback error>{error}</Feedback><Link to="/projects">Về projects</Link></main>;
 return <main className="workspace"><div className="page-heading"><div><Link to="/projects">← Projects</Link><h1>{detail.project.name}</h1><p className="muted">{dataset?`Phiên bản ${metadata?.version.versionNumber??'…'} · ${metadata?.version.rowCount??'…'} dòng · ${metadata?.columns.length??'…'} cột`:'Project chưa có dataset'}</p></div><div className="save-state" role="status">{saveStatus}</div></div>
     {error&&<Feedback error>{error}</Feedback>}{(saveStatus.startsWith('Xung đột')||saveStatus.startsWith('Chưa lưu'))&&<Button onClick={()=>void load()}>Tải lại workspace</Button>}

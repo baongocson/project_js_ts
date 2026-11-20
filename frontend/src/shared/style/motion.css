@@ -1,0 +1,165 @@
+/* Highlight layers are backgrounds so text and focus rings stay unobstructed. */
+:where(button:not(.cell-button), a.button) {
+  --shine: linear-gradient(105deg, transparent 42%, #ffffff35 50%, transparent 58%);
+}
+:is(button:not(.cell-button), a.button):not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):active {
+  transform: scale(.98);
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :is(button:not(.cell-button), a.button):not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):not([aria-busy="true"] *):hover {
+    background-image: var(--shine);
+    background-size: 260% 100%;
+    background-repeat: no-repeat;
+    animation: button-sweep var(--motion-slow) var(--ease-out) both;
+    box-shadow: 0 3px 16px var(--glow-color);
+  }
+}
+@keyframes button-sweep {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+:where(.project-card, .panel, main section):focus-within { border-color: var(--control-border); }
+@keyframes surface-enter {
+  from { opacity: .65; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  dialog[open], .shell-sidebar nav.is-expanded, .analysis-settings[open] > fieldset {
+    animation: surface-enter var(--motion-normal) var(--ease-out) both;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(button:not(.cell-button), a.button):active { transform: none !important; }
+}
+
+.analytics-shell { isolation: isolate; grid-template-rows: auto 1fr; }
+.pointer-spotlight {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: min(1100px, 115vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle, var(--spot-near), var(--spot-far) 34%, transparent 68%);
+  transform: translate3d(var(--spot-x, 50vw), var(--spot-y, 35vh), 0) translate(-50%, -50%);
+  transition: opacity var(--motion-normal) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .pointer-spotlight[data-pointer-lit] { opacity: 1; }
+}
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+  min-height: min(680px, 75dvh);
+}
+.auth-layout .auth-card { width: 100%; max-width: 540px; margin: 0 auto; }
+.auth-scene {
+  container-type: inline-size;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  pointer-events: none;
+  aspect-ratio: 1;
+  border-radius: var(--radius-card);
+  background:
+    radial-gradient(circle at 16% 24%, var(--sphere-rim) 0 1px, transparent 2px),
+    radial-gradient(circle at 81% 29%, var(--primary) 0 1px, transparent 2px),
+    radial-gradient(circle at 22% 72%, var(--primary) 0 1px, transparent 2px),
+    radial-gradient(circle at 75% 77%, var(--sphere-rim) 0 1px, transparent 2px),
+    radial-gradient(circle at 50% 53%, var(--spot-near), transparent 68%);
+}
+.auth-scene-depth {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(var(--parallax-x, 0px), var(--parallax-y, 0px), 0);
+  transition: transform var(--motion-normal) var(--ease-out);
+}
+.planet {
+  --diameter: 44cqi;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--diameter);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background:
+    radial-gradient(ellipse at 30% 23%, var(--sphere-light), transparent 38%),
+    radial-gradient(circle at 32% 24%, var(--sphere-mid) 12%, var(--sphere-dark) 66%, var(--sphere-rim) 100%);
+  box-shadow: inset -7px -11px 28px #080d275e, inset 0 0 2px 1px var(--sphere-rim), 0 16px 44px var(--glow-color);
+}
+.planet-main::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: .45;
+  background: repeating-linear-gradient(142deg, transparent 0 12%, var(--spot-far) 15%, transparent 20% 25%);
+  mix-blend-mode: screen;
+}
+.orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 87%;
+  height: 32%;
+  translate: -50% -50%;
+  rotate: -27deg;
+  border: 1px solid color-mix(in srgb, var(--sphere-rim), transparent 42%);
+  border-radius: 50%;
+}
+.orbit-inner { width: 67%; height: 25%; rotate: 25deg; opacity: .65; }
+.orbit-front { clip-path: inset(50% 0 0); }
+.moon-path {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-27deg);
+}
+.planet-moon { --diameter: 12cqi; left: 84%; top: 50%; }
+@supports (offset-path: ellipse(34% 15% at 50% 50%)) {
+  .planet-moon {
+    left: 0;
+    top: 0;
+    translate: none;
+    offset-path: ellipse(34% 15% at 50% 50%);
+    offset-rotate: 0deg;
+  }
+}
+.planet-distant { --diameter: 7cqi; left: 25%; top: 21%; opacity: .78; }
+@media (prefers-reduced-motion: no-preference) and (min-width: 1000px) and (pointer: fine) {
+  .planet-main { animation: planet-drift var(--motion-ambient) var(--ease-out) infinite alternate; }
+  .planet-moon { animation: moon-orbit 16s linear infinite; }
+  .planet-distant { animation: planet-drift 9s var(--ease-out) infinite alternate-reverse; }
+}
+@keyframes planet-drift { to { transform: translateY(-9px) rotate(9deg); } }
+@keyframes moon-orbit {
+  to { offset-distance: 100%; }
+}
+@media (max-width: 999px) {
+  .auth-layout { grid-template-columns: minmax(0, 1fr); min-height: auto; }
+  .auth-scene { display: none; }
+}
+@media (forced-colors: active) {
+  .auth-scene, .pointer-spotlight { display: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loading-panel > .skeleton-line { animation: skeleton-pulse 2s ease-in-out 3 alternate; }
+  .notice[role="alert"], .notice[role="status"] { animation: surface-enter var(--motion-fast) var(--ease-out); }
+}
+@keyframes skeleton-pulse { from { opacity: .6; } to { opacity: 1; } }
+
+.auth-scene:has(.auth-globe[data-ready="true"]) .auth-scene-depth { visibility: hidden; }
+.auth-globe { position: absolute; inset: 0; }
+.auth-globe[data-ready="true"] { pointer-events: auto; }
+.auth-globe-canvas { position: absolute; inset: 0 0 42px; touch-action: none; cursor: grab; }
+.auth-globe-canvas:active { cursor: grabbing; }
+.auth-globe-controls { position: absolute; bottom: 2px; inset-inline: 0; display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.auth-globe-controls .button { min-width: 34px; min-height: 34px; padding: 3px 8px; font-size: .8rem; }
+
+.auth-globe[data-ready="false"] .auth-globe-canvas { visibility: hidden; }

@@ -2,13 +2,12 @@
 body {
   font-family: var(--font-ui); -webkit-font-smoothing: antialiased;
   background-color: var(--bg);
-  background-image: radial-gradient(ellipse at 0% 0%, var(--ambient-purple), transparent 55%), radial-gradient(ellipse at 100% 25%, var(--ambient-cyan), transparent 50%), linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-image: radial-gradient(ellipse at 0% 0%, var(--ambient-start), transparent 55%), radial-gradient(ellipse at 100% 25%, var(--ambient-end), transparent 50%), linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 100% 900px, 100% 1100px, 48px 48px, 48px 48px;
   background-repeat: no-repeat, no-repeat, repeat, repeat;
 }
 :where(h1, h2, h3) { letter-spacing: -.025em; text-wrap: balance; }
-:where(main, .app-header) a { transition: color var(--motion-fast) ease; }
-:where(main, .app-header) a:hover { color: var(--accent); }
+:where(main, .app-header) a:not(.button):hover { color: var(--accent); }
 .eyebrow { letter-spacing: .12em; }
 @supports (background-clip: text) {
   .page-heading h1, .auth-card h1 { background: var(--gradient-heading); background-clip: text; color: transparent; }
@@ -17,10 +16,10 @@ body {
 /* Explicit app surfaces: no blanket styling of every div or nested semantic element. */
 :is(main, .workspace-layout, .local-workspace) section,
 .panel, .auth-card, .project-card, .preview-stage {
-  background: linear-gradient(var(--glass), var(--glass)) padding-box, var(--neon-border) border-box;
-  border: 1px solid transparent;
+  background: var(--glass);
+  border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-sm), 0 0 var(--glow-radius) var(--glow-color);
+  box-shadow: var(--shadow-sm);
 }
 .summary-chart, .row-inspector, :where(main, dialog) fieldset {
   border-color: var(--border);
@@ -35,9 +34,9 @@ body {
 }
 .app-header { background: var(--surface); }
 @supports (backdrop-filter: blur(8px)) {
-  .app-header { background: var(--glass); backdrop-filter: blur(8px); }
+  #content .dashboard-hero, .app-header, .auth-card, dialog { background-color: var(--glass); backdrop-filter: blur(var(--glass-blur)); }
 }
-.brand-mark { background: var(--gradient-brand); box-shadow: 0 4px 12px #3b82f624; }
+.brand-mark { background: var(--gradient-brand); box-shadow: 0 4px 12px var(--glow-color); }
 .connection-bar { background: var(--surface-elevated); }
 .badge { background: var(--accent-soft); color: var(--accent); border-radius: var(--radius-pill); }
 .badge.ready { color: var(--success); background: var(--success-tint); }
@@ -109,7 +108,7 @@ body {
 .section-tabs { background: var(--surface); border-color: var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-sm); }
 .section-tabs button:not(.button) { border: 1px solid transparent; transition: background-color var(--motion-fast) ease, color var(--motion-fast) ease; }
 .section-tabs button:not(.button):not(:disabled):hover { background: var(--tint); color: var(--text); }
-.section-tabs button[aria-current="page"]:not(.button) { background: var(--button-bg); color: var(--button-text); border-color: var(--button-bg); box-shadow: 0 2px 8px #3b82f61a; }
+.section-tabs button[aria-current="page"]:not(.button) { background: var(--button-bg); color: var(--button-text); border-color: var(--button-bg); box-shadow: 0 2px 8px var(--glow-color); }
 .section-tabs button:not(.button):disabled { opacity: 1; color: var(--disabled-text); cursor: not-allowed; }
 .toolbar { border-radius: var(--radius-lg); }
 .toolbar :is(input, select) { min-height: 44px; }
@@ -121,7 +120,7 @@ body {
 .cell-missing { background: var(--tint); color: var(--muted); }
 .filter-list li { border-color: var(--border); border-radius: var(--radius-control); }
 .missing-bar-track > span { background: var(--warning); }
-dialog { background: var(--surface-elevated); border-color: var(--control-border); border-radius: var(--radius-card); box-shadow: var(--shadow-dialog); }
+dialog { background: var(--glass); border-color: var(--control-border); border-radius: var(--radius-card); box-shadow: var(--shadow-dialog); }
 dialog::backdrop { background: var(--backdrop); }
 progress { accent-color: var(--primary); }
 .scene-tooltip { border-radius: var(--radius-control); }
@@ -140,3 +139,27 @@ progress { accent-color: var(--primary); }
   .button:disabled { border-color: GrayText; color: GrayText; }
   .data-table td.selected { outline: 2px solid Highlight; }
 }
+
+.dashboard-hero {
+  padding: clamp(24px, 5vw, 64px);
+  background-image: linear-gradient(120deg, transparent 32%, var(--spot-far));
+  box-shadow: var(--shadow-md);
+}
+.dashboard-hero h1 { max-width: 17ch; font-size: clamp(2rem, 5vw, 3.75rem); }
+.dashboard-overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: var(--space-4); }
+.dashboard-workflow { margin-block: 0; padding-inline-start: var(--space-5); }
+.dashboard-workflow li + li { margin-top: var(--space-2); }
+.dashboard-workflow li::marker { color: var(--accent); font-weight: 750; }
+.loading-panel { border: 1px solid var(--border); background: var(--glass); border-radius: var(--radius-lg); padding: var(--space-4); color: var(--muted); }
+.skeleton-line { display: block; height: 8px; width: min(210px, 60%); margin-top: var(--space-3); background: var(--accent-soft); border-radius: var(--radius-pill); }
+@media (prefers-reduced-motion: no-preference) {
+  :is(.dashboard-overview-grid > section, .project-grid > .project-card, .stat-grid > div):nth-child(-n+5) {
+    animation: surface-enter var(--motion-normal) var(--ease-out) backwards;
+  }
+  :is(.dashboard-overview-grid > section, .project-grid > .project-card, .stat-grid > div):nth-child(2) { animation-delay: 35ms; }
+  :is(.project-grid > .project-card, .stat-grid > div):nth-child(3) { animation-delay: 70ms; }
+  :is(.project-grid > .project-card, .stat-grid > div):nth-child(4) { animation-delay: 105ms; }
+  :is(.project-grid > .project-card, .stat-grid > div):nth-child(5) { animation-delay: 140ms; }
+}
+
+.sync-panel progress { width: min(100%, 32rem); height: 12px; }

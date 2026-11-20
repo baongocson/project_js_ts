@@ -25,7 +25,7 @@ export function Scatter3D(props: ScatterProps) {
     <div className="toolbar"><label htmlFor={colorId}>Màu hiển thị</label><select id={colorId} value={axis} onChange={event => setAxis(event.target.value as NumericAxis)}><option value="none">Theo chế độ màu điểm</option>{(['x','y','z'] as const).map((value, index) => <option key={value} value={value}>Gradient {value.toUpperCase()} · {props.labels[index]}</option>)}</select><small className="muted">Chỉ đổi hiển thị · không lưu vào workspace hay thay dữ liệu.</small></div>
     <ScatterLegend colors={colors}/>
     {simple ? <ScatterFallback {...props} colors={colors}/> : <SceneBoundary key={simple ? 'svg' : 'webgl'} fallback={fallback}>
-      <Suspense fallback={<p aria-live="polite">Đang chuẩn bị không gian 3D…</p>}><WebGLScatter {...props} colors={colors}/></Suspense>
+      <Suspense fallback={<div className="loading-panel loading-scene" aria-live="polite">Đang chuẩn bị không gian 3D…<span className="skeleton-line" aria-hidden="true"/></div>}><WebGLScatter {...props} colors={colors}/></Suspense>
     </SceneBoundary>}
   </div>;
 }

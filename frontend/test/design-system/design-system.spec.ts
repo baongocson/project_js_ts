@@ -182,8 +182,9 @@ test('WebGL initializes, camera controls work, and context restoration preserves
   await page.getByRole('button',{name:'Đặt lại góc nhìn',exact:true}).click();
   const box=await scene.locator('canvas').boundingBox();
   expect(box).not.toBeNull();
-  const camera=new PerspectiveCamera(45,box!.width/box!.height,.1,1000);
+  const camera=new PerspectiveCamera(44,box!.width/box!.height,.1,1000);
   camera.position.set(Math.sin(Math.PI/4)*17,17*.65,Math.cos(Math.PI/4)*17);camera.lookAt(0,0,0);camera.updateMatrixWorld();
+  camera.setViewOffset(box!.width, box!.height, 0, box!.height * .05, box!.width, box!.height);
   const projected=new Vector3(-4,0,4).project(camera);
   await page.mouse.move(box!.x+(projected.x+1)*box!.width/2,box!.y+(1-projected.y)*box!.height/2);
   await expect(scene).not.toHaveAttribute('data-active-row','');
@@ -285,4 +286,45 @@ test('project CRUD and account theme controls keep their existing frontend API c
   await page.getByLabel('Giao diện',{exact:true}).selectOption('dark');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');expect(user.preferences.theme).toBe('dark');
   await page.goto('/profile');await expect(page.getByRole('heading',{name:'Hồ sơ tài khoản',exact:true})).toBeVisible();
   for(const width of [375,768,1366,1920]){await page.setViewportSize({width,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
+});
+
+test('auth scene and spotlight follow theme, pointer and reduced motion without moving the form', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'no-preference' });
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 401, json: {} }));
+  await page.addInitScript(() => {
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...args: unknown[]) {
+      return kind.startsWith('webgl') ? null : Reflect.apply(getContext, this, [kind, ...args]);
+    } as typeof getContext;
+  });
+  await page.goto('/login');
+  const scene = page.locator('.auth-scene');
+  const planet = scene.locator('.planet-main');
+  const spotlight = page.locator('.pointer-spotlight');
+  const email = page.getByLabel('Email', { exact: true });
+  await expect(scene).toBeVisible();
+  await expect(scene.locator('.auth-scene-depth')).toHaveAttribute('aria-hidden', 'true');
+  await expect(planet).toHaveCSS('animation-name', 'planet-drift');
+  const darkLight = await planet.evaluate(element => getComputedStyle(element).backgroundImage);
+  await page.locator('#content').evaluate(element => Promise.all(element.getAnimations().map(animation => animation.finished)));
+  const formPosition = await email.boundingBox();
+  await page.mouse.move(880, 360);
+  await expect(spotlight).toHaveAttribute('data-pointer-lit', '');
+  await expect(spotlight).toHaveCSS('--spot-x', '880px');
+  await expect(scene.locator('.auth-scene-depth')).not.toHaveCSS('--parallax-x', '');
+  expect(await email.boundingBox()).toEqual(formPosition);
+  await email.fill('guest@example.com');
+  await page.getByLabel('Giao diện', { exact: true }).selectOption('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(planet).not.toHaveCSS('background-image', darkLight);
+  await expect(page.getByRole('link', { name: 'Làm việc trên máy' })).toHaveCSS('color', 'rgb(118, 80, 12)');
+  await page.screenshot({ path: test.info().outputPath('premium-login-light.png'), animations: 'disabled' });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(spotlight).not.toHaveAttribute('data-pointer-lit', '');
+  await expect(planet).toHaveCSS('animation-name', 'none');
+  await page.setViewportSize({ width: 375, height: 800 });
+  await expect(scene).toBeHidden();
+  await expect(page.getByRole('link', { name: 'Làm việc trên máy' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

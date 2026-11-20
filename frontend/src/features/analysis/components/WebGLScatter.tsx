@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { CanvasTexture, Color, type InstancedMesh, Object3D, Vector3 } from 'three';
+import { CanvasTexture, Color, type InstancedMesh, Object3D, PerspectiveCamera, Vector3 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Button } from '../../../shared/ui';
 import type { ScatterPoint, ScatterProps } from '../types';
@@ -9,9 +9,9 @@ import type { ScatterRenderProps, ScatterColors } from '../scatter-colors';
 
 type VisualPoint = { source: ScatterPoint; position: [number, number, number] };
 function TickLabel({text,position,color}:{text:string;position:[number,number,number];color:string}){
-  const texture=useMemo(()=>{const canvas=document.createElement('canvas');canvas.width=512;canvas.height=64;const context=canvas.getContext('2d')!;context.font='26px system-ui';context.textAlign='center';context.fillStyle=color;context.fillText(text,256,42,500);return new CanvasTexture(canvas);},[text,color]);
+  const texture=useMemo(()=>{const canvas=document.createElement('canvas');canvas.width=512;canvas.height=64;const context=canvas.getContext('2d')!;context.font='40px system-ui';context.textAlign='center';context.fillStyle=color;context.fillText(text,256,46,500);return new CanvasTexture(canvas);},[text,color]);
   useEffect(()=>()=>texture.dispose(),[texture]);
-  return <sprite position={position} scale={[2.5,.3125,1]}><spriteMaterial map={texture} transparent depthTest={false} toneMapped={false}/></sprite>;
+  return <sprite position={position} scale={[3.5,.4375,1]}><spriteMaterial map={texture} transparent depthTest={false} toneMapped={false}/></sprite>;
 }
 function CoordinateAxes({model,labels,colors}:{model:ReturnType<typeof scatterModel>;labels:ScatterProps['labels'];colors:ScatterColors}){
   const geometry=useMemo(()=>{
@@ -27,6 +27,7 @@ function CoordinateAxes({model,labels,colors}:{model:ReturnType<typeof scatterMo
 }
 function Camera({ reset, turn, zoom }: { reset: number; turn: number; zoom: number }) {
   const { camera, gl, invalidate } = useThree();
+  const { width, height } = useThree(state => state.size);
   const controls = useRef<OrbitControls | null>(null);
   useEffect(() => {
     const orbit = new OrbitControls(camera, gl.domElement);
@@ -42,6 +43,15 @@ function Camera({ reset, turn, zoom }: { reset: number; turn: number; zoom: numb
     camera.position.set(Math.sin(angle) * radius, radius * .65, Math.cos(angle) * radius);
     controls.current?.target.set(0, 0, 0); controls.current?.update(); invalidate();
   }, [camera, invalidate, reset, turn, zoom]);
+  useEffect(() => {
+    if (!(camera instanceof PerspectiveCamera) || width <= 0 || height <= 0) return;
+    // Fit the narrow axis and balance the grid below the cloud without moving the orbit target.
+    const aspect = width / height;
+    const focalLength = camera.getFilmHeight() * Math.min(1, aspect) / (2 * Math.tan(22 * Math.PI / 180));
+    camera.setFocalLength(focalLength);
+    camera.setViewOffset(width, height, 0, height * .05, width, height);
+    invalidate();
+  }, [camera, height, invalidate, width]);
   return null;
 }
 function PointCloud({ points, selected, colors, onSelect, onHover }: {
@@ -99,7 +109,7 @@ export function WebGLScatter({ points, axes, labels, colors, selected, onSelect 
   return <div className="webgl-scatter">
     <p className="muted">Kéo để xoay · Cuộn để zoom · Rê chuột để xem · Click để ghim và mở dòng. Co giãn trục chỉ phục vụ hiển thị.</p>
     <div className="scene-canvas" role="group" aria-label="Biểu đồ 3D tương tác" data-testid="webgl-scene" data-ready={ready} data-active-row={inspected?.rowId ?? ''}>
-      <Canvas camera={{ position: [12, 11, 13], fov: 45 }} frameloop="demand" dpr={[1, 1.5]} onCreated={({ gl }) => {
+      <Canvas camera={{ position: [12, 11, 13], fov: 44 }} frameloop="demand" dpr={[1, 1.5]} onCreated={({ gl }) => {
         gl.domElement.setAttribute('aria-label', 'Không gian WebGL 3D');
       }} fallback={<p>WebGL không được hỗ trợ. Chọn hình chiếu tương thích phía trên.</p>}>
         <color attach="background" args={[colors.palette.background]}/>

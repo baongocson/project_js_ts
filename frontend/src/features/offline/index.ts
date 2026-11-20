@@ -6,3 +6,4 @@ export { IndexedDbQueueStore } from './indexeddb-queue-store.ts';
 export { replayOfflineQueue } from './replay.ts';
 export { SyncHttpError } from './types.ts';
 export type { OfflineQueue, OfflineCommand, QueueStore, SyncAdapter, RemoteState, PreviewReceipt, QueueStatus } from './types.ts';
+export { readLocalAnalytics, type LocalAnalytics } from './local-analytics';
