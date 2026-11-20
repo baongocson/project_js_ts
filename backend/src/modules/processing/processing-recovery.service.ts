@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { RecoveryFenceService } from '../../infrastructure/database/recovery-fence.service';
+import { RecoveryFenceRepository } from '../../infrastructure/database/recovery-fence.repository';
 import { ProcessingRepository } from './processing.repository';
 
 /** Retires expired preview indexes. BE-2's orphan-candidate recovery then safely
@@ -10,7 +10,7 @@ export class ProcessingRecoveryService implements OnApplicationBootstrap, OnModu
   private readonly logger = new Logger(ProcessingRecoveryService.name);
   private timer?: ReturnType<typeof setInterval>;
   private task?: Promise<void>;
-  constructor(private readonly repository: ProcessingRepository, private readonly fence: RecoveryFenceService, private readonly config: ConfigService) {}
+  constructor(private readonly repository: ProcessingRepository, private readonly fence: RecoveryFenceRepository, private readonly config: ConfigService) {}
   onApplicationBootstrap(): void {
     if (this.config.get('DATABASE_ENABLED') !== 'true') return;
     this.start();

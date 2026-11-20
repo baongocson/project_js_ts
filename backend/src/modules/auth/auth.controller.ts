@@ -3,7 +3,7 @@ import { Public } from './security/auth-context';
 import { AuthMutationGuard } from './security/auth-mutation.guard';
 import type { Request, Response } from 'express';
 import { parseEmptyQuery } from '../../common/validation/query.validation';
-import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
+import { DtoValidationPipe } from '../../common/pipes/dto-validation.pipe';
 import { AuthService } from './auth.service';
 import type { RegisterDto, LoginDto, EmptyBodyDto } from './dto/auth.dto';
 import { parseRegister, parseLogin, parseEmptyBody } from './dto/auth.validation';

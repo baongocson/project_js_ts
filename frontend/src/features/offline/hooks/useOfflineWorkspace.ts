@@ -1,16 +1,18 @@
+import { inspectLocalAccount,withLocalAccountLock } from '../services/account-safety';
+import { localVersion } from '../services/local-processing';
 import type {AccountAction} from '../../auth';
 import type {ImportOptions} from '../../datasets';
 import { authApi } from '../../auth';
 
-import { createLocalProject, restoreLocalProject, ProjectApi, syncLocalProject } from '../project-sync';
+import { createLocalProject, restoreLocalProject, ProjectApi, syncLocalProject } from '../services/project-sync';
 
 import { useEffect, useId, useState } from 'react';
 
-import { projectStore, type LocalProject } from '../project-store';
+import { projectStore, type LocalProject } from '../repositories/project-store';
 
 import { session, useSession } from '../../auth';
 
-import { subscribeProjectProgress } from '../project-events';
+import { subscribeProjectProgress } from '../domain/project-events';
 
 export type OfflineWorkspaceProps = Record<string, never>;
 export function useOfflineWorkspace(){
@@ -38,6 +40,6 @@ const onBackupImported:(project:LocalProject)=>Promise<void> = async project=>{a
 const syncSelectedProject:()=>void = ()=>{if(!current)return;return void action(async()=>{const result=await syncLocalProject(current.id,new ProjectApi(()=>token));await reload(current.id);setMessage(result.status==='synced'?'Đã đồng bộ và xác minh dữ liệu server':`Chưa đồng bộ: ${result.error}`);});};
 const onLocalApplied:()=>Promise<void> = async()=>{if(!current)return;await reload(current.id);setMessage('Đã lưu thay đổi offline');};
 const restoreSelectedVersion:()=>void = ()=>{if(!current)return;return void action(async()=>{await restoreLocalProject(current.id,Number(restoreTarget));await reload(current.id);setMessage('Đã lưu restore offline');});};
-return {id,projects,setSelected,name,setName,email,setEmail,password,setPassword,token,account,message,setMessage,busy,restoreTarget,setRestoreTarget,current,reload,action,authenticate,onAccountComplete,importLocalCsv,reloadLocalProjects,onBackupImported,syncSelectedProject,onLocalApplied,restoreSelectedVersion};
+return {inspectLocalAccount,withLocalAccountLock,currentVersion:current?localVersion(current):undefined,id,projects,setSelected,name,setName,email,setEmail,password,setPassword,token,account,message,setMessage,busy,restoreTarget,setRestoreTarget,current,reload,action,authenticate,onAccountComplete,importLocalCsv,reloadLocalProjects,onBackupImported,syncSelectedProject,onLocalApplied,restoreSelectedVersion};
 }
 export type OfflineWorkspaceModel = ReturnType<typeof useOfflineWorkspace>;

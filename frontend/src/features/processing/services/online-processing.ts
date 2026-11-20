@@ -2,17 +2,17 @@
 
 import type { Cell } from '@dashboard/data-core';
 
-import { requestJson } from '../../../shared/api';
-import { processingApi } from './processing-api';
+
+import { processingApi } from '../api/processing-api';
 
 import type { ProcessingAdapter } from '../types';
 
-import type { AiSuggestions } from '../ai-suggestions';
+
 
 export function onlineProcessing(datasetId:string,versionId:string):ProcessingAdapter{
   return {
     suggestions:async(group,signal,batch=0)=>{
-      const data=await requestJson<AiSuggestions>(`datasets/${datasetId}/versions/${versionId}/ai/suggestions`,{method:'POST',json:{group,batch},signal,replay:'safe'});
+      const data=await processingApi.suggestions(datasetId,versionId,group,batch,signal);
       if(data.versionId!==versionId)throw new Error('Gợi ý thuộc phiên bản dữ liệu khác; hãy tải lại.');
       return data;
     },
@@ -22,7 +22,7 @@ export function onlineProcessing(datasetId:string,versionId:string):ProcessingAd
     categories:async column=>{
       const values:Cell[]=[];
       for(let page=1;;page++){
-        const data=await requestJson<{items:{value:Cell|null;isMissing:boolean}[];totalCategories:number;totalPages:number}>(`datasets/${datasetId}/versions/${versionId}/analysis/columns/${column}/value-counts?page=${page}&limit=100&includeMissing=false`);
+        const data=await processingApi.categoryPage(datasetId,versionId,column,page);
         if(data.totalCategories>5000)throw new Error('Vượt 5000 category; không thể tạo mapping ordinal');
         values.push(...data.items.filter(item=>!item.isMissing&&item.value).map(item=>item.value!));
         if(page>=data.totalPages)return values;

@@ -1,8 +1,9 @@
+import { workspaceService } from '../services/workspace-service';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import type { Cell } from '@dashboard/data-core';
-import { projectsApi, workspaceDrafts, draftMatches, type WorkspaceDraft, type WorkspacePatch, type ProjectDetail, type Workspace } from '../../features/projects';
-import { datasetsApi, type Metadata, type RowsResult } from '../../features/datasets';
+import { type WorkspaceDraft, type WorkspacePatch, type ProjectDetail, type Workspace } from '../../features/projects';
+import { type Metadata, type RowsResult } from '../../features/datasets';
 import { onlineProcessing } from '../../features/processing';
 
 import { onlineAnalysis } from '../../features/analysis';
@@ -32,23 +33,21 @@ export function useWorkspace(){
   const install=useCallback((value:ProjectDetail,stamp:number)=>{
     if(stamp!==generation.current)return;current.current=value;pending.current={};blocked.current=false;setError('');setDetail(value);setReadGeneration(value=>value+1);setSaveStatus('Đã tải workspace');setLoading(false);
     try{
-      const saved=workspaceDrafts.list(userId,projectId),unconfirmed:WorkspaceDraft[]=[];
-      // Other tabs own independent mutable draft records. Do not delete them on read.
-      for(const draft of saved)if(!draftMatches(value.workspace,draft))unconfirmed.push(draft);
+      const unconfirmed=workspaceService.drafts(userId,projectId,value.workspace);
       setDrafts(unconfirmed);setDraftProblem('');
     }catch(error){setDraftProblem(error instanceof Error?error.message:'Không đọc được bản nháp');}
     inFlight.current={};
   },[userId,projectId]);
   const load=useCallback(async()=>{
     const stamp=++generation.current;setRows(undefined);setMetadata(undefined);setCellDetail('');
-    try{install(await projectsApi.detail(projectId),stamp);}
+    try{install(await workspaceService.detail(projectId),stamp);}
     catch(error){if(stamp===generation.current)setError(error instanceof Error?error.message:'Không mở được workspace');}
     finally{if(stamp===generation.current)setLoading(false);}
   },[projectId,install]);
   const invalidate=useCallback(()=>{generation.current++;clearTimeout(timer.current);},[]);
   useEffect(()=>{
     const stamp=++generation.current;
-    void projectsApi.detail(projectId).then(value=>install(value,stamp)).catch(error=>{if(stamp===generation.current){setError(error instanceof Error?error.message:'Không mở được workspace');setLoading(false);}});
+    void workspaceService.detail(projectId).then(value=>install(value,stamp)).catch(error=>{if(stamp===generation.current){setError(error instanceof Error?error.message:'Không mở được workspace');setLoading(false);}});
     return invalidate;
   },[projectId,install,invalidate]);
   const dataset=detail?.dataset,version=dataset?.currentVersionId;
@@ -59,20 +58,19 @@ export function useWorkspace(){
   useEffect(()=>{
     if(!datasetId||!version)return;
     const controller=new AbortController();
-    void datasetsApi.metadata(datasetId,version,controller.signal).then(value=>{if(!controller.signal.aborted)setMetadata(value);}).catch(error=>{if(!controller.signal.aborted)setError(String(error));});
+    void workspaceService.metadata(datasetId,version,controller.signal).then(value=>{if(!controller.signal.aborted)setMetadata(value);}).catch(error=>{if(!controller.signal.aborted)setError(String(error));});
     return()=>controller.abort();
   },[datasetId,version,readGeneration]);
   useEffect(()=>{
     if(!datasetId||!version||!queryState)return;
     const controller=new AbortController();const state=JSON.parse(queryState) as Workspace['tableState'];
     const query=new URLSearchParams({page:String(state.page),limit:String(state.pageSize),filters:JSON.stringify(state.filters)});if(state.sort)query.set('sort',`${state.sort.columnId}:${state.sort.direction}`);
-    void datasetsApi.rows(datasetId,version,query,controller.signal).then(value=>{if(!controller.signal.aborted)setRows(value);}).catch(error=>{if(!controller.signal.aborted)setError(error instanceof Error?error.message:'Không đọc được bảng');});
+    void workspaceService.rows(datasetId,version,query,controller.signal).then(value=>{if(!controller.signal.aborted)setRows(value);}).catch(error=>{if(!controller.signal.aborted)setError(error instanceof Error?error.message:'Không đọc được bảng');});
     return()=>controller.abort();
   },[datasetId,version,queryState,readGeneration]);
   function persist(patch:WorkspacePatch,workspace:Workspace){
     try{
-      if(Object.keys(patch).length)workspaceDrafts.save({schema:1,id:draftId,userId,projectId,revision:workspace.revision,boundVersionId:workspace.boundVersionId,patch,updatedAt:new Date().toISOString()});
-      else workspaceDrafts.remove(userId,projectId,draftId);
+      workspaceService.persist(userId,projectId,draftId,patch,workspace);
       setDraftProblem('');
       return true;
     }catch(error){setDraftProblem(`Chưa lưu được bản nháp trên máy: ${error instanceof Error?error.message:'Storage không khả dụng'}. Hãy giữ trang mở hoặc xuất bản nháp.`);return false;}
@@ -82,7 +80,7 @@ export function useWorkspace(){
   useEffect(()=>{
     if(!datasetId||!version||!selectedRow||!selectedColumn)return;
     const abort=new AbortController();
-    void datasetsApi.row(datasetId,version,selectedRow,abort.signal).then(({row})=>{if(abort.signal.aborted)return;const value=row.cells[selectedColumn];if(!value)return;setInspectedCell({rowId:selectedRow,columnId:selectedColumn,version,value});setCellDetail(`Dòng ${row.position+1} · ${value.kind} · ${JSON.stringify(value.value)}`);}).catch(error=>{if(!abort.signal.aborted)setError(error instanceof Error?error.message:'Không tải được ô đã chọn');});
+    void workspaceService.row(datasetId,version,selectedRow,abort.signal).then(({row})=>{if(abort.signal.aborted)return;const value=row.cells[selectedColumn];if(!value)return;setInspectedCell({rowId:selectedRow,columnId:selectedColumn,version,value});setCellDetail(`Dòng ${row.position+1} · ${value.kind} · ${JSON.stringify(value.value)}`);}).catch(error=>{if(!abort.signal.aborted)setError(error instanceof Error?error.message:'Không tải được ô đã chọn');});
     return()=>abort.abort();
   },[datasetId,version,selectedRow,selectedColumn,readGeneration]);
   async function flush(){
@@ -91,7 +89,7 @@ export function useWorkspace(){
     try{while(Object.keys(pending.current).length&&stamp===generation.current){
       const patch=pending.current;inFlight.current=patch;pending.current={};setSaveStatus('Đang lưu…');
       const base:ProjectDetail=current.current!;
-      const result=await projectsApi.workspace(projectId,{revision:base.workspace.revision,boundVersionId:base.workspace.boundVersionId,...patch});
+      const result=await workspaceService.save(projectId,{revision:base.workspace.revision,boundVersionId:base.workspace.boundVersionId,...patch});
       if(stamp!==generation.current)return;
       inFlight.current={};
       const workspace={...result.workspace,...pending.current};
@@ -108,7 +106,7 @@ export function useWorkspace(){
     const persisted=persist({...inFlight.current,...pending.current},current.current.workspace);
     current.current={...current.current,workspace:{...current.current.workspace,...patch}};setDetail(current.current);setSaveStatus(blocked.current?'Chưa lưu · tải lại workspace để khôi phục bản nháp':'Có thay đổi chưa lưu');clearTimeout(timer.current);timer.current=setTimeout(()=>{void flush();},500);return persisted;
   }
-  function removeDraft(draft:WorkspaceDraft){try{workspaceDrafts.remove(userId,projectId,draft.id);setDrafts(values=>values.filter(value=>value.id!==draft.id));}catch(error){setDraftProblem(String(error));}}
+  function removeDraft(draft:WorkspaceDraft){try{workspaceService.removeDraft(draft);setDrafts(values=>values.filter(value=>value.id!==draft.id));}catch(error){setDraftProblem(String(error));}}
   function recoverDraft(draft:WorkspaceDraft){
     if(!current.current||current.current.workspace.boundVersionId!==draft.boundVersionId)return;
     // Explicit recovery uses the server revision just loaded; stale drafts never autosave on bootstrap.

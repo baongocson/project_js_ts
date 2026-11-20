@@ -1,7 +1,7 @@
 import { compatibleEngine, cellKey,ENGINE_VERSION,missingKind,processSnapshot,projectPreview,sameCell,type Snapshot } from '@dashboard/data-core';
 import type { ProcessingAdapter,Preview,PreviewChange } from '../../processing';
 import { PreviewRejected } from '../../processing';
-import { projectLock,projectStore,type LocalProject } from '../project-store';
+import { projectLock,projectStore,type LocalProject } from '../repositories/project-store';
 export const localVersion=(project:LocalProject)=>project.operations.at(-1)?.id??'original';
 export function localProcessing(projectId:string,expectedVersion?:string):ProcessingAdapter{
   const previews=new Map<string,{preview:Preview;baseVersion:string;specification:Parameters<ProcessingAdapter['preview']>[0];snapshot:Snapshot;changes:PreviewChange[]}>();

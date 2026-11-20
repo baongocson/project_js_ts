@@ -1,7 +1,7 @@
 import { Body, Controller, Param, Post, Query, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { CurrentPrincipal, type Principal } from '../auth/security/auth-context';
-import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
+import { DtoValidationPipe } from '../../common/pipes/dto-validation.pipe';
 import { resourceParams, type ResourceParamsDto } from '../../common/validation/request.validation';
 import { parseSuggestionRequest, type SuggestionRequest } from './ai.contract';
 import { AiService } from './ai.service';

@@ -1,6 +1,6 @@
 # Offline workspace và đồng bộ
 
-Ứng dụng ở `/offline` hoặc `/local/projects`. Source gốc, typed snapshot/history/outbox/mapping ở `project-store.ts`; sync thật qua `project-sync.ts`. `OfflineWorkspace` lắp shared ImportWizard, DataTableView, ProcessingPanel, AnalysisPanel và LocalWorkspacePane. Auth dùng session/transport chung, access/refresh token không lưu trong IndexedDB.
+Ứng dụng ở `/offline` hoặc `/local/projects`. Source gốc, typed snapshot/history/outbox/mapping được lưu qua `repositories/project-store.ts`; sync thật qua `services/project-sync.ts`. `services/` chứa backup/local processing/workspace và sync policy; `api/` chứa endpoint HTTP; `domain/` chứa preview reconstruction và progress events. `OfflineWorkspace` lắp shared ImportWizard, DataTableView, ProcessingPanel, AnalysisPanel và LocalWorkspacePane. Auth dùng session/transport chung, access/refresh token không lưu trong IndexedDB.
 
 ## Storage và nâng cấp
 

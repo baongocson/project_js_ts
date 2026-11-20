@@ -1,16 +1,14 @@
-import { Injectable, Optional, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectConnection } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
+import { HealthRepository } from './infrastructure/database/health.repository';
 @Injectable()
 export class AppService {
-  constructor(private readonly config: ConfigService, @Optional() @InjectConnection() private readonly connection?: Connection) {}
+  constructor(private readonly config: ConfigService, private readonly repository:HealthRepository) {}
   async health() {
     const enabled = this.config.get('DATABASE_ENABLED') === 'true';
     if (enabled) {
       try {
-        if (this.connection?.readyState !== 1) throw new Error('Disconnected');
-        await this.connection.db!.command({ ping: 1 }, { timeoutMS: 3000 });
+        await this.repository.ping();
       } catch {
         throw new ServiceUnavailableException({ code: 'DATABASE_UNAVAILABLE', message: 'Không thể kết nối cơ sở dữ liệu' });
       }

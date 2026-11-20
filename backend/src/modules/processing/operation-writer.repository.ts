@@ -11,7 +11,7 @@ export interface CommittedOperation {
 }
 /** Transaction participant; callers must fence and publish before writing this ledger. */
 @Injectable()
-export class OperationWriterService extends Be2Repository {
+export class OperationWriterRepository extends Be2Repository {
   constructor(@Optional() @InjectConnection() connection?: Connection) { super(connection); }
   async append(operation: CommittedOperation, session: ClientSession): Promise<void> {
     if (!session.inTransaction()) throw new Error('Operation ledger requires a publish transaction');

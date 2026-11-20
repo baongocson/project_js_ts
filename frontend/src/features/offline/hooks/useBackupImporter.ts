@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import { type LocalProject } from '../project-store';
-import { importProjectBackup, parseProjectBackup } from '../project-backup';
+import { type LocalProject } from '../repositories/project-store';
+import { importProjectBackup, parseProjectBackup } from '../services/project-backup';
 
 export type BackupImporterProps = {onImported(project:LocalProject):Promise<void>};
 export function useBackupImporter({onImported}:{onImported(project:LocalProject):Promise<void>}){

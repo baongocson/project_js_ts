@@ -3,7 +3,7 @@ import { useResource, type AnalysisSettings } from './useAnalysisResource';
 import { useCallback, useState } from 'react';
 import type { Column, DistributionResult, ValueCountsResult } from '@dashboard/data-core';
 
-import type { AnalysisAdapter } from '../api/analysis-adapters';
+import type { AnalysisAdapter } from '../services/analysis-service';
 
 export type DistributionProps = {adapter:AnalysisAdapter;columns:Column[];config:AnalysisSettings};
 export function useDistribution({adapter,columns,config}:{adapter:AnalysisAdapter;columns:Column[];config:AnalysisSettings}){

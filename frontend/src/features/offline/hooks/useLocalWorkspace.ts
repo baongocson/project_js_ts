@@ -5,9 +5,9 @@ import { queryRows, type WorkspaceState } from '@dashboard/data-core';
 
 import { localAnalysis } from '../../analysis';
 
-import { localWorkspaceStore, type LocalWorkspace } from '../local-workspace';
+import { localWorkspaceStore, type LocalWorkspace } from '../services/local-workspace';
 import { localProcessing, localVersion } from '../processing-adapter';
-import type { LocalProject } from '../project-store';
+import type { LocalProject } from '../repositories/project-store';
 
 export type LocalWorkspaceProps = {project:LocalProject;onApplied():Promise<void>;history:ReactNode};
 export function useLocalWorkspace({project,onApplied,history}:{project:LocalProject;onApplied():Promise<void>;history:ReactNode}){

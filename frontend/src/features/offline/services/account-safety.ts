@@ -1,5 +1,5 @@
-import { projectLock,projectStore } from './project-store';
-import { workspaceDrafts } from '../projects';
+import { projectLock,projectStore } from '../repositories/project-store';
+import { workspaceDrafts } from '../../projects';
 
 export async function inspectLocalAccount(userId:string){
   const projects=(await projectStore.list()).filter(project=>project.accountId===userId);

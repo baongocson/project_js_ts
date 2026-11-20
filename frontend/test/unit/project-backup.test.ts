@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ENGINE_VERSION,importCsv,processSnapshot } from '@dashboard/data-core';
-import { backupProject,parseProjectBackup,sourceHash } from '../../src/features/offline/project-backup';
-import type { LocalProject } from '../../src/features/offline/project-store';
+import { backupProject,parseProjectBackup,sourceHash } from '../../src/features/offline/services/project-backup';
+import type { LocalProject } from '../../src/features/offline/repositories/project-store';
 async function fixture():Promise<LocalProject>{
   const source=new TextEncoder().encode('n,t\n1,a\n2,b\n'),original=importCsv(source,{delimiter:','},()=>crypto.randomUUID());
   const specification={method:'uppercase' as const,scope:{type:'columns' as const,columnIds:[original.columns[1].columnId]},parameters:{},statisticsScope:{type:'whole-columns' as const}};

@@ -1,5 +1,7 @@
 # Tài liệu refactor
 
+- [Kiến trúc theo luồng request/response](request-flow-architecture.md): cấu trúc hiện tại, trách nhiệm các tầng, luồng online/offline và cách kiểm tra.
+
 - [Frontend plan](frontend-refactor-plan.md): phân tích yêu cầu trong video, gồm căn cứ thời gian và các điểm chưa rõ lúc phân tích.
 - [Backend plan](backend-refactor-plan.md): phân tích yêu cầu backend với cùng nguyên tắc.
 - [Trạng thái thực hiện](refactor-status.md): đối chiếu code thực tế, quyết định đã xác nhận, thay đổi triển khai, kết quả kiểm chứng và giới hạn còn lại.

@@ -39,7 +39,10 @@ export class ProjectsService implements OnApplicationBootstrap, OnModuleDestroy 
       return response;
     }));
   }
-  list(principal: Principal, query: ListProjectsQueryDto) { return this.repository.list(principal.userId, query); }
+  async list(principal: Principal, query: ListProjectsQueryDto) {
+    const result=await this.repository.list(principal.userId,query);
+    return {...result,items:result.items.map(item=>({_id:item._id.toHexString(),name:item.name,lifecycle:item.lifecycle,updatedAt:item.updatedAt.toISOString()}))};
+  }
   async get(principal: Principal, projectId: string) {
     await this.ownership.project(projectId, principal);
     const project = await this.repository.get(projectId), stored = await this.repository.workspace(projectId);
@@ -50,7 +53,7 @@ export class ProjectsService implements OnApplicationBootstrap, OnModuleDestroy 
   }
   async rename(principal: Principal, projectId: string, body: ProjectNameDto) {
     await this.ownership.project(projectId, principal, true);
-    return this.repository.transaction(async session => { await this.ownership.fence(principal, projectId, session); return this.repository.rename(projectId, body.name, session); });
+    return this.repository.transaction(async session => { await this.ownership.fence(principal, projectId, session); const result=await this.repository.rename(projectId, body.name, session); return {...result,updatedAt:result.updatedAt.toISOString()}; });
   }
   async saveWorkspace(principal: Principal, projectId: string, patch: PatchWorkspaceDto) {
     await this.ownership.project(projectId, principal, true);

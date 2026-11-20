@@ -1,4 +1,4 @@
-import type { OfflineQueue, QueueStore } from './types.ts';
+import type { OfflineQueue, QueueStore } from '../types.ts';
 
 const DATABASE_NAME = 'dashboard3d-offline-v1';
 const STORE = 'outbox';

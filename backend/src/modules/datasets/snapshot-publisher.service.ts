@@ -5,7 +5,7 @@ import { DatasetsRepository } from './datasets.repository';
 import { IdempotencyService, sha256, type Lease } from '../../infrastructure/idempotency/idempotency.service';
 import type { VersionRecord } from '../../infrastructure/database/be2-records';
 import type { ProcessingSummaryDto } from '../../common/dto/response.dto';
-import { OperationWriterService } from '../processing/operation-writer.service';
+import { OperationWriterRepository } from '../processing/operation-writer.repository';
 import { OwnershipService } from '../auth/security/ownership.service';
 import { snapshotContentHash } from './snapshot-hash';
 export interface PublishInput {
@@ -15,7 +15,7 @@ export interface PublishInput {
 /** Internal BE-3 boundary; no HTTP route, algorithms or preview lifecycle decisions. */
 @Injectable()
 export class SnapshotPublisherService {
-  constructor(private readonly datasets: DatasetsRepository, private readonly receipts: IdempotencyService, private readonly operations: OperationWriterService, private readonly ownership: OwnershipService) {}
+  constructor(private readonly datasets: DatasetsRepository, private readonly receipts: IdempotencyService, private readonly operations: OperationWriterRepository, private readonly ownership: OwnershipService) {}
   private async checkLeaseParent(lease: Lease, datasetId: string): Promise<void> {
     const dataset = await this.ownership.dataset(datasetId, lease.principal, true);
     if (dataset.projectId.toHexString() !== lease.projectId) throw new Error('Lease must be scoped to the dataset project');

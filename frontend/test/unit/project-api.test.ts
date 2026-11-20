@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { configureAuthTransport } from '../../src/shared/api/http-client';
-import { ProjectApi } from '../../src/features/offline/project-sync';
+import { ProjectApi } from '../../src/features/offline/services/project-sync';
 import { SyncHttpError } from '../../src/features/offline/types';
 void test('the entire sync API sequence remains pinned to its authenticated owner across separate requests',async()=>{
   let owner='owner-a',requests=0;

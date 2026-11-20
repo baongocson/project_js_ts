@@ -5,13 +5,13 @@ import { Binary } from 'mongodb';
 import { CODEC_VERSION, decodeSnapshot, type Column, type Snapshot } from '@dashboard/data-core';
 import { Be2Repository } from '../../infrastructure/database/be2-repository';
 import type { ColumnRecord, DatasetRecord, VersionRecord } from '../../infrastructure/database/be2-records';
-import { sha256 } from '../../infrastructure/idempotency/idempotency.service';
+import { sha256 } from '../../common/domain/sha256';
 import { snapshotContentHash } from './snapshot-hash';
 import { publicColumn } from './dataset-mappers';
-import { RecoveryFenceService } from '../../infrastructure/database/recovery-fence.service';
+import { RecoveryFenceRepository } from '../../infrastructure/database/recovery-fence.repository';
 @Injectable()
 export class DatasetsRepository extends Be2Repository {
-  constructor(private readonly recoveryFence: RecoveryFenceService, @Optional() @InjectConnection() connection?: Connection) { super(connection); }
+  constructor(private readonly recoveryFence: RecoveryFenceRepository, @Optional() @InjectConnection() connection?: Connection) { super(connection); }
   fenceRecovery(projectId: Types.ObjectId, session: ClientSession) { return this.recoveryFence.activeProject(projectId, session); }
   async byProject(projectId: string, session?: ClientSession) { return this.db().collection<DatasetRecord>('datasets').findOne({ projectId: new Types.ObjectId(projectId) }, { session }); }
   async byId(datasetId: string, session?: ClientSession) {

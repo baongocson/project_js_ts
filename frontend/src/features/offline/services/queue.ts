@@ -1,4 +1,4 @@
-import type { OfflineQueue, OfflineCommand } from './types.ts';
+import type { OfflineQueue, OfflineCommand } from '../types.ts';
 
 const uuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
 const objectId = /^[\da-f]{24}$/i;

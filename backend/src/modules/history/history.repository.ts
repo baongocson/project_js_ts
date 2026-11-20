@@ -2,7 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Types } from 'mongoose';
 import { Be2Repository } from '../../infrastructure/database/be2-repository';
-import type { CommittedOperation } from '../processing/operation-writer.service';
+import type { CommittedOperation } from '../processing/operation-writer.repository';
 import type { HistoryQueryDto } from './dto/history.dto';
 
 /** Read-only history boundary; never exposes another dataset's ledger. */

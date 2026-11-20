@@ -16,7 +16,11 @@ Source backend và test.
 
 ## Luồng và phạm vi
 
-main.ts khởi động AppModule; module nhận HTTP và gọi service. Database kết nối tại infrastructure; DTO/policy dùng chung tại common và packages/data-core. test/ chứa unit, E2E và integration, không nằm trong bản build production. Auth/Users và10API Projects/Datasets có nghiệp vụ;10API BE-3 vẫn scaffold. Xem docs/teamwork/nguyen-be2.md.
+main.ts khởi động AppModule. Luồng HTTP: middleware → guard → interceptor chiều vào → pipe → controller → service → repository → MongoDB; kết quả đi qua interceptor chiều ra và framework gửi response. Lỗi được chuẩn hóa bởi ApiExceptionFilter. Guard có thể đọc phiên/quyền qua service/repository trước controller.
+
+Database kết nối tại infrastructure; service không truy vấn collection trực tiếp. Ownership, idempotency, cleanup và recovery đã tách repository riêng. DTO/policy và packages/data-core giữ hợp đồng/thuật toán dùng chung. test/ chứa unit, E2E và integration, không nằm trong bản build production. Xem [kiến trúc theo luồng hành động](../../docs/refactor/request-flow-architecture.md).
+
+`npm run typecheck -w backend` gồm kiểm kiểu và kiểm tra kiến trúc controller/service/repository.
 
 ## Bảo trì
 

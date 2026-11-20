@@ -4,7 +4,7 @@ import { useResource } from './useAnalysisResource';
 import { useCallback, useMemo, useState } from 'react';
 import type { CorrelationResult } from '@dashboard/data-core';
 
-import type { AnalysisAdapter } from '../api/analysis-adapters';
+import type { AnalysisAdapter } from '../services/analysis-service';
 
 export type CorrelationProps = {adapter:AnalysisAdapter};
 export function useCorrelation({adapter}:{adapter:AnalysisAdapter}){

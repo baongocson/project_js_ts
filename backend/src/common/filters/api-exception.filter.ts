@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import type { Response } from 'express';
-import type { LoggedRequest } from '../be2-request-log.interceptor';
+import type { LoggedRequest } from '../interceptors/be2-request-log.interceptor';
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {

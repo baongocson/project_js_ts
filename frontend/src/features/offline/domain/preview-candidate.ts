@@ -1,6 +1,6 @@
 import { sameCell,type Snapshot,type Column,type Row } from '@dashboard/data-core';
-import type { Preview,PreviewChange } from '../processing';
-import { SyncHttpError } from './types';
+import type { Preview,PreviewChange } from '../../processing';
+import { SyncHttpError } from '../types';
 
 function mismatch():never{throw new SyncHttpError(409,'SYNC_PREVIEW_MISMATCH','Nội dung preview server khác bản local; chưa Apply, dữ liệu local được giữ');}
 function cellsEqual(left:Row['cells'],right:Row['cells']):boolean{

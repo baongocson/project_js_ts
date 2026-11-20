@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 Object.defineProperty(globalThis,'BroadcastChannel',{value:undefined,configurable:true});
 const {autoEligible,MAX_AUTO_ATTEMPTS,retryDelay}=await import('../../src/features/offline/sync-coordinator');
-import type { LocalProject } from '../../src/features/offline/project-store';
+import type { LocalProject } from '../../src/features/offline/repositories/project-store';
 void test('auto replay requires explicit opt-in, exact bound owner, pending work and bounded retry eligibility',()=>{
   const project={autoSync:true,accountId:'owner',datasetId:'dataset',cursor:0,operations:[{}],status:'local'} as unknown as LocalProject;
   assert.equal(autoEligible(project,'owner'),true);

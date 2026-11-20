@@ -4,7 +4,7 @@ import { useResource, type AnalysisSettings } from './useAnalysisResource';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Column, Row, Points3dResult } from '@dashboard/data-core';
 
-import type { AnalysisAdapter } from '../api/analysis-adapters';
+import type { AnalysisAdapter } from '../services/analysis-service';
 
 import type { ProcessingAdapter } from '../../processing';
 

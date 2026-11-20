@@ -2,17 +2,15 @@ import type { OfflineWorkspaceModel } from '../hooks/useOfflineWorkspace';
 
 import { Link } from 'react-router-dom';
 import { ImportWizard } from '../../datasets';
-import { localVersion } from '../processing-adapter';
 
 import { AccountActions } from '../../auth';
 import { LocalWorkspacePane } from './LocalWorkspacePane';
 import { BackupImporter, ProjectRecovery } from './ProjectRecovery';
 import { SyncCenter } from './SyncCenter';
 
-import { inspectLocalAccount, withLocalAccountLock } from '../account-safety';
 
 export function OfflineWorkspaceView(model:OfflineWorkspaceModel){
-  const {id,projects,setSelected,name,setName,email,setEmail,password,setPassword,token,account,message,setMessage,busy,restoreTarget,setRestoreTarget,current,reload,action,authenticate,onAccountComplete,importLocalCsv,reloadLocalProjects,onBackupImported,syncSelectedProject,onLocalApplied,restoreSelectedVersion}=model;
+  const {inspectLocalAccount,withLocalAccountLock,currentVersion,id,projects,setSelected,name,setName,email,setEmail,password,setPassword,token,account,message,setMessage,busy,restoreTarget,setRestoreTarget,current,reload,action,authenticate,onAccountComplete,importLocalCsv,reloadLocalProjects,onBackupImported,syncSelectedProject,onLocalApplied,restoreSelectedVersion}=model;
 
 return <main className="workspace local-workspace">
     <Link to="/">Về trang chủ</Link><h1>Dữ liệu offline và đồng bộ</h1>
@@ -37,7 +35,7 @@ return <main className="workspace local-workspace">
       <SyncCenter project={current} busy={busy} authenticated={!!token} onReload={()=>reload(current.id)} onMessage={setMessage} onSync={syncSelectedProject}/>
       <ProjectRecovery project={current} onChanged={()=>reload(current.id)} onRemoved={()=>reload()} onMessage={setMessage}/>
       <div className="local-project-heading"><p className="eyebrow">LOCAL WORKSPACE</p><h2>Workspace · {current.name}</h2><p>{current.snapshot.rows.length} dòng · {current.snapshot.columns.length} cột · Lưu trên thiết bị</p></div>
-      <LocalWorkspacePane key={`${current.id}:${localVersion(current)}`} project={current} onApplied={onLocalApplied}
+      <LocalWorkspacePane key={`${current.id}:${currentVersion}`} project={current} onApplied={onLocalApplied}
         history={<section><h2>Lịch sử local</h2>{current.operations.length>0?<>
         <label>Phiên bản khôi phục <select value={restoreTarget} onChange={event=>setRestoreTarget(event.target.value)}><option value="0">CSV ban đầu</option>{current.operations.slice(0,-1).map((operation,index)=><option key={operation.id} value={index+1}>Bước {index+1} · {operation.kind}</option>)}</select></label>
         <button disabled={busy} onClick={restoreSelectedVersion}>Khôi phục offline</button>

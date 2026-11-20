@@ -1,4 +1,4 @@
-import { type Snapshot, type Column } from '@dashboard/data-core';
+import { type Snapshot, type Column, type CsvOptions, type ProcessingSpecification } from '@dashboard/data-core';
 
 import { SyncHttpError } from '../types';
 import { requestJson, ApiError } from '../../../shared/api';
@@ -16,6 +16,17 @@ export class ProjectApi {
     catch(error){if(error instanceof ApiError)throw new SyncHttpError(error.status,error.code,error.message,error.retryAfter);throw error;}
   }
   post(path:string,body:unknown,key:string){return this.request(path,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':key},body:JSON.stringify(body)});}
+  me(){return this.request('users/me');}
+  detail(projectId:string){return this.request(`projects/${projectId}`);}
+  create(name:string,key:string){return this.post('projects',{name},key);}
+  importSource(projectId:string,source:Uint8Array,fileName:string,options:CsvOptions|undefined,key:string){
+    const form=new FormData();form.set('importOptions',JSON.stringify(options??{}));form.set('file',new Blob([new Uint8Array(source)],{type:'text/csv'}),fileName);
+    return this.request(`projects/${projectId}/datasets`,{method:'POST',headers:{'Idempotency-Key':key},body:form});
+  }
+  preview(dataset:string,version:string,specification:ProcessingSpecification,key:string){return this.post(`datasets/${dataset}/previews`,{baseVersionId:version,specification},key);}
+  previewPage(dataset:string,preview:string,page:number){return this.request(`datasets/${dataset}/previews/${preview}?page=${page}&limit=100`);}
+  apply(dataset:string,previewId:string|undefined,key:string){return this.post(`datasets/${dataset}/operations`,{previewId},key);}
+  restore(dataset:string,target:string,expectedCurrentVersionId:string|undefined,key:string){return this.post(`datasets/${dataset}/versions/${target}/restore`,{expectedCurrentVersionId},key);}
   async snapshot(dataset:string,version:string):Promise<Snapshot>{
     const meta=await this.request(`datasets/${dataset}/versions/${version}`);
     const rows:Snapshot['rows']=[];let total:number|undefined;

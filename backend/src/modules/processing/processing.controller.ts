@@ -2,7 +2,7 @@ import { parseEmptyQuery } from '../../common/validation/query.validation';
 import { CurrentPrincipal, type Principal } from '../auth/security/auth-context';
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ProcessingService } from './processing.service';
-import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
+import { DtoValidationPipe } from '../../common/pipes/dto-validation.pipe';
 import { IdempotencyKey } from '../../common/validation/idempotency-key.decorator';
 import { resourceParams, type ResourceParamsDto } from '../../common/validation/request.validation';
 import type { CreatePreviewDto, ApplyPreviewDto } from './dto/processing.dto';

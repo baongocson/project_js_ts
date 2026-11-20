@@ -1,1 +1,2 @@
-export {onlineAnalysis,localAnalysis} from './analysis-adapters';
+export {onlineAnalysis} from './analysis-api';
+export type {AnalysisAdapter} from '../analysis-contract';

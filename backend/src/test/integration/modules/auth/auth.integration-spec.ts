@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Connection, Types } from 'mongoose';
 import { randomUUID } from 'node:crypto';
 import { createTestApp, record } from '../../../utils';
+import { AccountCleanupRepository } from '../../../../infrastructure/database/account-cleanup.repository';
 import { AccountCleanupService } from '../../../../infrastructure/database/account-cleanup.service';
 import { AuthRepository } from '../../../../modules/auth/auth.repository';
 import { issueAccessToken } from '../../../../modules/auth/security/auth-crypto';
@@ -181,7 +182,7 @@ describe('BE-1 HTTP + real MongoDB (no auth/ownership overrides)', () => {
     await request(fixture.server).get('/api/v1/users/me').set('Authorization', `Bearer ${result.token}`).expect(401);
     await connection.db!.collection('datasets').updateOne({ _id: unfinished.datasetId }, { $set: { 'originalFile.storageKey': original.storageKey } });
     const config = fixture.app.get(ConfigService);
-    const restartedCleanup = new AccountCleanupService(config, connection);
+    const restartedCleanup = new AccountCleanupService(config, new AccountCleanupRepository(connection));
     try {
       // Fresh service instance proves recovery uses durable markers, without sweeping unrelated accounts.
       await restartedCleanup.removeUser(new Types.ObjectId(otherId));

@@ -1,13 +1,13 @@
-import { type ProjectApi, object, objectId, type Json } from './api/project-api';
-export {ProjectApi} from './api/project-api';
+import { type ProjectApi, object, objectId, type Json } from '../api/project-api';
+export {ProjectApi} from '../api/project-api';
 import { compatibleEngine, DataError, ENGINE_VERSION, importCsv, mapOriginalIds, type Snapshot, type ProcessingSpecification, type CsvOptions } from '@dashboard/data-core';
-import { projectLock, projectStore, type LocalProject } from './project-store';
-import { SyncHttpError } from './types';
+import { projectLock, projectStore, type LocalProject } from '../repositories/project-store';
+import { SyncHttpError } from '../types';
 
-import type { Preview, PreviewPage } from '../processing';
-import { previewCandidate } from './preview-candidate';
+import type { Preview, PreviewPage } from '../../processing';
+import { previewCandidate } from '../domain/preview-candidate';
 import { assertOriginalSource } from './project-backup';
-import { publishProjectProgress } from './project-events';
+import { publishProjectProgress } from '../domain/project-events';
 
 export async function createLocalProject(file:File,name:string,importOptions:CsvOptions={delimiter:','},creationId:string=crypto.randomUUID()):Promise<LocalProject>{
   const projectName=name.trim()||file.name;
@@ -56,19 +56,18 @@ export async function syncLocalProject(id:string,api:ProjectApi):Promise<LocalPr
   return projectLock(id,async()=>{
     const project=await projectStore.load(id);if(!project)throw new Error('LOCAL_PROJECT_NOT_FOUND');
     try{
-      const me=await api.request('users/me');
+      const me=await api.me();
       api.bindOwner(objectId(me._id));
       if(project.accountId&&project.accountId!==me._id)throw new SyncHttpError(403,'SYNC_ACCOUNT_MISMATCH','Đăng nhập đúng tài khoản đã gắn với dữ liệu này');
       if(!compatibleEngine(project.engineVersion,ENGINE_VERSION))throw new SyncHttpError(409,'SYNC_ENGINE_MISMATCH','Engine đã thay đổi; giữ nguyên dữ liệu local');
       if(!project.datasetId)try{await assertOriginalSource(project);}catch(error){throw new SyncHttpError(413,error instanceof Error?error.message:'LOCAL_SOURCE_MISSING','CSV nguồn bị thiếu hoặc không khớp; chọn lại file nguồn trước khi đồng bộ');}
       project.accountId=objectId(me._id);project.status='syncing';delete project.error;delete project.syncRetry;delete project.retryAfterMs;await projectStore.save(project);
-      if(!project.projectId){const result=await api.post('projects',{name:project.name},project.createKey);project.projectId=objectId(object(result.project)._id);await projectStore.save(project);}
+      if(!project.projectId){const result=await api.create(project.name,project.createKey);project.projectId=objectId(object(result.project)._id);await projectStore.save(project);}
       if(!project.datasetId){
-        const form=new FormData();form.set('importOptions',JSON.stringify(project.importOptions??{}));form.set('file',new Blob([new Uint8Array(project.source)],{type:'text/csv'}),project.fileName);
-        const result=await api.request(`projects/${project.projectId}/datasets`,{method:'POST',headers:{'Idempotency-Key':project.importKey},body:form});
+        const result=await api.importSource(project.projectId!,project.source,project.fileName,project.importOptions,project.importKey);
         project.datasetId=objectId(object(result.dataset)._id);project.serverVersionId=objectId(object(result.version)._id);project.importVersionId=project.serverVersionId;await projectStore.save(project);
       }
-      const remote=async()=>object((await api.request(`projects/${project.projectId}`)).dataset);
+      const remote=async()=>object((await api.detail(project.projectId!)).dataset);
       const verifyHead=async(expected:string)=>{const state=await remote();if(state._id!==project.datasetId||state.currentVersionId!==expected)throw new SyncHttpError(409,'BASE_VERSION_STALE','Server đã đổi phiên bản; giữ bản local');return state;};
       if(!project.mapping){const state=await verifyHead(project.serverVersionId!);const snapshot=await api.snapshot(project.datasetId!,project.serverVersionId!);project.mapping=verifyMapping(project.original,snapshot,project,String(object(state.originalFile).sha256));await projectStore.save(project);}
       while(project.cursor<project.operations.length){
@@ -76,7 +75,7 @@ export async function syncLocalProject(id:string,api:ProjectApi):Promise<LocalPr
         if(project.restoredBackup&&operation.kind==='process'&&operation.phase==='apply-sent'&&operation.previewId){
           // An imported file cannot assert that an Apply was sent. If its preview
           // is still ready, recheck the entire candidate before any publication.
-          try{const view=await api.request(`datasets/${project.datasetId}/previews/${operation.previewId}?page=1&limit=100`) as unknown as PreviewPage;if(view.preview.status==='ready')operation.phase='preview-sent';}
+          try{const view=await api.previewPage(project.datasetId!,operation.previewId,1) as unknown as PreviewPage;if(view.preview.status==='ready')operation.phase='preview-sent';}
           catch(error){if(!(error instanceof SyncHttpError&&[404,410].includes(error.status)))throw error;}
         }
         // A sent Apply may already have committed: replay its receipt before checking stale head.
@@ -84,13 +83,13 @@ export async function syncLocalProject(id:string,api:ProjectApi):Promise<LocalPr
         if(operation.kind==='process'&&(operation.phase==='queued'||operation.phase==='preview-sent')){
           try{
           operation.serverSpecification??=mappedSpec(operation.specification,project);operation.phase='preview-sent';await projectStore.save(project);
-          const result=await api.post(`datasets/${project.datasetId}/previews`,{baseVersionId:project.serverVersionId,specification:operation.serverSpecification},operation.previewKey);
+          const result=await api.preview(project.datasetId!,project.serverVersionId!,operation.serverSpecification,operation.previewKey);
           if(!compatibleEngine(String(result.engineVersion),project.engineVersion,operation.specification.method)||result.canApply!==true||result.status!=='ready')throw new SyncHttpError(409,'SYNC_PREVIEW_MISMATCH','Preview server khác kết quả offline');
           const previewId=objectId(result.previewId);
           const base=await api.snapshot(project.datasetId!,project.serverVersionId!);
           const changes:PreviewPage['changes']=[];let total:number|undefined;
           for(let page=1;total===undefined||changes.length<total;page++){
-            const view=await api.request(`datasets/${project.datasetId}/previews/${previewId}?page=${page}&limit=100`) as unknown as PreviewPage;
+            const view=await api.previewPage(project.datasetId!,previewId,page) as unknown as PreviewPage;
             if(view.preview.previewId!==previewId||view.preview.baseVersionId!==project.serverVersionId||!compatibleEngine(view.preview.engineVersion,project.engineVersion,operation.specification.method)||view.preview.specHash!==result.specHash||view.preview.status!=='ready'||!view.preview.canApply||Date.parse(view.preview.expiresAt)<=Date.now()||!Number.isSafeInteger(view.totalChanges)||view.totalChanges<0||!Array.isArray(view.changes)||view.page!==page||total!==undefined&&total!==view.totalChanges)throw new SyncHttpError(409,'SYNC_PREVIEW_MISMATCH','Preview đã đổi hoặc hết hạn; chưa Apply');
             total=view.totalChanges;
             if(changes.length+view.changes.length>total||changes.length<total&&!view.changes.length)throw new SyncHttpError(409,'SYNC_PREVIEW_MISMATCH','Preview thiếu trang thay đổi; chưa Apply');
@@ -117,11 +116,11 @@ export async function syncLocalProject(id:string,api:ProjectApi):Promise<LocalPr
           const target=operation.target===0?project.importVersionId:project.operations[operation.target-1].resultVersionId;
           if(!target)throw new Error('SYNC_MAPPING_REQUIRED');
           operation.phase='apply-sent';await projectStore.save(project);
-          const result=await api.post(`datasets/${project.datasetId}/versions/${target}/restore`,{expectedCurrentVersionId:project.serverVersionId},operation.applyKey);
+          const result=await api.restore(project.datasetId!,target,project.serverVersionId,operation.applyKey);
           version=objectId(object(result.newVersion)._id);
         }else{
           let result:Json;
-          try{result=await api.post(`datasets/${project.datasetId}/operations`,{previewId:operation.previewId},operation.applyKey);}
+          try{result=await api.apply(project.datasetId!,operation.previewId,operation.applyKey);}
           catch(error){
             // A terminal reply to the ORIGINAL Apply key confirms that attempt did
             // not commit. Only then may a new preview/key be created on the same head.

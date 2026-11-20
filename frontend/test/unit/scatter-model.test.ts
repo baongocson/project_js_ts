@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { scatterModel } from '../../src/features/analysis/scatter-model';
-import { localAnalysis } from '../../src/features/analysis/api/analysis-adapters';
+import { localAnalysis } from '../../src/features/analysis/services/analysis-service';
 import { importCsv } from '@dashboard/data-core';
 
 void test('points and axis ticks share one transform with full-version bounds, constant axes and extreme finite numbers',()=>{

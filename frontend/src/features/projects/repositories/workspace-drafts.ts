@@ -1,4 +1,4 @@
-import type { Workspace } from './types';
+import type { Workspace } from '../types';
 export type WorkspacePatch=Partial<Pick<Workspace,'tableState'|'selection'|'chartConfig'|'activeTab'>>;
 export interface WorkspaceDraft {schema:1;id:string;userId:string;projectId:string;revision:number;boundVersionId:string|null;patch:WorkspacePatch;updatedAt:string}
 const prefix='dashboard-workspace-draft-v1:';

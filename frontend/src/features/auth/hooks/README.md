@@ -1,6 +1,6 @@
 # auth/hooks
 
-Quản lý phiên, xác thực form, hồ sơ và xác nhận đăng xuất/xóa tài khoản. Kiểm quyền và xóa dữ liệu vẫn theo API cùng callback an toàn được app truyền vào.
+Hook giữ state/effect cho phiên, form, hồ sơ và xác nhận đăng xuất/xóa tài khoản. `session.ts` chỉ subscribe và bootstrap React; token, refresh, khóa và session store được quản lý bởi `../services/session-service.ts`. Kiểm quyền và xóa dữ liệu vẫn theo API cùng callback an toàn được app truyền vào.
 
 ## File triển khai
 

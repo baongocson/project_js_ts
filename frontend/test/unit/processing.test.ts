@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { ENGINE_VERSION,importCsv,processSnapshot,projectPreview,type ProcessingMethod,type ProcessingSpecification,type Scope,type Snapshot } from '@dashboard/data-core';
 import { makeSpecification, methodGroups, presets } from '../../src/features/processing/methods';
-import { previewCandidate } from '../../src/features/offline/preview-candidate';
+import { previewCandidate } from '../../src/features/offline/domain/preview-candidate';
 import type { Preview,PreviewChange } from '../../src/features/processing/types';
 
 void test('workspace groups expose every contracted method exactly once and do not inherit old-only operations',()=>{

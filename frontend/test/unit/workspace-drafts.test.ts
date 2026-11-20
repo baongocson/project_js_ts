@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { draftMatches,workspaceDrafts,type WorkspaceDraft } from '../../src/features/projects/workspace-drafts';
+import { draftMatches,workspaceDrafts,type WorkspaceDraft } from '../../src/features/projects/repositories/workspace-drafts';
 import type { Workspace } from '../../src/features/projects/types';
 const data=new Map<string,string>();let quota=false;
 Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{get length(){return data.size;},key:(index:number)=>[...data.keys()][index]??null,getItem:(key:string)=>data.get(key)??null,setItem:(key:string,value:string)=>{if(quota)throw new DOMException('Full','QuotaExceededError');data.set(key,value);},removeItem:(key:string)=>data.delete(key)}});

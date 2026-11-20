@@ -4,7 +4,7 @@ import { type AnalysisSettings } from './useAnalysisResource';
 import { useEffect, useState } from 'react';
 import type { Column, Row } from '@dashboard/data-core';
 
-import type { AnalysisAdapter } from '../api/analysis-adapters';
+import type { AnalysisAdapter } from '../services/analysis-service';
 
 import type { ProcessingAdapter } from '../../processing';
 

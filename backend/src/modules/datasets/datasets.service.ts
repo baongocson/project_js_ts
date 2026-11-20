@@ -12,7 +12,7 @@ import type { Principal } from '../auth/security/auth-context';
 import type { CsvUploadDto, ImportOptionsDto } from './dto/import-options.dto';
 import type { DatasetRecord, VersionRecord } from '../../infrastructure/database/be2-records';
 import { ProjectStateService } from '../projects/project-state.service';
-import { OperationWriterService } from '../processing/operation-writer.service';
+import { OperationWriterRepository } from '../processing/operation-writer.repository';
 import type { RowsQueryDto } from './dto/dataset-query.dto';
 import { snapshotContentHash } from './snapshot-hash';
 export function publicRow(row: Row) {
@@ -23,7 +23,7 @@ export function publicRow(row: Row) {
 }
 @Injectable()
 export class DatasetsService {
-  constructor(private readonly repository: DatasetsRepository, private readonly idempotency: IdempotencyService, private readonly storage: OriginalStorageService, private readonly ownership: OwnershipService, private readonly projects: ProjectStateService, private readonly operations: OperationWriterService, private readonly storageWrites: StorageWriteBarrier) {}
+  constructor(private readonly repository: DatasetsRepository, private readonly idempotency: IdempotencyService, private readonly storage: OriginalStorageService, private readonly ownership: OwnershipService, private readonly projects: ProjectStateService, private readonly operations: OperationWriterRepository, private readonly storageWrites: StorageWriteBarrier) {}
   async importCsv(principal: Principal, projectId: string, options: ImportOptionsDto, key: string, file?: CsvUploadDto) {
     await this.ownership.project(projectId, principal, true);
     if (!file) throw new BadRequestException({ code: 'VALIDATION_ERROR', message: 'Thiếu file CSV' });

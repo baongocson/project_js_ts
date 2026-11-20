@@ -7,6 +7,8 @@ DTO, validation, policy và xử lý lỗi dùng chung.
 - domain/ — thư mục con, xem README bên trong.
 - dto/ — thư mục con, xem README bên trong.
 - filters/ — thư mục con, xem README bên trong.
+- interceptors/ — request logging ở hai chiều của handler.
+- pipes/ — DtoValidationPipe gọi parser kiểm request.
 - validation/ — thư mục con, xem README bên trong.
 
 ## Luồng và phạm vi

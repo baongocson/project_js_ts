@@ -2,7 +2,7 @@ import { useResource, type AnalysisSettings } from './useAnalysisResource';
 import { useCallback, useMemo } from 'react';
 import type { Column, AnalysisSummaryResult } from '@dashboard/data-core';
 
-import type { AnalysisAdapter } from '../api/analysis-adapters';
+import type { AnalysisAdapter } from '../services/analysis-service';
 
 export type SummaryProps = {adapter:AnalysisAdapter;columns:Column[];config:AnalysisSettings};
 export function useSummary({adapter,columns,config}:{adapter:AnalysisAdapter;columns:Column[];config:AnalysisSettings}){

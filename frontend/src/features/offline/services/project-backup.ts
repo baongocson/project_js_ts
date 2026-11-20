@@ -1,6 +1,6 @@
 import { compatibleEngine, ENGINE_VERSION,encodeSnapshot,importCsv,mapOriginalIds,processSnapshot,sameCell,type Snapshot } from '@dashboard/data-core';
-import { projectLock,projectStore,type LocalProject } from './project-store';
-import { makeSpecification } from '../processing';
+import { projectLock,projectStore,type LocalProject } from '../repositories/project-store';
+import { makeSpecification } from '../../processing';
 
 export async function sourceHash(bytes:Uint8Array){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes)))).map(value=>value.toString(16).padStart(2,'0')).join('');}
 export function hasOriginalSource(project:LocalProject){return project.source instanceof Uint8Array&&project.source.byteLength>0;}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { scanSuggestions, suggestionSpecification, type AiSuggestion, type AiSuggestions, type SuggestionsFetcher } from '../../src/features/processing/ai-suggestions';
-import { onlineProcessing } from '../../src/features/processing/api/online-processing';
+import { onlineProcessing } from '../../src/features/processing/services/online-processing';
 import { configureAuthTransport } from '../../src/shared/api';
 
 const suggestion: AiSuggestion = { id: 'one', reason: 'HTML', evidence: '1/2', caution: 'Review', specification: { method: 'strip_html', parameters: { decodeEntities: true }, scope: { type: 'columns', columnIds: ['last'] }, statisticsScope: { type: 'whole-columns' } } };

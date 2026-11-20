@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { createOfflineQueue } from '../../src/features/offline/queue.ts';
-import { replayOfflineQueue } from '../../src/features/offline/replay.ts';
+import { createOfflineQueue } from '../../src/features/offline/services/queue.ts';
+import { replayOfflineQueue } from '../../src/features/offline/services/replay.ts';
 import { SyncHttpError } from '../../src/features/offline/types.ts';
 
 const ID = 'aaaaaaaaaaaaaaaaaaaaaaaa';

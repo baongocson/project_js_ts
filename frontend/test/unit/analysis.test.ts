@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { importCsv,type Snapshot } from '@dashboard/data-core';
-import { localAnalysis,onlineAnalysis } from '../../src/features/analysis/api/analysis-adapters';
+import { localAnalysis,onlineAnalysis } from '../../src/features/analysis/services/analysis-service';
 
 function snapshot(source:string){let id=0;return importCsv(new TextEncoder().encode(source),{delimiter:','},()=>`id-${++id}`);}
 void test('local analysis uses full typed snapshot, pair counts/N/A, complete frequency denominator and stable sampling',async()=>{

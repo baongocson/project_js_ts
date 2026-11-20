@@ -2,7 +2,7 @@ import { parseEmptyQuery } from '../../common/validation/query.validation';
 import { Body, Controller, Delete, Get, HttpCode, Patch, Query } from '@nestjs/common';
 import { CurrentPrincipal, type Principal } from '../auth/security/auth-context';
 import { UsersService } from './users.service';
-import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
+import { DtoValidationPipe } from '../../common/pipes/dto-validation.pipe';
 import type { PatchUserDto } from './dto/user.dto';
 import { parsePatchUser } from './dto/user.validation';
 import { parseEmptyBody } from '../auth/dto/auth.validation';

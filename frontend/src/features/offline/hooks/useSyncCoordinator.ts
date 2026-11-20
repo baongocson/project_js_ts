@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
 import { session,useSession } from '../../auth';
-import { ApiError,requestJson } from '../../../shared/api';
-import { projectLock,projectStore,type LocalProject } from '../project-store';
-import { ProjectApi,syncLocalProject } from '../project-sync';
-import { subscribeProjectProgress } from '../project-events';
-export const MAX_AUTO_ATTEMPTS=5;
-export function retryDelay(attempt:number){return Math.min(60_000,2000*2**Math.max(0,attempt-1));}
-export function autoEligible(project:LocalProject,userId:string){return !!project.autoSync&&project.accountId===userId&&!['conflict','blocked'].includes(project.status)&&(!project.datasetId||project.cursor<project.operations.length)&&(project.syncRetry?.attempt??0)<MAX_AUTO_ATTEMPTS;}
+import { ApiError,getHealth } from '../../../shared/api';
+import { projectLock,projectStore,type LocalProject } from '../repositories/project-store';
+import { ProjectApi,syncLocalProject } from '../services/project-sync';
+import { subscribeProjectProgress } from '../domain/project-events';
+import { retryDelay,autoEligible } from '../services/sync-policy';
+export { MAX_AUTO_ATTEMPTS,retryDelay,autoEligible } from '../services/sync-policy';
 export function useSyncCoordinator(){
   const current=useSession(),userId=current.status==='authenticated'?current.user?._id:undefined;
   useEffect(()=>{
@@ -29,7 +28,7 @@ export function useSyncCoordinator(){
             if(stopped||session.getSnapshot().user?._id!==userId)break;
             const due=project.syncRetry?.nextAt??0;if(due>Date.now()){next=Math.min(next??Infinity,due);continue;}
             // onLine is only a hint: probe the API before reading credentials or replaying mutations.
-            try{await requestJson('health',{auth:false});}catch(error){await retry(project,'NETWORK_OR_API_UNAVAILABLE',error instanceof ApiError?error.retryAfter??0:0);continue;}
+            try{await getHealth();}catch(error){await retry(project,'NETWORK_OR_API_UNAVAILABLE',error instanceof ApiError?error.retryAfter??0:0);continue;}
             if(stopped||session.getSnapshot().user?._id!==userId)break;
             const result=await syncLocalProject(project.id,new ProjectApi(()=>session.accessToken()??''));
             if(result.status==='retry')await retry(project,undefined,result.retryAfterMs??0);

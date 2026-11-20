@@ -1,12 +1,12 @@
 import { parseEmptyQuery } from '../../common/validation/query.validation';
 import { Body, Controller, Get, Param, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { CsvUploadInterceptor } from './csv-upload.interceptor';
-import { Be2RequestLogInterceptor } from '../../common/be2-request-log.interceptor';
+import { CsvUploadInterceptor } from './interceptors/csv-upload.interceptor';
+import { Be2RequestLogInterceptor } from '../../common/interceptors/be2-request-log.interceptor';
 import { InputValidator } from '../../common/validation/validation';
 import { CurrentPrincipal, type Principal } from '../auth/security/auth-context';
 import type { CsvUploadDto } from './dto/import-options.dto';
 import { DatasetsService } from './datasets.service';
-import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
+import { DtoValidationPipe } from '../../common/pipes/dto-validation.pipe';
 import { IdempotencyKey } from '../../common/validation/idempotency-key.decorator';
 import { resourceParams, type ResourceParamsDto } from '../../common/validation/request.validation';
 import type { ImportOptionsDto } from './dto/import-options.dto';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Column, DistributionResult } from '@dashboard/data-core';
-import type { AnalysisAdapter } from '../api/analysis-adapters';
+import type { AnalysisAdapter } from '../services/analysis-service';
 
 export type BoxplotProps = {adapter:AnalysisAdapter;columns:Column[]};
 export function useBoxplot({adapter,columns}:{adapter:AnalysisAdapter;columns:Column[]}){

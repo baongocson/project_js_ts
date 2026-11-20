@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { CurrentPrincipal, type Principal } from '../auth/security/auth-context';
 import { AnalysisService } from './analysis.service';
-import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
+import { DtoValidationPipe } from '../../common/pipes/dto-validation.pipe';
 import { resourceParams, type ResourceParamsDto } from '../../common/validation/request.validation';
 import type { SummaryQueryDto, DistributionQueryDto, CorrelationQueryDto, Points3dQueryDto, ValueCountsQueryDto } from './dto/analysis-query.dto';
 import { parseSummaryQuery, parseDistributionQuery, parseCorrelationQuery, parsePoints3dQuery, parseValueCountsQuery } from './dto/analysis-query.validation';

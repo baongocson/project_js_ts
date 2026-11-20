@@ -4,7 +4,7 @@ import { Connection, Types, type ClientSession } from 'mongoose';
 import { Be2Repository } from './be2-repository';
 /** Internal cleanup coordinator, analogous to account cleanup. No HTTP authorization role. */
 @Injectable()
-export class RecoveryFenceService extends Be2Repository {
+export class RecoveryFenceRepository extends Be2Repository {
   constructor(@Optional() @InjectConnection() connection?: Connection) { super(connection); }
   async activeProject(projectId: Types.ObjectId, session: ClientSession): Promise<boolean> {
     const project = await this.db().collection('projects').findOne({ _id: projectId, lifecycle: { $in: ['empty', 'ready'] } }, { session });

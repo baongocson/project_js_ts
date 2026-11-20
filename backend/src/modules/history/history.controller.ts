@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CurrentPrincipal, type Principal } from '../auth/security/auth-context';
 import { parseEmptyQuery } from '../../common/validation/query.validation';
-import { DtoValidationPipe } from '../../common/validation/dto-validation.pipe';
+import { DtoValidationPipe } from '../../common/pipes/dto-validation.pipe';
 import { IdempotencyKey } from '../../common/validation/idempotency-key.decorator';
 import { resourceParams, type ResourceParamsDto } from '../../common/validation/request.validation';
 import { HistoryService } from './history.service';

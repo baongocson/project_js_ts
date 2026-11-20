@@ -1,1 +1,1 @@
-export {localProcessing,localVersion} from './api/local-processing';
+export {localProcessing,localVersion} from './services/local-processing';

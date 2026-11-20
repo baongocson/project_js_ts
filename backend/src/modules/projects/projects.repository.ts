@@ -18,7 +18,7 @@ export class ProjectsRepository extends Be2Repository {
     // Out-of-range pages are valid and empty, including a safe page number whose
     // page*limit would otherwise overflow the driver's safe integer skip range.
     const items = query.page > Math.ceil(total / query.limit) ? [] : await this.db().collection<ProjectRecord>('projects').find(filter).sort({ [field]: direction, _id: -1 }).skip((query.page - 1) * query.limit).limit(query.limit).toArray();
-    return { items: items.map(item => ({ _id: item._id.toHexString(), name: item.name, lifecycle: item.lifecycle, updatedAt: item.updatedAt.toISOString() })), page: query.page, limit: query.limit, total };
+    return { items, page: query.page, limit: query.limit, total };
   }
   async get(id: string, session?: ClientSession) {
     const project = await this.db().collection<ProjectRecord>('projects').findOne({ _id: new Types.ObjectId(id), lifecycle: { $ne: 'deleting' } }, { session });
@@ -33,7 +33,7 @@ export class ProjectsRepository extends Be2Repository {
   async rename(id: string, name: string, session: ClientSession) {
     const updatedAt = new Date();
     await this.db().collection<ProjectRecord>('projects').updateOne({ _id: new Types.ObjectId(id), lifecycle: { $ne: 'deleting' } }, { $set: { name, updatedAt } }, { session });
-    return { _id: id, name, updatedAt: updatedAt.toISOString() };
+    return { _id: id, name, updatedAt };
   }
   async saveWorkspace(before: WorkspaceRecord, next: WorkspaceRecord, session: ClientSession): Promise<void> {
     const result = await this.db().collection<WorkspaceRecord>('workspaces').replaceOne({ _id: before._id, revision: before.revision, boundVersionId: before.boundVersionId }, next, { session });

@@ -10,12 +10,14 @@ import { join } from 'node:path';
 import { createTestApp, record } from '../../../utils';
 import { AccountCleanupService } from '../../../../infrastructure/database/account-cleanup.service';
 import { IdempotencyService, sha256 } from '../../../../infrastructure/idempotency/idempotency.service';
+import { IdempotencyRepository } from '../../../../infrastructure/idempotency/idempotency.repository';
 import { OriginalStorageService } from '../../../../infrastructure/storage/original-storage.service';
 import { DatasetsRepository } from '../../../../modules/datasets/datasets.repository';
 import { DatasetsService } from '../../../../modules/datasets/datasets.service';
 import { ProjectsRepository } from '../../../../modules/projects/projects.repository';
+import { ImportRecoveryRepository } from '../../../../modules/datasets/import-recovery.repository';
 import { ImportRecoveryService } from '../../../../modules/datasets/import-recovery.service';
-import { OperationWriterService } from '../../../../modules/processing/operation-writer.service';
+import { OperationWriterRepository } from '../../../../modules/processing/operation-writer.repository';
 import { ProjectsService } from '../../../../modules/projects/projects.service';
 import { OwnershipService } from '../../../../modules/auth/security/ownership.service';
 import { SnapshotPublisherService } from '../../../../modules/datasets/snapshot-publisher.service';
@@ -240,7 +242,7 @@ describe('BE-2 real MongoDB + filesystem + protected HTTP', () => {
   });
   it('automatically heartbeats while work is in progress', async () => {
     const ownership = fixture.app.get(OwnershipService), id = await create();
-    const service = new IdempotencyService(ownership, new ConfigService({ IDEMPOTENCY_LEASE_MS: 1500, IDEMPOTENCY_HEARTBEAT_MS: 150 }), connection);
+    const service = new IdempotencyService(ownership, new ConfigService({ IDEMPOTENCY_LEASE_MS: 1500, IDEMPOTENCY_HEARTBEAT_MS: 150 }), new IdempotencyRepository(connection));
     const claim = await service.claim(principal, id, 'be2.automatic-heartbeat', randomUUID(), {});
     if (claim.replay) throw new Error('Expected lease');
     const before = await connection.db!.collection('idempotencyRecords').findOne({ _id: claim.lease.id });
@@ -264,7 +266,7 @@ describe('BE-2 real MongoDB + filesystem + protected HTTP', () => {
   });
   it('rolls back publish when ledger write fails, then resumes the same request after lease expiry', async () => {
     const id = await create(), key = randomUUID();
-    const spy = jest.spyOn(fixture.app.get(OperationWriterService), 'append').mockRejectedValueOnce(new Error('Injected ledger failure'));
+    const spy = jest.spyOn(fixture.app.get(OperationWriterRepository), 'append').mockRejectedValueOnce(new Error('Injected ledger failure'));
     await upload(id, key).expect(500);
     spy.mockRestore();
     const dataset = await connection.db!.collection('datasets').findOne({ projectId: new Types.ObjectId(id) });
@@ -291,11 +293,11 @@ describe('BE-2 real MongoDB + filesystem + protected HTTP', () => {
     expect(takeover.replay).toBe(false);
     await expect(repository.transaction(session => service.touch(claim.lease, session))).rejects.toMatchObject({ status: 409 });
     const failureKey = randomUUID();
-    const spy = jest.spyOn(fixture.app.get(OperationWriterService), 'append').mockRejectedValueOnce(new Error('abandon import'));
+    const spy = jest.spyOn(fixture.app.get(OperationWriterRepository), 'append').mockRejectedValueOnce(new Error('abandon import'));
     await upload(id, failureKey).expect(500); spy.mockRestore();
     await connection.db!.collection('idempotencyRecords').updateOne({ projectId: new Types.ObjectId(id), keyDigest: sha256(failureKey) }, { $set: { leaseUntil: new Date(0) } });
     const restartConfig = new ConfigService({ DATABASE_ENABLED: 'true', IMPORT_RECOVERY_ENABLED: 'true' });
-    const restarted = new ImportRecoveryService(repository, fixture.app.get(OriginalStorageService), restartConfig, connection);
+    const restarted = new ImportRecoveryService(repository, fixture.app.get(OriginalStorageService), restartConfig, fixture.app.get(ImportRecoveryRepository));
     const realRecover = restarted.recover.bind(restarted);
     const scoped = jest.spyOn(restarted, 'recover').mockImplementation(() => realRecover(id));
     const previousRecovery = process.env.IMPORT_RECOVERY_ENABLED;

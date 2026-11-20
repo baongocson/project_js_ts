@@ -2,5 +2,5 @@
 export { ProjectsPage } from './pages/ProjectsPage';
 export { projectsApi } from './api/projects-api';
 export type { Project,ProjectDetail,Workspace,Dataset,Adjustment,RowFilter,Page,VersionMetadata } from './types';
-export { workspaceDrafts,draftMatches } from './workspace-drafts';
-export type { WorkspaceDraft,WorkspacePatch } from './workspace-drafts';
+export { workspaceDrafts,draftMatches } from './repositories/workspace-drafts';
+export type { WorkspaceDraft,WorkspacePatch } from './repositories/workspace-drafts';

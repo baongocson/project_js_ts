@@ -1,5 +1,5 @@
 import type { Snapshot, ProcessingSpecification, IdMapping,CsvOptions } from '@dashboard/data-core';
-import { publishProjectProgress,publishProjectRemoval } from './project-events';
+import { publishProjectProgress,publishProjectRemoval } from '../domain/project-events';
 
 export type LocalOperation = {
   id: string; snapshot: Snapshot;

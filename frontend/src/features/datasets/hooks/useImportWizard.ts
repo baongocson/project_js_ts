@@ -1,17 +1,10 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
-import { DataError, importCsv, type LogicalType, type Snapshot } from '@dashboard/data-core';
-import { ApiError } from '../../../shared/api';
+import type { LogicalType, Snapshot } from '@dashboard/data-core';
+import { optionsFor,errorMessage,readImportSource,previewImport,importDataset } from '../services/import-service';
 
-import { datasetsApi, type ImportOptions } from '../api/datasets-api';
+import { type ImportOptions } from '../api/datasets-api';
 
 type Props={disabled?:boolean}&({local?:false;projectId:string;onImported():Promise<void>}|{local:true;onImportLocal(file:File,options:ImportOptions,key:string):Promise<void>});
-function optionsFor(delimiter:ImportOptions['delimiter'],overrides:Record<number,LogicalType>):ImportOptions{return {delimiter,...(Object.keys(overrides).length?{columnTypes:Object.entries(overrides).map(([position,logicalType])=>({position:Number(position),logicalType}))}:{})};}
-function errorMessage(error:unknown){
-  const message=error instanceof Error?error.message:'Không đọc được CSV';
-  if(!(error instanceof ApiError||error instanceof DataError))return message;
-  const issues=(error.details as {issues?:{code?:string;recordIndex?:number;lineStart?:number;lineEnd?:number;columnPosition?:number;message?:string}[]}|undefined)?.issues;
-  return message+(issues?.length?' · '+issues.map(issue=>`${issue.code??''} · Record ${issue.recordIndex??'—'}, dòng ${issue.lineStart??'—'}–${issue.lineEnd??'—'}, cột ${issue.columnPosition??'—'}: ${issue.message??''}`).join('; '):'');
-}
 export type ImportWizardProps = Props;
 export function useImportWizard(props:Props){
   const id=useId(),input=useRef<HTMLInputElement>(null),inspection=useRef(0);
@@ -21,20 +14,20 @@ export function useImportWizard(props:Props){
   const busy=working||!!props.disabled;
   async function inspect(next:File|undefined,separator:ImportOptions['delimiter']){
     const stamp=++inspection.current;setFile(next);setDelimiter(separator);setPreview(undefined);setInferred(undefined);setSource(undefined);setOverrides({});setError('');if(!next){setInspecting(false);return;}setInspecting(true);
-    try{if(next.size>16_000_000)throw new Error('CSV vượt 16.000.000 byte');const bytes=new Uint8Array(await next.arrayBuffer());if(stamp!==inspection.current)return;const snapshot=importCsv(bytes,{delimiter:separator},()=>crypto.randomUUID());setSource(bytes);setInferred(snapshot);setPreview(snapshot);}
+    try{const bytes=await readImportSource(next);if(stamp!==inspection.current)return;const snapshot=previewImport(bytes,{delimiter:separator});setSource(bytes);setInferred(snapshot);setPreview(snapshot);}
     catch(error){if(stamp===inspection.current)setError(errorMessage(error));}
     finally{if(stamp===inspection.current)setInspecting(false);}
   }
   function override(position:number,type:string){
     if(!source)return;const next={...overrides};if(type)next[position]=type as LogicalType;else delete next[position];setOverrides(next);setError('');
-    try{setPreview(importCsv(source,optionsFor(delimiter,next),()=>crypto.randomUUID()));}catch(error){setPreview(undefined);setError(errorMessage(error));}
+    try{setPreview(previewImport(source,optionsFor(delimiter,next)));}catch(error){setPreview(undefined);setError(errorMessage(error));}
   }
   async function submit(event:FormEvent){
     event.preventDefault();if(!file||!preview||busy||inspecting||submitting.current)return;submitting.current=true;setWorking(true);setError('');
     const options=optionsFor(delimiter,overrides),payload=JSON.stringify(options);if(pending.current?.file!==file||pending.current.payload!==payload)pending.current={file,payload,key:crypto.randomUUID()};
     try{
       if(props.local){await props.onImportLocal(file,options,pending.current.key);setFile(undefined);setPreview(undefined);setInferred(undefined);setSource(undefined);setOverrides({});if(input.current)input.current.value='';}
-      else{await datasetsApi.import(props.projectId,file,options,pending.current.key);await props.onImported();}
+      else{await importDataset(props.projectId,file,options,pending.current.key);await props.onImported();}
       pending.current=undefined;
     }catch(error){setError(errorMessage(error));}
     finally{submitting.current=false;setWorking(false);}

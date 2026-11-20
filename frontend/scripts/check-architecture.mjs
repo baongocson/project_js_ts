@@ -25,7 +25,8 @@ const errors = [];
 
 // Required feature folders must contain implementations, not only placeholder barrels.
 for (const feature of fs.readdirSync(path.join(root, 'features'), { withFileTypes: true }).filter(entry => entry.isDirectory())) {
-  for (const folder of ['api', 'hooks', 'components', 'pages']) {
+  // Local-only features need no HTTP API. Services are optional for simple CRUD.
+  for (const folder of ['hooks', 'components', 'pages']) {
     const directory = path.join(root, 'features', feature.name, folder);
     if (!fs.existsSync(directory) || !fs.readdirSync(directory).some(name => /\.tsx?$/.test(name) && name !== 'index.ts')) {
       errors.push(`Thiếu triển khai trong thư mục bắt buộc: features/${feature.name}/${folder}`);
@@ -35,7 +36,7 @@ for (const feature of fs.readdirSync(path.join(root, 'features'), { withFileType
 
 for (const file of files) {
   const source = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
-  function checkSpecifier(specifier) {
+  function checkSpecifier(specifier, runtime = true) {
     if (!specifier || !ts.isStringLiteralLike(specifier)) return;
     const resolved = ts.resolveModuleName(specifier.text, file, options, ts.sys).resolvedModule;
     if (!resolved) return; // tsc reports unresolved TypeScript imports; CSS is outside this graph.
@@ -56,12 +57,48 @@ for (const file of files) {
     const targetParts = relative(target).split('/');
     const sourceParts = relative(file).split('/');
     const sameFeature = from === 'features' && sourceParts[1] === targetParts[1];
+    const sourceLayer = from === 'features' ? sourceParts[2] : sourceParts[1];
+    const targetLayer = to === 'features' ? targetParts[2] : targetParts[1];
+    if (runtime && (sameFeature || from === 'app' && to === 'app')) {
+      const forbidden = {
+        services: ['hooks', 'components', 'pages'],
+        api: ['services', 'repositories', 'hooks', 'components', 'pages'],
+        repositories: ['services', 'api', 'hooks', 'components', 'pages'],
+        domain: ['services', 'api', 'repositories', 'hooks', 'components', 'pages'],
+        components: ['api', 'services', 'repositories'],
+        pages: ['api', 'services', 'repositories'],
+      };
+      if (forbidden[sourceLayer]?.includes(targetLayer)) {
+        errors.push(`Sai trách nhiệm tầng: ${relative(file)} -> ${relative(target)}`);
+      }
+    }
     if (to === 'features' && !sameFeature && targetParts.length > 2 &&
         !(targetParts.length === 3 && targetParts[2] === 'index.ts')) {
       errors.push(`Import sâu vào feature: ${relative(file)} -> ${relative(target)}`);
     }
   }
   function visit(node) {
+    if (ts.isImportDeclaration(node)) {
+      const parts = relative(file).split('/');
+      const layer = parts[0] === 'features' ? parts[2] : parts[1];
+      const bindings = node.importClause?.namedBindings;
+      const importsRequest = !node.importClause?.isTypeOnly && bindings && ts.isNamedImports(bindings) &&
+        bindings.elements.some(item => !item.isTypeOnly && (item.propertyName ?? item.name).text === 'requestJson');
+      if (parts[0] !== 'shared' && layer !== 'api' && importsRequest) {
+        errors.push(`HTTP client chỉ được gọi từ api: ${relative(file)}`);
+      }
+      if (['services', 'repositories', 'api', 'domain'].includes(layer) &&
+          ['react', 'react-dom', 'react-router-dom'].includes(node.moduleSpecifier.text) && !node.importClause?.isTypeOnly &&
+          (!bindings || !ts.isNamedImports(bindings) || bindings.elements.some(item => !item.isTypeOnly))) {
+        errors.push(`Tầng ${layer} không phụ thuộc React: ${relative(file)}`);
+      }
+    }
+    if (ts.isCallExpression(node) &&
+        (ts.isIdentifier(node.expression) && node.expression.text === 'fetch' ||
+         ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'fetch') &&
+        relative(file) !== 'shared/api/http-client.ts') {
+      errors.push(`fetch phải tập trung tại HTTP client: ${relative(file)}`);
+    }
     if (ts.isImportDeclaration(node) && relative(file).startsWith('features/')) {
       const folder = relative(file).split('/')[2];
       const bindings = node.importClause?.namedBindings;
@@ -74,7 +111,14 @@ for (const file of files) {
         errors.push(`State/effect nghiệp vụ phải đặt trong hooks: ${relative(file)}`);
       }
     }
-    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) checkSpecifier(node.moduleSpecifier);
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+      const clause = node.importClause;
+      const bindings = clause?.namedBindings;
+      const runtime = ts.isImportDeclaration(node)
+        ? !clause?.isTypeOnly && (!bindings || !ts.isNamedImports(bindings) || bindings.elements.some(item => !item.isTypeOnly))
+        : !node.isTypeOnly;
+      checkSpecifier(node.moduleSpecifier, runtime);
+    }
     if (ts.isCallExpression(node) && (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
         (ts.isIdentifier(node.expression) && node.expression.text === 'require'))) {
       checkSpecifier(node.arguments[0]);

@@ -1,5 +1,5 @@
-import type { OfflineQueue, QueueStore, SyncAdapter, OfflineCommand } from './types.ts';
-import { SyncHttpError as HttpError } from './types.ts';
+import type { OfflineQueue, QueueStore, SyncAdapter, OfflineCommand } from '../types.ts';
+import { SyncHttpError as HttpError } from '../types.ts';
 
 export interface ReplayResult { status: OfflineQueue['status']; cursor: number; error?: string }
 

@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import type { ProcessingSpecificationDto } from '../processing/dto/processing.dto';
 import type { ImportOptionsDto } from '../datasets/dto/import-options.dto';
 import type { OperationDto } from '../processing/dto/processing-response.dto';
-import type { CommittedOperation } from '../processing/operation-writer.service';
+import type { CommittedOperation } from '../processing/operation-writer.repository';
 import { OwnershipService } from '../auth/security/ownership.service';
 import type { Principal } from '../auth/security/auth-context';
 import { DatasetsRepository } from '../datasets/datasets.repository';

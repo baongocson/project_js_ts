@@ -5,7 +5,7 @@ Object.defineProperty(globalThis, 'BroadcastChannel', { value: undefined, config
 Object.defineProperty(globalThis, 'navigator', { value: { onLine: true, locks: { request: async (_name: string, callback: () => Promise<unknown>) => callback() } }, configurable: true });
 const storage = new Map<string, string>();
 Object.defineProperty(globalThis, 'localStorage', { value: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value), removeItem: (key: string) => storage.delete(key) } });
-const { session } = await import('../../src/features/auth/hooks/session');
+const { session } = await import('../../src/features/auth/services/session-service');
 const { requestJson } = await import('../../src/shared/api/http-client');
 const user = { _id: 'user1', email: 'user@example.com', displayName: null, preferences: { theme: 'system' } };
 
