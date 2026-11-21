@@ -64,7 +64,7 @@ async function main() {
     environment: 'Local isolated HTTPS/Nest production build/MongoDB replica, generator on same machine',
     tls: 'Self-signed temporary localhost certificate; verification disabled only for this isolated test process',
     limitations: ['Not deployment SLA: generator and database share the backend machine', 'No frontend metrics or RPO/RTO measured', 'Import metric includes upload', 'AI cold-start and multi-batch coverage not measured'],
-    sessions: 20, activeVus: profile === 'ai' ? 1 : (profile === 'data' && smoke ? 2 : 5), authRateLimit: 'AUTH_REGISTER_LIMIT=100 only on the isolated process for fixture setup; other limits unchanged; auth excluded from measurements',
+    sessions: 20, activeVus: profile === 'ai' ? 1 : (profile === 'load' ? 10 : (profile === 'data' && smoke ? 2 : 5)), authRateLimit: 'AUTH_REGISTER_LIMIT=100 only on the isolated process for fixture setup; other limits unchanged; auth excluded from measurements',
     duration: profile === 'load' ? (smoke ? '10s' : '10m') : null, iterations: profile === 'load' ? null : (smoke ? 2 : 20),
     ai: profile === 'ai' ? 'Real Ollama loopback qwen3:4b; warmup outside metrics' : 'disabled' };
   try {
@@ -106,13 +106,13 @@ async function main() {
     metadata.fixture = { rows: 10000, columns: 20, bytes: Buffer.byteLength(csv), sha256: createHash('sha256').update(csv).digest('hex'),
       numericColumns: 18, textColumns: 2, categories: 5, missing: '1000 cells', duplicates: '9000 rows', tfidfMaxFeatures: 16 };
     const users = [];
-    console.log('Preparing 20 isolated sessions and 5 datasets (10,000 rows x 20 columns).');
+    console.log('Preparing 20 registered accounts and 10 isolated workspaces/datasets (10,000 rows x 20 columns).');
     // Only this disposable process raises the registration limit for setup; auth is not benchmarked.
     for (let i = 0; i < 20; i++) {
       const email = `perf-${randomUUID()}@example.test`, password = randomBytes(24).toString('base64url');
       await api('/auth/register', 'POST', { email, password });
       const login = await api('/auth/login', 'POST', { email, password });
-      if (i < 5) {
+      if (i < 10) {
         const project = await api('/projects', 'POST', { name: `perf-seed-${i}` }, login.accessToken);
         // Use native multipart via HTTP, without disabling TLS process-wide.
         const boundary = 'perf-' + randomUUID();

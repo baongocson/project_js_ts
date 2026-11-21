@@ -36,7 +36,7 @@ if (profile === 'load') thresholds.dropped_iterations = ['count==0'];
 
 export const options = {
   scenarios: profile === 'load'
-    ? { load: { executor: 'constant-arrival-rate', rate, timeUnit: '1s', duration, preAllocatedVUs: 5, maxVUs: 5, gracefulStop: '30s' } }
+    ? { load: { executor: 'constant-arrival-rate', rate, timeUnit: '1s', duration, preAllocatedVUs: 10, maxVUs: 10, gracefulStop: '30s' } }
     : { [profile]: { executor: 'shared-iterations', vus: profile === 'ai' ? 1 : Math.min(5, iterations), iterations, maxDuration: profile === 'ai' ? '50m' : '30m' } },
   thresholds, summaryTrendStats: ['min', 'med', 'p(95)', 'max', 'avg'],
   systemTags: ['status', 'method', 'name', 'scenario', 'expected_response'],
@@ -121,7 +121,7 @@ function dataWorkflow(user) {
 }
 
 export default function () {
-  const user = fixture[(exec.vu.idInTest - 1) % 5];
+  const user = fixture[(exec.vu.idInTest - 1) % fixture.length];
   if (profile === 'load') load(user);
   else if (profile === 'data') dataWorkflow(user);
   else if (profile === 'ai') request(user, 'POST', `/datasets/${user.dataset}/versions/${user.version}/ai/suggestions`, 'ai_warm', 201,
