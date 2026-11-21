@@ -12,9 +12,10 @@ test('Collection shows selectable boxplot and EDA charts, and colors global flag
   await online(page,'EDA and global colors','x,y,z,other,label\n1,2,3,1,a\n2,3,4,1,a\n3,4,5,1,\n4,5,6,1,b\n5,6,7,1,b\n6,7,8,100,c\n,8,9,1,d\n');
   await expect(page.getByRole('img',{name:'Boxplot x',exact:true})).toBeVisible();
   await page.getByLabel('Cột boxplot',{exact:true}).selectOption({label:'other'});
-  await expect(page.getByTestId('boxplot-panel')).toContainText('1 outlier');await expect(page.getByRole('img',{name:'Boxplot other',exact:true})).toBeVisible();
-  await expect(page.getByRole('img',{name:'Histogram phân phối toàn cột',exact:true})).toBeVisible();
-  await page.getByLabel('Cột phân phối',{exact:true}).selectOption({label:'label'});await expect(page.getByRole('img',{name:'Biểu đồ tần suất giá trị',exact:true})).toBeVisible();
+  await expect(page.getByTestId('boxplot-panel').locator('dl > div')
+    .filter({ has: page.getByText('Outlier', { exact: true }) }).locator('.analytics-sr')).toHaveText('1');await expect(page.getByRole('img',{name:'Boxplot other',exact:true})).toBeVisible();
+  await expect(page.getByRole('group',{name:'Histogram phân phối toàn cột',exact:true})).toBeVisible();
+  await page.getByLabel('Cột phân phối',{exact:true}).selectOption({label:'label'});await expect(page.getByRole('list',{name:'Biểu đồ tần suất giá trị',exact:true})).toBeVisible();
   await page.screenshot({path:test.info().outputPath('eda-collection-desktop.png'),fullPage:true});await page.setViewportSize({width:390,height:844});await page.screenshot({path:test.info().outputPath('eda-collection-mobile.png'),fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.setViewportSize({width:1280,height:720});
   await page.getByRole('button',{name:'Không gian 3D',exact:true}).click();await axes(page);await page.getByRole('button',{name:'Dùng hình chiếu tương thích',exact:true}).click();
   await page.getByLabel('Màu điểm',{exact:true}).selectOption('outlier');await expect(page.getByTestId('global-point-flags')).toContainText('1 dòng outlier');await expect(page.locator('circle[data-point][fill="#b73350"]')).toHaveCount(1);
@@ -29,7 +30,7 @@ test('five online analysis APIs cover all rows, preserve N/A, sampling and point
   await page.getByLabel('Các cột kiểm outlier',{exact:true}).selectOption([{label:'x (number)'},{label:'label (text)'}]);
   await expect(page.getByTestId('analysis-summary')).toContainText('label: N/A — cột không phải number');
   await page.getByRole('button',{name:'Phân phối và tần suất',exact:true}).click();
-  await expect(page.getByRole('img',{name:'Histogram phân phối toàn cột'})).toBeVisible();
+  await expect(page.getByRole('group',{name:'Histogram phân phối toàn cột'})).toBeVisible();
   await page.getByLabel('Cột phân phối',{exact:true}).selectOption({label:'constant'});await expect(page.getByTestId('analysis-distribution')).toContainText('N/A — cột hằng');
   await page.getByLabel('Cột phân phối',{exact:true}).selectOption({label:'empty'});await expect(page.getByTestId('analysis-distribution')).toContainText('Missing: 120');
   await page.getByLabel('Cột phân phối',{exact:true}).selectOption({label:'label'});await expect(page.getByTestId('analysis-distribution')).toContainText('2 category · 120 dòng');await expect(page.getByTestId('analysis-distribution')).toContainText('50%');

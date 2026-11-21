@@ -5,5 +5,6 @@ export interface AnalysisAdapter {
   correlation(signal?:AbortSignal):Promise<CorrelationResult>;
   points(query:Points3dQuery,signal?:AbortSignal):Promise<Points3dResult>;
   counts(column:string,query:ValueCountsQuery,signal?:AbortSignal):Promise<ValueCountsResult>;
+  moments?(columnId:string): { mean:number; deviation:number } | null;
   row(id:string,signal?:AbortSignal):Promise<Row>;
 }

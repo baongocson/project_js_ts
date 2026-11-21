@@ -1,41 +1,41 @@
 /* Semantic tokens. ThemeEffect remains the only owner of data-theme/preferences. */
 :root {
   color-scheme: light;
-  --bg: #f4f7fc;
+  --bg: #F8FAFC;
   --surface: #ffffff;
-  --surface-elevated: #f0f5fc;
-  --text: #17253d;
+  --surface-elevated: #f8f4ea;
+  --text: #14213D;
   --muted: #52637b;
-  --border: #d7e1ef;
-  --control-border: #74849b;
-  --primary: #3b82f6;
-  --purple: #a855f7;
-  --cyan: #22d3ee;
+  --border: #dfd1af;
+  --control-border: #8b7853;
+  --primary: #D4A63A;
+  --purple: #ad7820;
+  --cyan: #c29438;
   --success: #13734d;
   --warning: #8a5800;
   --danger: #be123c;
-  --accent: #1d4ed8;
-  --tint: #eaf1fc;
-  --button-bg: #1d4ed8;
-  --button-hover: #1e40af;
-  --button-active: #1e3a8a;
+  --accent: #76500c;
+  --tint: #f5eddb;
+  --button-bg: #253450;
+  --button-hover: #354563;
+  --button-active: #14213D;
   --button-text: #ffffff;
   --danger-bg: #be123c;
   --danger-hover: #9f1239;
   --danger-active: #881337;
-  --focus: #1d4ed8;
+  --focus: #846015;
   --placeholder: #64748b;
   --disabled-bg: #e8edf5;
   --disabled-text: #5b6b82;
   --success-tint: #e2f5eb;
   --danger-tint: #fff0f3;
-  --accent-soft: #dce9ff;
-  --gradient-wash: linear-gradient(125deg, #3b82f608, #a855f706 58%, #22d3ee06);
-  --gradient-brand: linear-gradient(130deg, #1d4ed8, #6d28d9);
+  --accent-soft: #f3e7c8;
+  --gradient-wash: linear-gradient(125deg, #d4a63a16, #ffffff10);
+  --gradient-brand: linear-gradient(130deg, #14213D, #6f4c12);
   --shadow-sm: 0 2px 5px #17253d05, 0 8px 24px #17253d05;
   --shadow-md: 0 6px 18px #17253d08, 0 20px 48px #17253d08;
   --shadow-dialog: 0 24px 80px #0b122033;
-  --shadow-focus: 0 0 0 3px #3b82f624;
+  --shadow-focus: #d4a63a45;
   --backdrop: #0b1220a6;
   --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
@@ -53,41 +53,50 @@
   --space-8: 2rem;
   --control-padding-block: .6875rem;
   --control-padding-inline: .75rem;
-  --motion-fast: 140ms;
-  --motion-normal: 180ms;
-  --ambient-purple: #a855f710;
-  --ambient-cyan: #0891b212;
-  --grid-line: #1d4ed806;
-  --glass: #fffffff2;
-  --neon-border: linear-gradient(125deg, #3b82f65c, #a855f738 55%, #0891b24a);
-  --glow-color: #3b82f61a;
+  --motion-fast: 150ms;
+  --motion-normal: 250ms;
+  --ambient-start: #d4a63a23;
+  --ambient-end: #e9c97920;
+  --grid-line: #84601509;
+  --glass: #ffffffcc;
+  --neon-border: linear-gradient(125deg, #ba8a35, #eadcbc 56%, #d4a63a);
+  --glow-color: #d4a63a29;
   --glow-radius: 24px;
-  --gradient-action: linear-gradient(115deg, #1d4ed8, #6d28d9);
-  --gradient-heading: linear-gradient(110deg, #17253d 10%, #1d4ed8 60%, #6d28d9);
+  --gradient-action: linear-gradient(115deg, #14213d9c, #62451755);
+  --gradient-heading: linear-gradient(110deg, #14213D 32%, #76500c);
+  --motion-slow: 500ms;
+  --motion-ambient: 12s;
+  --ease-out: cubic-bezier(.2,.75,.25,1);
+  --glass-blur: 8px;
+  --spot-near: #d4a63a23;
+  --spot-far: #dfac4d13;
+  --sphere-light: #fff6cc;
+  --sphere-mid: #bc862a;
+  --sphere-dark: #192740;
+  --sphere-rim: #e8b955;
   --hover-lift: -2px;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0b1220;
+  --bg: #0B1120;
   --surface: #111c30;
   --surface-elevated: #17253d;
   --text: #f1f5f9;
   --muted: #94a3b8;
-  --border: #30425e;
+  --border: #344361;
   --control-border: #64748b;
-  --primary: #3b82f6;
+  --primary: #67e8f9;
   --purple: #a855f7;
   --cyan: #22d3ee;
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #fb7185;
-  --accent: #93c5fd;
+  --accent: #a5edfa;
   --tint: #17253d;
-  /* Brand primary stays exact; a darker action fill gives white text adequate contrast. */
-  --button-bg: #2563eb;
-  --button-hover: #1d4ed8;
-  --button-active: #1e40af;
+  --button-bg: #154969;
+  --button-hover: #1e5577;
+  --button-active: #173152;
   --focus: #22d3ee;
   --placeholder: #94a3b8;
   --disabled-bg: #1b2b43;
@@ -96,23 +105,33 @@
   --danger-tint: #3b2032;
   --accent-soft: #203858;
   --gradient-wash: linear-gradient(125deg, #3b82f60a, #a855f708 58%, #22d3ee08);
-  --gradient-brand: linear-gradient(130deg, #1d4ed8, #6d28d9);
+  --gradient-brand: linear-gradient(130deg, #155573, #6035a1);
   --shadow-sm: 0 2px 6px #00000012, 0 8px 24px #00000014;
   --shadow-md: 0 6px 18px #0000001a, 0 20px 48px #0000001f;
   --shadow-dialog: 0 24px 80px #00000066;
   --shadow-focus: 0 0 0 3px #22d3ee24;
   --backdrop: #030814bf;
-  --ambient-purple: #9333ea26;
-  --ambient-cyan: #06b6d41c;
+  --ambient-start: #9333ea26;
+  --ambient-end: #06b6d41c;
   --grid-line: #93c5fd06;
-  --glass: #111c30f2;
+  --glass: #142039d1;
   --neon-border: linear-gradient(125deg, #22d3ee80, #3b82f64a 40%, #a855f780);
-  --glow-color: #3b82f62b;
+  --glow-color: #35d9fc25;
   --glow-radius: 32px;
+  --gradient-action: linear-gradient(115deg, #12496190, #6938a46a);
+  --danger-bg: #9f1239;
+  --danger-hover: #9d174d;
+  --danger-active: #881337;
+  --spot-near: #22d3ee24;
+  --spot-far: #a855f71a;
+  --sphere-light: #cefaff;
+  --sphere-mid: #16829e;
+  --sphere-dark: #251942;
+  --sphere-rim: #9259f5;
   --gradient-heading: linear-gradient(110deg, #f1f5f9 10%, #a5d8ff 55%, #d8b4fe);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root { --motion-fast: 0s; --motion-normal: 0s; --hover-lift: 0px; }
+  :root { --motion-fast: 0s; --motion-normal: 0s; --motion-slow: 0s; --motion-ambient: 0s; --hover-lift: 0px; }
   html:focus-within { scroll-behavior: auto; }
 }

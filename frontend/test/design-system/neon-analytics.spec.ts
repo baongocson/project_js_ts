@@ -1,0 +1,116 @@
+import { test, expect } from '@playwright/test';
+
+test('WebGL auth globe responds to drag, wheel and reset without blocking the form', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error' && !message.text().includes('401')) errors.push(message.text()); });
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 401, json: {} }));
+  await page.goto('/login');
+  const globe = page.getByRole('group', { name: 'Quả cầu dữ liệu 3D' });
+  await expect(globe).toHaveAttribute('data-ready', 'true');
+  const canvas = globe.locator('canvas');
+  const initial = await canvas.screenshot();
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * .7, box.y + box.height * .6, { steps: 7 });
+  await page.mouse.up();
+  await page.mouse.move(4, 4);
+  await expect.poll(async () => (await canvas.screenshot()).equals(initial)).toBe(false);
+  const rotated = await canvas.screenshot();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, -240);
+  await page.mouse.move(4, 4);
+  await expect.poll(async () => (await canvas.screenshot()).equals(rotated)).toBe(false);
+  await canvas.dblclick();
+  await page.mouse.move(4, 4);
+  await expect.poll(async () => (await canvas.screenshot()).equals(initial)).toBe(true);
+  await globe.getByRole('button', { name: 'Xoay phải', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(async () => (await canvas.screenshot()).equals(initial)).toBe(false);
+  await globe.getByRole('button', { name: 'Đặt lại quả cầu', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Tạm dừng', exact: true })).toHaveCount(0);
+  await page.getByLabel('Email', { exact: true }).fill('guest@example.com');
+  await page.getByLabel('Email', { exact: true }).clear();
+  await page.mouse.move(3, 3);
+  await page.screenshot({ path: test.info().outputPath('login-dark.png'), animations: 'disabled' });
+  await page.getByLabel('Giao diện', { exact: true }).selectOption('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect.poll(async () => (await canvas.screenshot()).equals(initial)).toBe(false);
+  await page.screenshot({ path: test.info().outputPath('login-light.png'), animations: 'disabled' });
+  await page.goto('/register');
+  await expect(page.getByRole('group', { name: 'Quả cầu dữ liệu 3D' })).toHaveAttribute('data-ready', 'true');
+  await page.setViewportSize({ width: 375, height: 800 });
+  await expect(page.getByRole('group', { name: 'Quả cầu dữ liệu 3D' })).toHaveCount(0);
+  await expect(page.getByLabel('Email', { exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('Dashboard charts use real offline snapshots, announce the final count and handle empty and zero', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 401, json: {} }));
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'no-preference' });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+  const donut = page.getByTestId('analytics-donut');
+  const bars = page.getByTestId('analytics-bars');
+  const gauge = page.getByTestId('analytics-gauge');
+  await expect(donut).toContainText('Chưa có ô để tính tỷ lệ.');
+  await expect(bars).toContainText('Chưa có cột dữ liệu.');
+  await expect(page.locator('.neon-kpis strong').first().locator('[aria-hidden]')).toHaveText('0');
+  await page.goto('/offline');
+  await page.getByLabel('Tên project', { exact: true }).fill('Analytics fixture');
+  await page.getByLabel('File CSV', { exact: true }).setInputFiles({ name: 'analytics.csv', mimeType: 'text/csv', buffer: Buffer.from('x,y,label\n1,2,a\n3,,b\n') });
+  await page.getByRole('button', { name: 'Lưu offline', exact: true }).click();
+  await expect(page.getByText('Đã lưu CSV offline', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Dashboard 3D', exact: true }).click();
+  await expect(page.locator('.neon-kpis strong').first().locator('[aria-hidden]')).toHaveText('1');
+  await expect(donut).toContainText('16,67');
+  await expect(gauge.locator('.analytics-sr')).toContainText('83,33');
+  await expect(gauge.locator('[aria-hidden="true"]').last()).toContainText('83,33');
+  await expect(bars.getByRole('button', { name: /number/ })).toBeVisible();
+  await donut.getByRole('button', { name: /Ô có giá trị/ }).focus();
+  await page.keyboard.press('Tab');
+  await expect(donut.getByRole('button', { name: /Ô thiếu/ })).toBeFocused();
+  await expect(donut.getByText('1 / 6 ô', { exact: true })).toBeVisible();
+  await page.mouse.move(4, 4);
+  await page.locator('h1').click();
+  await page.screenshot({ path: test.info().outputPath('dashboard-dark.png'), fullPage: true, animations: 'disabled' });
+  for (const [chart, name] of [[donut, 'donut'], [bars, 'bar'], [gauge, 'gauge']] as const) {
+    await chart.screenshot({ path: test.info().outputPath(name + '.png'), animations: 'disabled' });
+  }
+  await page.getByLabel('Giao diện', { exact: true }).selectOption('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.screenshot({ path: test.info().outputPath('dashboard-light.png'), fullPage: true, animations: 'disabled' });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(gauge.locator('.gauge-value')).toHaveCSS('animation-name', 'none');
+  for (const width of [375, 768, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  expect(errors).toEqual([]);
+});
+
+test('Header-only and complete CSV snapshots distinguish an unavailable percentage from zero missing', async ({ page }) => {
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 401, json: {} }));
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/offline');
+  await page.getByLabel('Tên project', { exact: true }).fill('Header only');
+  await page.getByLabel('File CSV', { exact: true }).setInputFiles({ name: 'header.csv', mimeType: 'text/csv', buffer: Buffer.from('x,y\n') });
+  await page.getByRole('button', { name: 'Lưu offline', exact: true }).click();
+  await expect(page.getByText('Đã lưu CSV offline', { exact: true })).toBeVisible();
+  await page.goto('/');
+  await expect(page.getByTestId('analytics-gauge')).toContainText('Chưa có ô để tính tỷ lệ.');
+  await page.goto('/offline');
+  await page.getByLabel('Tên project', { exact: true }).fill('Complete');
+  await page.getByLabel('File CSV', { exact: true }).setInputFiles({ name: 'complete.csv', mimeType: 'text/csv', buffer: Buffer.from('x,y\n0,0\n') });
+  await page.getByRole('button', { name: 'Lưu offline', exact: true }).click();
+  await expect(page.getByText('Đã lưu CSV offline', { exact: true })).toBeVisible();
+  await page.goto('/');
+  await expect(page.getByTestId('analytics-donut').getByRole('button', { name: /Ô thiếu/ })).toContainText('0%');
+  await expect(page.getByTestId('analytics-gauge').locator('.analytics-sr')).toHaveText('100%');
+  await expect(page.getByTestId('analytics-donut').locator('.neon-donut-value')).toHaveCount(0);
+});

@@ -29,3 +29,14 @@ void test('online analysis serializes outlier columns with the existing comma-se
   await onlineAnalysis('dataset','version').summary({outlierMethod:'iqr',outlierThreshold:1.5,outlierColumnIds:['a','b']});
   const url=new URL(requested,'https://example.test');assert.equal(url.searchParams.get('outlierColumnIds'),'a,b');assert.equal(url.searchParams.get('outlierThreshold'),'1.5');
 });
+
+void test('boxplot moments use full numeric column values and remain finite for extreme magnitudes',()=>{
+  const data=snapshot('value\n1\n2\n3\n');
+  const id=data.columns[0].columnId;
+  assert.deepEqual(localAnalysis(data,'v',0).moments?.(id),{mean:2,deviation:Math.sqrt(2/3)});
+  const large:Snapshot={...data,rows:data.rows.map((row,index)=>({...row,cells:{[id]:{kind:'number',value:[-1e308,0,1e308][index]}}}))};
+  const moments=localAnalysis(large,'v',0).moments?.(id);
+  assert.equal(moments?.mean,0);
+  assert.equal(moments?.deviation,Math.sqrt(2/3)*1e308);
+  assert.equal(localAnalysis({...data,rows:[]},'v',0).moments?.(id),null);
+});

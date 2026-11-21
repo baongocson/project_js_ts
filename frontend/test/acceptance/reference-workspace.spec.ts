@@ -35,10 +35,19 @@ test('reference layout: grouped steps, WebGL offline, projection, typed preview 
   if (scene) { await page.mouse.move(scene.x+scene.width/2,scene.y+scene.height/2); await page.mouse.down(); await page.mouse.move(scene.x+scene.width/2+70,scene.y+scene.height/2+20); await page.mouse.up(); }
   await page.getByRole('button', { name: 'Đặt lại góc nhìn', exact: true }).click();
   const layout = await page.locator('.product-grid').evaluate(element => {
-    const boxes = [...element.children].map(child => child.getBoundingClientRect());
-    return { sideBySide: boxes.length === 2 && boxes[0].right <= boxes[1].left };
+    const analysis = element.querySelector('.workspace-analysis')!.getBoundingClientRect();
+    const method = element.querySelector('.workspace-method')!.getBoundingClientRect();
+    const plot = element.querySelector('.scene-canvas')!.getBoundingClientRect();
+    const grid = element.getBoundingClientRect();
+    return {
+      methodBelowPlot: method.top >= analysis.bottom,
+      plotWidth: plot.width,
+      horizontalOffset: Math.abs(plot.left + plot.width / 2 - grid.left - grid.width / 2),
+    };
   });
-  expect(layout.sideBySide).toBe(true);
+  expect(layout.methodBelowPlot).toBe(true);
+  expect(layout.plotWidth).toBeGreaterThan(1000);
+  expect(layout.horizontalOffset).toBeLessThan(2);
   await chooseMethod(page, 'uppercase');
   await page.getByLabel('Các cột xử lý', { exact: true }).selectOption({ label: 'label' });
   await page.getByRole('button', { name: 'Xem trước thay đổi', exact: true }).click();

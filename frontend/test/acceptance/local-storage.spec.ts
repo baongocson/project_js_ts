@@ -10,7 +10,9 @@ function legacyProject(){
   return {id:crypto.randomUUID(),name:'Legacy source retained',fileName:'legacy.csv',source:Array.from(Buffer.from(source)),sourceHash:createHash('sha256').update(source).digest('hex'),original,snapshot,engineVersion:ENGINE_VERSION,operations:[{id:crypto.randomUUID(),kind:'process',specification,snapshot,previewKey:crypto.randomUUID(),applyKey:crypto.randomUUID(),phase:'queued'}],createKey:crypto.randomUUID(),importKey:crypto.randomUUID(),cursor:0,status:'local'};
 }
 async function seed(page:Page){
-  await page.goto('/');const project=legacyProject();
+  // The dashboard now reads IndexedDB. Seed v1 from a route that does not open
+  // the local database so the fixture owns the first upgrade request.
+  await page.goto('/login');const project=legacyProject();
   await page.evaluate(async project=>{
     const db=await new Promise<IDBDatabase>((resolve,reject)=>{const req=indexedDB.open('dashboard3d-projects-v1',1);req.onupgradeneeded=()=>req.result.createObjectStore('projects',{keyPath:'id'});req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
     try{await new Promise<void>((resolve,reject)=>{const tx=db.transaction('projects','readwrite');tx.objectStore('projects').put({...project,source:new Uint8Array(project.source)});tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});}finally{db.close();}
@@ -38,7 +40,8 @@ test('local workspace quota failure preserves published data and offers export/r
   await page.reload();await expect(page.getByLabel('Số dòng/trang',{exact:true})).toHaveValue('10');await expect(page.getByTestId('sync-state')).toContainText('0/1');await expect(page.getByRole('button',{name:'Dòng 1, cột n',exact:true})).toHaveText('1');
 });
 test('a blocked IndexedDB upgrade explains the old-tab lock and resumes without deleting v1 data',async({page})=>{
-  await page.goto('/');const project=legacyProject();
+  // Keep the legacy connection isolated from the dashboard's analytics reader.
+  await page.goto('/login');const project=legacyProject();
   await page.evaluate(async project=>{
     const db=await new Promise<IDBDatabase>((resolve,reject)=>{const req=indexedDB.open('dashboard3d-projects-v1',1);req.onupgradeneeded=()=>req.result.createObjectStore('projects',{keyPath:'id'});req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
     await new Promise<void>((resolve,reject)=>{const tx=db.transaction('projects','readwrite');tx.objectStore('projects').put({...project,source:new Uint8Array(project.source)});tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});window.legacyDatabaseForTest=db;

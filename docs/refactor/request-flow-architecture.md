@@ -143,3 +143,17 @@ Integration/acceptance runner dùng MongoDB replica tạm và database tên riê
 | git diff --check cho phần refactor | Đạt |
 
 `npm run lint` toàn repo còn 9 lỗi trong các file có sẵn ở `docs/slide/.build/author.mjs`, `check_html.mjs` và `add-two-slides/check_delivery.mjs`. Phần slide/Docker/Nginx có thay đổi từ trước đợt refactor được giữ nguyên. Test HTTP/MongoDB/browser ban đầu bị sandbox chặn loopback; các kết quả phía trên là sau khi chạy lại với quyền kết nối localhost.
+
+## Tích hợp premium UI ngày 21/11/2026
+
+Merge `feat/premium-ui-redesign-nguyen` (đến commit `b254828`) vào cấu trúc hiện tại, giữ commit refactor `8305d70`:
+
+- Không khôi phục `analysis/api/analysis-adapters.ts`. Hợp đồng `moments` được thêm vào `analysis-contract.ts`; tính mean/deviation nằm trong `services/analysis-service.ts`; hook `useBoxplot` cung cấp kết quả cho component.
+- Dashboard dùng `app/components/DashboardAnalytics.tsx → app/hooks/useDashboardAnalytics.ts → offline/services/local-analytics.ts → offline/repositories/project-store.ts`. Component không đọc storage trực tiếp.
+- Giữ globe đăng nhập, tương tác scatter, biểu đồ phân phối, animation và giao diện responsive của nhánh UI. Các chunk 3D và dashboard vẫn lazy load.
+- Fixture IndexedDB v1 khởi tạo từ `/login` thay vì `/`: trang dashboard mới đọc IndexedDB, nên không còn là trang trung lập để thiết lập kết nối v1 bị chặn. Giữ nguyên assertion migration, CAS, quota, blocked upgrade và bảo toàn dữ liệu.
+- Thêm unit test cho thống kê cột số cực lớn, trạng thái không có dữ liệu và lọc project theo guest/tài khoản hiện tại.
+
+Typecheck toàn workspace và design-system, checker kiến trúc FE/BE, build, lint frontend, 41 unit frontend, 10 offline replay và 36 test trình duyệt design-system đã đạt. Backend, API và schema IndexedDB không đổi trong merge này. Build còn cảnh báo chunk lớn của Vite.
+
+Acceptance HTTPS/MongoDB tạm: lượt toàn bộ có 52/53 ca đạt, ca blocked upgrade thất bại do fixture `/` nói trên. Sau sửa fixture, chạy lại cả nhóm `local-storage.spec.ts` đạt 4/4 trên HTTPS/MongoDB tạm; nhóm này cũng đạt 4/4 trên production preview riêng. Các assertion và timeout giữ nguyên. Không có lỗi kiểm thử còn chưa xử lý trong phạm vi merge.

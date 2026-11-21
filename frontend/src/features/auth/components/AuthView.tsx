@@ -2,12 +2,13 @@ import type { AuthFormModel } from '../hooks/useAuthForm';
 
 import { Link, Navigate } from 'react-router-dom';
 
+import { AuthScene } from './AuthScene';
 import { Button, Field, Feedback } from '../../../shared/ui';
 
 export function AuthView(model:AuthFormModel){
   const {register,current,notice,destination,email,setEmail,password,setPassword,confirmation,setConfirmation,visible,setVisible,busy,error,fields,created,submit}=model;
 if (current.status === 'authenticated') return <Navigate to={destination} replace />;
-return <main className="auth-card"><span className="eyebrow">DATA WORKSPACE</span>
+return <main className="auth-layout"><div className="auth-card"><span className="eyebrow">DATA WORKSPACE</span>
     <h1>{register ? 'Tạo tài khoản' : 'Đăng nhập'}</h1>
     <p className="muted">Phân tích dữ liệu, lưu phiên bản và tiếp tục làm việc khi mất mạng.</p>
     {notice && <Feedback>{notice}</Feedback>}
@@ -21,9 +22,9 @@ return <main className="auth-card"><span className="eyebrow">DATA WORKSPACE</spa
           error={fields.confirmation} required disabled={busy} onChange={event => setConfirmation(event.target.value)} />}
         <label className="check"><input type="checkbox" checked={visible} onChange={event => setVisible(event.target.checked)} /> Hiện mật khẩu</label>
         {error && <Feedback error>{error}</Feedback>}
-        <Button type="submit" disabled={busy}>{busy ? 'Đang xử lý…' : register ? 'Đăng ký' : 'Đăng nhập'}</Button>
+        <Button type="submit" className="auth-submit" disabled={busy} aria-busy={busy}>{busy && <span className="auth-loading-ring" aria-hidden="true"/>}{busy ? 'Đang xử lý…' : register ? 'Đăng ký' : 'Đăng nhập'}</Button>
       </form>}
     <p><Link to={register ? '/login' : '/register'}>{register ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký'}</Link></p>
     <Link to="/local/projects">Làm việc trên máy</Link>
-  </main>;
+  </div><AuthScene /></main>;
 }
