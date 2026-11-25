@@ -1,9 +1,9 @@
 # 05 — Nghiệm thu và báo cáo cuối
-Đọc tất cả đầu ra của 00–04; không bỏ qua giai đoạn thiếu file.
 
 ## Checklist
-- 30–35 slide, tỉ lệ 16:9, lời nói tối đa 15 phút.
-- Đủ 9 nhóm yêu cầu giảng viên hoặc ghi rõ thiếu bằng chứng.
+
+- 30–35 slide, lời nói tối đa 15 phút.
+- Đủ 9 nhóm yêu cầu giảng viên.
 - Có kiến trúc, database, API, FE, BE, user flow và workflow thật.
 - Workflow ghi đường dẫn file thực tế, request và response.
 - Có sơ đồ/hình rõ, không giả ảnh screenshot.
@@ -14,6 +14,7 @@
 - Không sửa code nghiệp vụ, không lộ secret.
 
 ## Báo cáo cuối cho người dùng
+
 - Danh sách file tạo và đường dẫn.
 - Số slide và tổng thời gian.
 - Sơ đồ đã tạo.
